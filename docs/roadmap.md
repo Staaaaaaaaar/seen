@@ -20,8 +20,11 @@
 - [x] Studio 使用 JDK 17 同步成功，四类 Preview 实际可渲染；本机路径已核对，缓存排除操作已写入开发指南。
 - [x] API 36 专用模拟器自动化通过，验证重看、事务、草稿、私有海报与界面流程。
 - [x] API 36 安装启动、7 项设备测试及 200% 字号空库检查完成；系统选图提供器、TalkBack、真实旧库升级和 Redmi 真机单独记录，不视作已通过。
-- [ ] 远端 CI：最终提交的 build / API 36 两个 job 成功后才创建 tag；实际结果见 [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml)。
 - [x] 本地交付已验证 Debug APK、校验和与验证记录：`.tools/v0.1.0/`。
-- [ ] annotated `v0.1.0` tag：按发布清单创建并推送，核对远端指向与本地一致。
+
+远端交付使用可直接核对的记录，避免在源码中维护“本提交已完成 CI”的自指状态：
+
+- [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml)：最终 tag 对应提交的 build / API 36 两个 job 均须成功。
+- [版本 tag](https://github.com/Staaaaaaaaar/seen/tags)：`v0.1.0` 使用 annotated tag，远端 peeled commit 须与已验证提交一致。
 
 当前不新增框架或拆分模块，不因下载故障自动升降依赖版本。后续每版交付应包含实际变更、测试结果、APK 路径/校验和、设备记录与限制。

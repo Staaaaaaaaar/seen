@@ -114,6 +114,18 @@ source scripts/env.sh
 ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug --write-locks --write-verification-metadata sha256
 ```
 
+生成后还需用**空依赖缓存**复验：已有缓存可能不再读取父 POM/BOM，导致生成元数据时漏项，而新机器会失败。为本次审查选一个尚未使用的 Gradle home（代理在其中单独配置；不复制依赖缓存），从官方源重新生成并审查差异：
+
+```bash
+GRADLE_USER_HOME="$PWD/.tools/dependency-review-home" ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug --write-verification-metadata sha256
+# 随后在相同目录用普通严格模式检查，不带 --write-*：
+GRADLE_USER_HOME="$PWD/.tools/dependency-review-home" ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug
+```
+
+Gradle 的自动生成仍可能漏掉父 POM/BOM；全新 CI 报缺失时，应按报告中的准确坐标从官方源显式解析元数据制品，由 Gradle 生成并审查哈希，不能直接加可信通配符或关闭校验。最终以普通严格模式和全新 CI 的实际结果为准。
+
+这属于依赖维护与发布复验，日常开发继续使用正常缓存。
+
 Studio 还会解析 Gradle 分发源码、库的 sources/Javadoc JAR 和 Kotlin 插件的 Gradle 专用源码变体，以及 AndroidX 源码变体中的 samples JAR。升级依赖后继续显式生成这些 IDE 制品校验，再实际执行一次 Studio Sync / Preview，避免“命令行通过但 IDE 被校验拦住”：
 
 ```bash
