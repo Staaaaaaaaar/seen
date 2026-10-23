@@ -1,0 +1,56 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
+}
+android {
+    namespace = "com.seen.film"
+    compileSdk = 36
+    defaultConfig {
+        applicationId = "com.seen.film"
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 1
+        versionName = "0.1.0"
+        testInstrumentationRunner = "com.seen.film.SeenTestRunner"
+    }
+    buildTypes {
+        debug { applicationIdSuffix = ".debug"; versionNameSuffix = "-debug" }
+        release { isMinifyEnabled = false }
+    }
+    buildFeatures { compose = true; buildConfig = true }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    sourceSets["androidTest"].assets.srcDir("$projectDir/schemas")
+}
+kotlin { jvmToolchain(17) }
+room { schemaDirectory("$projectDir/schemas") }
+dependencyLocking { lockAllConfigurations() }
+dependencies {
+    implementation(platform(libs.compose.bom))
+    implementation(libs.compose.ui)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material3)
+    implementation(libs.compose.icons)
+    implementation(libs.compose.preview)
+    debugImplementation(libs.compose.tooling)
+    implementation(libs.activity.compose)
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.lifecycle.runtime)
+    implementation(libs.core.ktx)
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    implementation(libs.coroutines.android)
+    ksp(libs.room.compiler)
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.runner)
+    androidTestImplementation(libs.room.testing)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.test)
+    debugImplementation(libs.compose.test.manifest)
+}
