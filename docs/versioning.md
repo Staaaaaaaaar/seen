@@ -11,7 +11,7 @@
 | v0.3.0 | 同上，增加备份恢复和迁移质量 |
 | v1.0.0 | 真机回归完成的签名 Release APK、校验和、CHANGELOG、tag、正式 GitHub Release |
 
-每版源码、构建结果和人工验收完成后才打 tag。不能把版本号写进 Gradle 就视作该版已发布。当前本地构建、单测、lint、模拟器自动化、Studio Sync 与 Preview 已验证。交付顺序：提交并推送最终源码 → 确认该提交的远端 CI 两个 job 成功 → 创建并推送 annotated tag → 核对远端 tag 与对应提交。
+每版源码、构建结果和人工验收完成后才打 tag。不能把版本号写进 Gradle 就视作该版已发布。当前本地构建、单测、lint、模拟器自动化、Studio Sync 与 Preview 已验证。交付顺序：提交并推送最终源码 → 确认该提交的远端 CI 的构建与 API 36 测试全部成功 → 创建并推送 annotated tag → 核对远端 tag 与对应提交。
 
 ## v0.1 tag 前检查
 
