@@ -17,7 +17,8 @@ def source_digest():
     for folder in ['app/src', 'app/schemas', 'gradle', 'scripts', '.github']:
         files.update(p for p in (ROOT / folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts)
     for name in ['settings.gradle.kts', 'build.gradle.kts', 'app/build.gradle.kts',
-                 'gradle.properties', 'gradlew', 'gradlew.bat', 'app/gradle.lockfile', 'gradle.lockfile']:
+                 'gradle.properties', 'gradlew', 'gradlew.bat', 'app/gradle.lockfile', 'gradle.lockfile',
+                 'settings-gradle.lockfile', 'buildscript-gradle.lockfile']:
         if (ROOT / name).is_file(): files.add(ROOT / name)
     digest = hashlib.sha256()
     for p in sorted(files):

@@ -4,17 +4,12 @@ set -euo pipefail
 seen_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 seen_studio="${ANDROID_STUDIO_HOME:-$seen_root/.tools/android-studio}"
 [[ -x "$seen_studio/bin/studio" ]] || { echo "Android Studio not found: $seen_studio" >&2; exit 1; }
-export JAVA_HOME="${SEEN_JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
-[[ -x "$JAVA_HOME/bin/java" ]] || { echo "JDK 17 not found: $JAVA_HOME" >&2; exit 1; }
-export ANDROID_HOME="${SEEN_ANDROID_SDK:-$seen_root/.tools/android-sdk}"
-export ANDROID_USER_HOME="$seen_root/.tools/android-user"
-export ANDROID_AVD_HOME="$seen_root/.tools/android-avd"
-export GRADLE_USER_HOME="$seen_root/.tools/gradle-home"
+source "$seen_root/scripts/env.sh"
 export STUDIO_PROPERTIES="$seen_root/.tools/studio.properties"
 # Let Studio use its tested bundled JBR, independently of the Gradle JDK.
 unset STUDIO_JDK
 export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
-mkdir -p "$ANDROID_HOME" "$ANDROID_USER_HOME" "$ANDROID_AVD_HOME" "$GRADLE_USER_HOME"
+mkdir -p "$ANDROID_HOME" "$ANDROID_USER_HOME" "$ANDROID_AVD_HOME" "${GRADLE_USER_HOME:-$HOME/.gradle}"
 python3 "$seen_root/scripts/configure_studio.py"
 if [[ "${1:-}" == --configure-sdk ]]; then
     shift

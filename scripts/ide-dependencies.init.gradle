@@ -1,0 +1,84 @@
+// Explicit maintenance task: include sources downloaded by Android Studio in verification metadata.
+// Run only while reviewing dependency changes, with --write-verification-metadata sha256.
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.gradle.jvm.JvmLibrary
+import org.gradle.api.attributes.Category
+import org.gradle.api.attributes.DocsType
+import org.gradle.api.attributes.Usage
+import org.gradle.language.base.artifact.SourcesArtifact
+import org.gradle.language.java.artifact.JavadocArtifact
+
+gradle.beforeProject { project ->
+    if (project != project.rootProject) return
+    def root = project
+    root.buildscript.repositories.exclusiveContent {
+        forRepository {
+            root.buildscript.repositories.ivy {
+                name = 'OfficialGradleSources'
+                url = uri('https://services.gradle.org/distributions')
+                patternLayout { artifact('[artifact]-[revision]-[classifier].[ext]') }
+                metadataSources { artifact() }
+            }
+        }
+        filter { includeModule('gradle', 'gradle') }
+    }
+    def distribution = root.buildscript.configurations.create('seenGradleSources')
+    root.buildscript.dependencies.add(distribution.name, "gradle:gradle:${gradle.gradleVersion}:src@zip")
+    root.tasks.register('seenCaptureIdeDependencies') {
+        doLast {
+            distribution.resolve()
+            def ids = new LinkedHashSet()
+            def variantSources = new LinkedHashSet()
+            def documentationIds = new LinkedHashSet()
+            root.allprojects.each { p ->
+                def configurations = [p.buildscript.configurations.getByName('classpath')]
+                // Debug application classpaths include the sources available while editing UI/tests.
+                configurations.addAll(p.configurations.findAll {
+                    it.canBeResolved && it.name in ['debugCompileClasspath', 'debugRuntimeClasspath',
+                        'debugAndroidTestCompileClasspath', 'debugUnitTestCompileClasspath',
+                        'debugAndroidTestRuntimeClasspath', 'debugUnitTestRuntimeClasspath']
+                })
+                configurations.each { c ->
+                    c.incoming.resolutionResult.allComponents.each {
+                        if (it.id instanceof ModuleComponentIdentifier) {
+                            ids.add(it.id)
+                            if (c.name != 'classpath') documentationIds.add(it.id)
+                        }
+                    }
+                    // AndroidX sources variants can publish both source and sample JARs.
+                    // ArtifactResolutionQuery alone returns only the primary source artifact.
+                    if (c.name != 'classpath') {
+                        c.incoming.artifactView {
+                            withVariantReselection()
+                            lenient = true
+                            componentFilter { it instanceof ModuleComponentIdentifier }
+                            attributes {
+                                attribute(Category.CATEGORY_ATTRIBUTE, p.objects.named(Category, Category.DOCUMENTATION))
+                                attribute(DocsType.DOCS_TYPE_ATTRIBUTE, p.objects.named(DocsType, DocsType.SOURCES))
+                                attribute(Usage.USAGE_ATTRIBUTE, p.objects.named(Usage, Usage.JAVA_RUNTIME))
+                            }
+                        }.files.files
+                    }
+                    // Kotlin plugins publish Gradle-version-specific binary/source variants.
+                    if (c.name == 'classpath') c.resolvedConfiguration.resolvedArtifacts.each { artifact ->
+                        if (artifact.classifier?.matches('gradle[0-9]+')) {
+                            def id = artifact.moduleVersion.id
+                            variantSources.add("${id.group}:${id.name}:${id.version}:${artifact.classifier}-sources@jar")
+                        }
+                    }
+                }
+            }
+            variantSources.each { notation ->
+                def dependency = root.buildscript.dependencies.create(notation)
+                dependency.transitive = false
+                root.buildscript.configurations.detachedConfiguration(dependency).resolve()
+            }
+            def result = root.dependencies.createArtifactResolutionQuery()
+                .forComponents(ids).withArtifacts(JvmLibrary, SourcesArtifact).execute()
+            root.dependencies.createArtifactResolutionQuery().forComponents(documentationIds)
+                .withArtifacts(JvmLibrary, JavadocArtifact).execute()
+            def sources = result.resolvedComponents.collectMany { it.getArtifacts(SourcesArtifact) }
+            println("Reviewed IDE source resolution for ${ids.size()} modules (${sources.size()} source results).")
+        }
+    }
+}

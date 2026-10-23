@@ -1,103 +1,141 @@
 # 开发指南
 
-本指南按现有脚本整理，面向 Ubuntu 22.04 / Linux x86_64。工具版本以仓库配置为准；本机安装记录与验收状态见 [验证日志](v0.1.0-validation.md)。
+主流程使用 Android Studio / SDK Manager / Device Manager 和仓库 Gradle Wrapper。辅助脚本面向 Linux x86_64；它们用于减少重复输入，不能代替宿主机的 JDK、网络、许可和虚拟化配置。首次打开步骤见 [README](../README.md)。
 
-## 首次配置
+## 工具链与支持范围
 
-1. 安装 JDK 17（Ubuntu 包名 `openjdk-17-jdk`）和 Android Studio。脚本不负责安装它们。
-2. 准备 `bash`、`python3`、`curl`、`unzip`、`sha256sum`、`flock` 和 `rg`（Ubuntu 包名 `ripgrep`）。
-3. 确保终端能下载 Google Android SDK、Google Maven、Maven Central 和 Gradle 发行包，并有足够磁盘空间。模拟器还需可用的 `/dev/kvm`。
-4. 在项目根目录运行以下命令，按提示阅读并接受所需 SDK 许可。
+| 项目 | 仓库要求 | 配置位置 |
+| --- | --- | --- |
+| Gradle 运行与 Kotlin 工具链 | 完整 JDK 17 | Studio Gradle JDK / `JAVA_HOME` |
+| Gradle / AGP / Kotlin | 8.13 / 8.13.2 / 2.3.21 | Wrapper / `gradle/libs.versions.toml` |
+| SDK | compile/target 36，min 26 | `app/build.gradle.kts` |
+| SDK 组件 | Platform 36、Build Tools 35.0.0、Platform-Tools | SDK Manager |
+| 自动设备验收 | API 36，Google APIs | Device Manager |
+
+本机实际验证 Ubuntu 22.04 x86_64。macOS / Windows 使用相同 Gradle 工程与官方 GUI，尚未实测；Linux 专用脚本不在这些平台承诺兼容。Windows 使用 `gradlew.bat`。Android Studio 的 JBR 与项目 Gradle JDK 分开选择；CLI 和 IDE 应使用同一个 JDK 17，详见 [官方 JDK 说明](https://developer.android.com/build/jdks)。不自动升降版本来绕过下载问题。
+
+## 首次准备：按阶段检查
+
+先安装 Studio 与 JDK 17，用 SDK Manager 安装表中组件，打开工程同步。Ubuntu 可安装 `openjdk-17-jdk`；脚本另需 bash、python3，CLI 安装器才需要 curl、unzip、sha256sum、flock。IDE、KVM 和系统软件包由开发者管理。
+
+已有 SDK 时，在终端选择真实路径（示例中的占位路径必须替换）：
 
 ```bash
-# 使用其他安装位置时，在配置前覆盖路径（均为绝对路径）：
-export SEEN_JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-export ANDROID_STUDIO_HOME=/absolute/path/to/android-studio
-# 可选：export SEEN_ANDROID_SDK=/absolute/path/to/android-sdk
+export JAVA_HOME=/absolute/path/to/jdk-17
+export ANDROID_HOME=/absolute/path/to/Android/Sdk
+bash scripts/doctor.sh
 bash scripts/setup.sh
+bash scripts/check.sh
 ```
 
-Studio 默认位置为 `.tools/android-studio`；不在此处安装时必须设置 `ANDROID_STUDIO_HOME`。SDK 默认位置为 `.tools/android-sdk`。仅准备与构建、不打开 IDE 时用 `bash scripts/setup.sh --no-open`。
+`doctor.sh` 只读，输出解析后的 JDK/SDK/cache 路径，检查 JDK 17 与 SDK 文件，提示 KVM 状态；不联网，不证明编译通过。`setup.sh` 仅写本机 `sdk.dir`、Gradle `java.home`，创建缺失的 IDE 配置与兼容环境入口；保留其他配置，不下载、不构建、不启动 IDE。`--check-only` 等价 doctor；旧 `--no-open` 保留为普通配置模式。
 
-setup 会创建缺失的 IDE 配置、安装缺失 SDK、生成 `local.properties` 和 `.tools/android-env.sh`，然后调用 `check.sh`。安装内容为 API 36、Build Tools 35.0.0、Platform-Tools 和命令行工具；Gradle 由标准 8.13 Wrapper 提供，无需全局安装。
-
-IDE 使用随附 JBR；项目 Gradle 使用 JDK 17。SDK 命令行工具优先使用 Studio 的 JBR，也可用 `SEEN_SDK_JAVA_HOME` 单独指定。`setup.sh --check-only` 只输出 Java 版本并检查 SDK 文件存在，不代表构建或设备验收通过。
-
-## 本机配置与代理
-
-| 位置 | 用途 |
-| --- | --- |
-| `local.properties` | 本机 SDK 路径 |
-| `.tools/android-env.sh` | CLI 使用的 Java、SDK、AVD 与 Gradle 路径 |
-| `.gradle/config.properties`、`.idea/gradle.xml` | Studio 的 Gradle JDK |
-| `.tools/studio-profile/`、`.tools/studio.properties` | IDE 设置、缓存、插件与日志 |
-| `.tools/gradle-home/` | Gradle 缓存与本机 properties |
-| `.tools/android-user/`、`.tools/android-avd/` | Android 用户设置与专用模拟器 |
-
-上述设置均不入库。`configure_studio.py` 只创建缺失配置，保留已有设置；变更 JDK、SDK 或代理后应核对已有配置，不要假定重新运行会全部覆盖。SDK 安装器会更新 `local.properties` 的 SDK 路径。
-
-首次配置可从 `HTTPS_PROXY` 继承无认证 HTTP 代理到 IDE 与 Gradle。SDK 安装器可读取 HTTP/HTTPS 代理环境变量或 IDE 代理设置；不同工具的代理不保证自动同步。变更时同时检查 Studio HTTP Proxy 与 `.tools/gradle-home/gradle.properties`。
-
-依赖下载需要镜像时，现有配置支持在本机 Gradle properties 中设置 `seen.googleMavenMirror=<HTTPS URL>`，仅影响 AndroidX/Android 工具组。默认 CI 使用官方源，不将个人代理或镜像写入公共配置；不关闭 TLS 校验。
-
-## 构建与图形调试
+未安装 SDK 且希望使用 CLI 的 Linux x86_64 开发者，显式执行：
 
 ```bash
-bash scripts/check.sh        # App / 测试 APK 编译、JVM 单测、lint、验证记录
-bash scripts/studio.sh       # 打开项目，执行 Gradle Sync 后运行或调试
+export JAVA_HOME=/absolute/path/to/jdk-17
+export SEEN_ANDROID_SDK=/absolute/path/to/android-sdk
+# 若当前 SDK 命令行工具要求比 17 更新的 Java，指定其运行时（可用 Studio 自带 JBR）
+export SEEN_SDK_JAVA_HOME=/absolute/path/to/android-studio/jbr
+bash scripts/setup.sh --install-sdk
 ```
 
-仅需打开 IDE 的 SDK 设置时用 `bash scripts/studio.sh --configure-sdk`。Preview 入口为 `app/src/debug/java/com/seen/film/ui/LibraryPreviews.kt`，含海报、时间、空状态与 200% 字号；渲染结果仍待实际确认。Preview 不替代保存、返回栈、系统选图与数据持久化测试。
+安装器使用固定官方压缩包与 SHA-256，按需下载；许可在终端由使用者阅读并接受，不静默同意。构建仍使用 JDK 17。也可以完全通过 Studio 安装，省去此步骤。
 
-直接使用 Gradle / adb 前，在同一终端运行 `source .tools/android-env.sh`。Debug APK 位于 `app/build/outputs/apk/debug/app-debug.apk`，包名 `com.seen.film.debug`。
+## 路径、配置与代理
 
-## 模拟器与设备测试
+脚本统一通过 `scripts/env.sh` 解析路径，不依赖旧机器生成的绝对路径文件：
+
+- JDK：`SEEN_JAVA_HOME` → `JAVA_HOME` → PATH 中 java 所属 JDK；要求完整 JDK 17。
+- SDK：`SEEN_ANDROID_SDK` → `ANDROID_HOME` → `ANDROID_SDK_ROOT` → `local.properties` → 项目 `.tools/android-sdk`。`ANDROID_HOME` 与旧变量 `ANDROID_SDK_ROOT` 不一致时明确停止。
+- 使用环境变量换 SDK 后执行 `setup.sh` 对齐 `local.properties`，否则标准 Gradle / Studio 仍可能使用旧路径。
+- Gradle 默认使用标准 `~/.gradle`；保留已有 `.tools/gradle-home` 的老工作区缓存。`GRADLE_USER_HOME` 可明确覆盖。CI 使用 Actions 的标准缓存。
+- 辅助脚本的 AVD 默认在 `.tools/android-avd`；Studio 从桌面启动时使用自己的 Device Manager 设备，两者可能不同。`ANDROID_AVD_HOME` / `ANDROID_USER_HOME` 可覆盖。
+- 大型 SDK/IDE 建议使用仓库外的共享安装；保留项目内 `.tools` 时可在 Studio Project 视图对该目录 Mark Directory as → Excluded，避免索引下载缓存。
+- `.tools/android-env.sh` 仅为兼容入口；新终端推荐 `source scripts/env.sh`。不要复制旧克隆的 local.properties、.tools、.idea 或 .gradle 到新机器。
+
+`setup.sh` 保留已有 `.idea/gradle.xml`；若曾手选其他 Gradle JDK，请在 Studio 中切换到 JDK 17 或 `GRADLE_LOCAL_JAVA_HOME`。`studio.sh` 是本机隔离配置的可选启动器，需要 `ANDROID_STUDIO_HOME`（默认 `.tools/android-studio`）；日常可直接用正常的 Studio 启动入口。
+
+代理由使用者显式配置，不从环境偷偷写入全局设置。Studio 设置 HTTP Proxy；Gradle 在当前 `GRADLE_USER_HOME` 的 `gradle.properties` 中设置 `systemProp.https.proxyHost` / `proxyPort`（及需要的 http 代理）。Wrapper 下载也需要可达代理。sdkmanager 安装器可读无认证 HTTP/SOCKS 环境代理；各工具的代理不是同一套设置。不要提交含代理凭据的文件，不关闭 TLS。
+
+默认源为 Google Maven、Maven Central 和插件门户。本机确需镜像可在用户 Gradle properties 设置 `seen.googleMavenMirror=https://...`，仅限制到 Android/AndroidX 组。CI 使用官方源。依赖 SHA-256 能检测内容变化，不替代首次来源审查。
+
+## 日常开发与 Preview
+
+在 Studio 完成 Gradle Sync，选择 `app` / `debug`；Run 用于正常启动，Debug 可断点。Preview 在 `app/src/debug/java/com/seen/film/ui/LibraryPreviews.kt`，包含海报、时间、空状态与 200% 字号。若文件在首次成功同步前已经打开，关闭该标签再重新打开，让 Studio 重新识别 Compose Split / Design 编辑器。可在 Settings → Editor → UI Tools 检查 Kotlin 的视图设置。Preview 是布局辅助；真实系统选图、保存、返回栈和持久化仍需设备验证。
+
+标准命令（可绕过所有辅助脚本）：
 
 ```bash
-bash scripts/emulator.sh --show    # 创建并打开专用 API 36 模拟器
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug
 ```
 
-专用 AVD 为 `Seen_API36`，Pixel 7 / Google APIs x86_64，端口 5556。首次运行下载缺失组件，不清空已有 AVD。需要 KVM；如明确接受较慢的软件模拟，可设置 `SEEN_EMULATOR_NO_ACCEL=1`。
+`bash scripts/check.sh` 运行相同任务、配置检查与环境预检，并在成功后输出源码/APK 哈希绑定的 `.tools/check-result.json`。不会安装 SDK、更新依赖保护或打开窗口。APK：`app/build/outputs/apk/debug/app-debug.apk`；报告：`app/build/reports/tests/testDebugUnitTest/` 与 `app/build/reports/lint-results-debug.html`。
 
-在另一终端、项目根目录执行：
+## 模拟器、安装与测试
+
+推荐从 Device Manager 创建 API 36 Google APIs 设备，按宿主机选架构（[官方设备说明](https://developer.android.com/studio/run/managing-avds)），启动后选中设备 Run。Windows 在系统启用支持的虚拟化后端；Linux 检查虚拟化和 `/dev/kvm` 权限，组变更后可能需要重新登录。构建不要求 KVM。
+
+Linux 专用 AVD 的可选流程：
 
 ```bash
-source .tools/android-env.sh
+# 仅首次安装组件，仍需阅读许可；不在启动脚本中自动下载
+bash scripts/install_android_sdk.sh --emulator
+bash scripts/emulator.sh --prepare   # 仅创建 Seen_API36，不清已有数据
+bash scripts/emulator.sh --show      # 前台运行，关闭窗口即可退出
+# 无窗口运行可用 --headless；另一个终端继续下列步骤
+source scripts/env.sh
 adb devices -l
+ANDROID_SERIAL=emulator-5556 bash scripts/run.sh
+```
+
+专用 AVD 是 Pixel 7 / API 36 / Google APIs x86_64，端口 5556；如被占用先检查已有设备，不杀未知进程。`--headless` 使用软件图形但 CPU 仍默认 KVM。无 KVM 可显式选择 `SEEN_EMULATOR_NO_ACCEL=1`，速度可能很慢，不作为默认方案。
+
+`run.sh` 要求明确 `ANDROID_SERIAL`，执行 assemble → `adb install -r` → 启动 Activity，不会自动选真机、卸载或清库。也可用原生命令：
+
+```bash
+adb -s emulator-5556 install -r app/build/outputs/apk/debug/app-debug.apk
+adb -s emulator-5556 shell am start -W -n com.seen.film.debug/com.seen.film.MainActivity
+ANDROID_SERIAL=emulator-5556 ./gradlew :app:connectedDebugAndroidTest
+# 或生成额外验证记录
 ANDROID_SERIAL=emulator-5556 bash scripts/check.sh --device
 ```
 
-真机需开启开发者选项和 USB 调试、接受 RSA 授权，并有设备访问权限。当前设备测试门槛为 API 36；多设备连接时以 `ANDROID_SERIAL` 明确选择隔离测试设备。Redmi K70 Ultra 的选图、键盘、手势区、TalkBack、大字号与覆盖安装仍需人工回归。
+设备测试含 Room/事务/重启、私有海报、草稿与完整观看界面流程，测试 Application 与数据隔离。使用专用模拟器：Gradle 为安装测试 APK 可能处理包状态，不要对真实个人数据实例运行集成测试。不同机器的 Debug 签名可能不同；签名冲突请选择隔离设备或匹配密钥，不能卸载真实实例。Redmi 真机的选图、手势区、TalkBack、大字号和覆盖升级需单独人工回归。
 
-完整 v0.1 自动验收使用：
+完整本地门槛 `bash scripts/verify-v0.1.sh` 串联构建与专用 API 36 测试，已有模拟器保留，自行启动的退出时关闭。要求组件和依赖保护已准备；不会隐式安装或修改锁。成功收集到 `.tools/v0.1.0/`。本地门槛不查询 GitHub、不要求 gh 登录；发布前可单独运行 `python3 scripts/git_preflight.py` 做只读连通性检查。CI/tag 属发布检查，不由本地测试成功代替。
+
+## 依赖与 CI
+
+依赖版本集中管理，普通构建只读取锁与校验文件。新增/升级依赖时显式生成，再审查差异与来源：
 
 ```bash
-bash scripts/verify-v0.1.sh
+source scripts/env.sh
+./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug --write-locks --write-verification-metadata sha256
 ```
 
-该脚本先执行构建检查；缺少锁文件或校验元数据时启用 Gradle 生成，再准备专用模拟器、运行设备测试、核对源码/APK 哈希并做 Git 预检，成功后收集到 `.tools/v0.1.0/`。生成的 `app/gradle.lockfile` 与 `gradle/verification-metadata.xml` 应审查依赖来源后提交。脚本不执行 tag 或发布；Git 预检失败也不能视作完整交付通过。手工先打开的专用模拟器会保留，脚本自行启动的模拟器会在结束时关闭。
+Studio 还会解析 Gradle 分发源码、库的 sources/Javadoc JAR 和 Kotlin 插件的 Gradle 专用源码变体，以及 AndroidX 源码变体中的 samples JAR。升级依赖后继续显式生成这些 IDE 制品校验，再实际执行一次 Studio Sync / Preview，避免“命令行通过但 IDE 被校验拦住”：
 
-设备测试使用隔离测试 Application 和临时数据库。不得卸载或清除承载真实记录的应用；不同机器/CI 的 Debug 签名可能不同，签名冲突不能靠卸载真实实例解决。
+```bash
+./gradlew seenCaptureIdeDependencies --init-script scripts/ide-dependencies.init.gradle --write-verification-metadata sha256
+```
 
-## 日志与故障定位
+此任务按当前依赖图解析源码，只在依赖维护时运行，不嵌入日常 setup/check。依赖没有发布源码时不影响业务编译。
 
-| 内容 | 位置 |
+提交 `app/gradle.lockfile`、`settings-gradle.lockfile`、其他根锁文件（若生成）、`gradle/verification-metadata.xml`；不手写假哈希，不为了构建通过添加任意可信通配符。校验失败先核对来源，遵循 [Gradle 校验说明](https://docs.gradle.org/current/userguide/dependency_verification.html)。
+
+Actions 的 build job 执行环境脚本回归、构建/单测/lint；API 36 job 依赖 build，执行集成测试，分别上传报告。使用 JDK 17、标准 Wrapper 与默认官方依赖源。远端是否通过以实际 workflow 结果为准。
+
+## 排障与日志
+
+| 失败阶段 | 检查方式 |
 | --- | --- |
-| 环境准备 | `.tools/setup.log` |
-| 最近构建 / 设备测试 | `.tools/build-latest.log` / `.tools/device-tests-latest.log` |
-| 完整验收 / 模拟器 | `.tools/v0.1-verification.log` / `.tools/emulator.log` |
-| 构建报告 | `app/build/reports/` |
-| 构建 / 设备验证记录 | `.tools/check-result.json` / `.tools/device-result.json` |
-| 依赖诊断 | `.tools/dependency-diagnosis.log` |
+| 环境预检 | `bash scripts/doctor.sh`，查看实际解析路径；JDK 需有 javac |
+| Sync / 下载 | 先查原始网络/TLS 错误、代理与源；`bash scripts/diagnose-dependencies.sh` 输出 classpath 诊断 |
+| 编译 | 看失败 task 和源码行；不要把编译错误归因网络 |
+| lint | `app/build/reports/lint-results-debug.html` |
+| 模拟器 | `adb devices -l`、SDK Emulator 加速检查、KVM/宿主权限；完整验收日志 `.tools/emulator.log` |
+| 设备测试 | `app/build/reports/androidTests/connected/` 与 `.tools/device-tests-latest.log` |
+| 安装运行 | 明确 serial；检查签名、磁盘及 `adb -s SERIAL logcat` |
 
-依赖解析失败时运行 `bash scripts/diagnose-dependencies.sh`，查看原始异常和编译器 classpath；诊断通过不代表构建通过。按实际报错区分下载、编译和 lint 问题，不默认清缓存或升级版本。
-
-受限会话的 socket、网络或 X11 失败不能直接归因为宿主机故障；图形调试与完整验收应在具备相应权限的普通终端运行。
-
-## 工程维护
-
-- 单 app 模块、单 Activity，手动依赖注入；UI → ViewModel → Repository，Room Flow 提供已保存数据。
-- 版本统一在 `gradle/libs.versions.toml` 管理；工具链升级与业务改动分别验证。
-- 保留 `app/schemas/` 的历史版本；数据库结构变化须显式迁移，不允许 destructive migration。
-- CI 使用同一 `check.sh`，先构建、单测与 lint，再执行 API 36 集成测试；成功构建才上传 APK。远端实际状态见验证日志。
-- 密钥、本机设置、构建产物、备份和真实记录不入库。签名和交付见 [版本约定](versioning.md)。
+构建日志 `.tools/build-latest.log`，验证记录 `.tools/check-result.json` / `device-result.json`，完整验收 `.tools/v0.1-verification.log`。报告来自实际执行；配置预检和依赖诊断不代表 App 成功运行。受限会话的 socket、X11 或 KVM 可见性与宿主机不同，应在正常终端复核，不默认清缓存、删 AVD 或重装系统。

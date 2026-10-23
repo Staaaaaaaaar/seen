@@ -22,6 +22,8 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
+      - name: Test development helpers
+        run: python3 -m unittest discover -s scripts/tests -v
       - name: Install SDK
         run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
       - name: Build, unit tests and lint

@@ -2,7 +2,8 @@
 # Official CLI-only Android SDK installation for Seen on Linux x86_64.
 set -euo pipefail
 seen_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-seen_sdk="${SEEN_ANDROID_SDK:-$seen_root/.tools/android-sdk}"
+source "$seen_root/scripts/env.sh"
+seen_sdk="$ANDROID_HOME"
 case "${1:-}" in
     ''|--emulator) ;;
     *) echo 'Usage: install_android_sdk.sh [--emulator]' >&2; exit 2 ;;
@@ -11,7 +12,7 @@ seen_packages=('platform-tools' 'platforms;android-36' 'build-tools;35.0.0')
 if [[ "${1:-}" == --emulator ]]; then
     seen_packages+=('emulator' 'system-images;android-36;google_apis;x86_64')
 fi
-seen_java_home="${SEEN_JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
+seen_java_home="$JAVA_HOME"
 seen_cli_url='https://dl.google.com/android/repository/commandlinetools-linux-15859902_latest.zip'
 # SHA-256 from https://developer.android.com/studio (checked 2026-10-23).
 seen_cli_sha='4e4c464f145a7512b57d088ac6c278c03c9eea610886b35a5e0804e74eedf583'
@@ -27,10 +28,7 @@ seen_studio="${ANDROID_STUDIO_HOME:-$seen_root/.tools/android-studio}"
 if [[ -z "${SEEN_SDK_JAVA_HOME:-}" && -x "$seen_studio/jbr/bin/java" ]]; then
     seen_sdk_java_home="$seen_studio/jbr"
 fi
-export ANDROID_USER_HOME="$seen_root/.tools/android-user"
-export ANDROID_AVD_HOME="$seen_root/.tools/android-avd"
-export GRADLE_USER_HOME="$seen_root/.tools/gradle-home"
-mkdir -p "$ANDROID_USER_HOME" "$ANDROID_AVD_HOME" "$GRADLE_USER_HOME"
+mkdir -p "$ANDROID_USER_HOME" "$ANDROID_AVD_HOME"
 export PATH="$JAVA_HOME/bin:$PATH"
 java -version
 # Java SDK Manager does not automatically use the shell's HTTP_PROXY variables.
@@ -107,14 +105,7 @@ lines = [line for line in lines if not line.lstrip().startswith(('sdk.dir=', 'sd
 value = str(sdk).replace('\\', '\\\\').replace(' ', '\\ ')
 local.write_text('\n'.join(lines + ['sdk.dir=' + value]) + '\n')
 PY
-{
-    printf 'export JAVA_HOME=%q\n' "$JAVA_HOME"
-    printf 'export ANDROID_HOME=%q\n' "$ANDROID_HOME"
-    printf 'export ANDROID_USER_HOME=%q\n' "$ANDROID_USER_HOME"
-    printf 'export ANDROID_AVD_HOME=%q\n' "$ANDROID_AVD_HOME"
-    printf 'export GRADLE_USER_HOME=%q\n' "$GRADLE_USER_HOME"
-    printf 'export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"\n'
-} > "$seen_root/.tools/android-env.sh"
+printf 'source %q\n' "$seen_root/scripts/env.sh" > "$seen_root/.tools/android-env.sh"
 echo "SDK installed and verified: $seen_sdk"
 echo 'Project local.properties configured. Next build:'
 echo "  cd '$seen_root'"

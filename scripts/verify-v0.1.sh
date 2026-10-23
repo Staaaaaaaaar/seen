@@ -29,11 +29,12 @@ seen_failure() {
 trap seen_failure ERR
 echo '=== 1/3：构建、单测、lint 与测试 APK 编译 ==='
 if [[ ! -f app/gradle.lockfile || ! -f gradle/verification-metadata.xml ]]; then
-    SEEN_CAPTURE_DEPENDENCIES=1 bash scripts/check.sh
-else
-    bash scripts/check.sh
+    echo '缺少依赖锁/校验元数据。请先显式生成、审查，再执行验收。' >&2
+    echo 'source scripts/env.sh; ./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug --write-locks --write-verification-metadata sha256' >&2
+    exit 1
 fi
-source .tools/android-env.sh
+bash scripts/check.sh
+source scripts/env.sh
 echo '=== 2/3：准备 Android 16 / API 36 专用模拟器 ==='
 bash scripts/emulator.sh --prepare
 export ANDROID_SERIAL=emulator-5556
@@ -79,8 +80,7 @@ for name in ['check-result','device-result']:
 BUNDLE
 mkdir -p .tools/v0.1.0
 cp app/build/outputs/apk/debug/app-debug.apk .tools/v0.1.0/seen-v0.1.0-debug.apk
-python3 scripts/git_preflight.py
-cp .tools/check-result.json .tools/device-result.json .tools/git-preflight.json .tools/v0.1.0/
+cp .tools/check-result.json .tools/device-result.json .tools/v0.1.0/
 (cd .tools/v0.1.0 && sha256sum seen-v0.1.0-debug.apk > SHA256SUMS)
 echo '本地自动化门槛已通过。交付文件位于 .tools/v0.1.0/。'
 echo 'GitHub CI、版本 tag 与后续 Redmi 真机验收状态仍需分别核对。'

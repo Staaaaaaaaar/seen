@@ -9,16 +9,23 @@ case "${1:-}" in
     --device) seen_tasks=(:app:connectedDebugAndroidTest); seen_log_name=device-tests-latest.log ;;
     *) echo '用法：bash scripts/check.sh [--device]' >&2; exit 2 ;;
 esac
-if [[ -f .tools/android-env.sh ]]; then source .tools/android-env.sh; fi
 mkdir -p .tools
-seen_extra=()
-if [[ "${SEEN_CAPTURE_DEPENDENCIES:-0}" == 1 ]]; then
-    seen_extra=(--write-locks --write-verification-metadata sha256)
-fi
 if [[ ${1:-} == --device ]]; then rm -f .tools/device-result.json; else rm -f .tools/check-result.json; fi
+source scripts/env.sh
 {
     python3 scripts/check_project.py
-    if ./gradlew "${seen_tasks[@]}" "${seen_extra[@]}" --console=plain --stacktrace; then :; else exit "$?"; fi
+    bash scripts/doctor.sh
+    if [[ ${1:-} == --device ]]; then
+        if [[ -z "${ANDROID_SERIAL:-}" ]]; then
+            mapfile -t seen_devices < <(adb devices | awk 'NR > 1 && $2 == "device" {print $1}')
+            [[ ${#seen_devices[@]} == 1 ]] || { echo '请选择一个隔离 API 36 设备并设置 ANDROID_SERIAL。' >&2; exit 2; }
+            export ANDROID_SERIAL="${seen_devices[0]}"
+        fi
+        [[ "$(adb -s "$ANDROID_SERIAL" shell getprop ro.build.version.sdk | tr -d '\r')" == 36 ]] || {
+            echo '设备验收要求 API 36；未执行测试。' >&2; exit 2;
+        }
+    fi
+    if ./gradlew "${seen_tasks[@]}" --console=plain --stacktrace; then :; else exit "$?"; fi
     if [[ ${1:-} == --device ]]; then python3 scripts/verification.py --device; else python3 scripts/verification.py; fi
     if [[ ${1:-} != --device ]]; then
         [[ -f app/build/outputs/apk/debug/app-debug.apk ]]

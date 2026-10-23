@@ -1,6 +1,6 @@
 # 开发规划
 
-本页汇总已确认的版本范围与未完成门槛，不代表启动新开发。当前停留在 **v0.1.0 待验收候选**；每版完成后暂停，不自动进入下一版。实际执行结果只记在 [验证日志](v0.1.0-validation.md)，发布规则见 [版本约定](versioning.md)。
+当前交付版本为 **v0.1.0**；每版完成后暂停，不自动进入下一版。实际执行结果见 [验证日志](v0.1.0-validation.md)，提交、CI 与 tag 的交付顺序见 [发布约定](versioning.md)。
 
 ## 版本范围
 
@@ -13,14 +13,15 @@
 
 电影主页与详情已从原 v0.2 前移至 v0.1，本地海报也属于 v0.1；联网仍在 v0.2。备份草案见 [产品与设计](design-review.md)。不增加社交、推荐流、广告、影视播放或云同步。
 
-## v0.1 剩余门槛
+## v0.1 验收与交付状态
 
-- [ ] 最新候选通过完整 `assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`、`lintDebug`，保存源码/APK 哈希与报告。
-- [ ] 生成并审查依赖锁、SHA-256 校验元数据，确认干净环境和默认官方源可构建。
-- [ ] Studio 使用 JDK 17 同步，四类 Preview 实际可渲染；核对本机路径和工具缓存排除设置。
-- [ ] API 36 专用模拟器自动化通过，验证重看、事务、草稿、私有海报与界面流程。
-- [ ] API 36 安装启动与人工回归完成；Redmi 真机的选图、系统布局、无障碍和升级结果单独记录，不视作已通过。
-- [ ] 在有效可写仓库核对远端历史，提交工程及生成文件，确认同一提交的远端 CI 两个 job 通过。
-- [ ] 按发布检查清单交付已验证 Debug APK、记录和 annotated `v0.1.0` tag，然后暂停。
+- [x] 最新候选通过完整 `assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`、`lintDebug`，保存源码/APK 哈希与报告。
+- [x] 由 Gradle 生成并审查依赖锁、SHA-256 校验元数据，本地普通校验构建通过；干净环境与官方源由远端 CI 另验。
+- [x] Studio 使用 JDK 17 同步成功，四类 Preview 实际可渲染；本机路径已核对，缓存排除操作已写入开发指南。
+- [x] API 36 专用模拟器自动化通过，验证重看、事务、草稿、私有海报与界面流程。
+- [x] API 36 安装启动、7 项设备测试及 200% 字号空库检查完成；系统选图提供器、TalkBack、真实旧库升级和 Redmi 真机单独记录，不视作已通过。
+- [ ] 远端 CI：最终提交的 build / API 36 两个 job 成功后才创建 tag；实际结果见 [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml)。
+- [x] 本地交付已验证 Debug APK、校验和与验证记录：`.tools/v0.1.0/`。
+- [ ] annotated `v0.1.0` tag：按发布清单创建并推送，核对远端指向与本地一致。
 
 当前不新增框架或拆分模块，不因下载故障自动升降依赖版本。后续每版交付应包含实际变更、测试结果、APK 路径/校验和、设备记录与限制。
