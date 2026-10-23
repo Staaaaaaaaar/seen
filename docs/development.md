@@ -124,7 +124,7 @@ Studio 还会解析 Gradle 分发源码、库的 sources/Javadoc JAR 和 Kotlin 
 
 提交 `app/gradle.lockfile`、`settings-gradle.lockfile`、其他根锁文件（若生成）、`gradle/verification-metadata.xml`；不手写假哈希，不为了构建通过添加任意可信通配符。校验失败先核对来源，遵循 [Gradle 校验说明](https://docs.gradle.org/current/userguide/dependency_verification.html)。
 
-Actions 的 build job 执行环境脚本回归、构建/单测/lint；API 36 job 依赖 build，执行集成测试，分别上传报告。使用 JDK 17、标准 Wrapper 与默认官方依赖源。远端是否通过以实际 workflow 结果为准。
+Actions 的 build job 执行环境脚本回归、构建/单测/lint；API 36 job 依赖 build，执行集成测试，分别上传报告。使用 JDK 17、标准 Wrapper 与默认官方依赖源；SDK action 显式指定所需组件，不依赖其默认的旧 `tools` 包。远端是否通过以实际 workflow 结果为准。
 
 ## 排障与日志
 
