@@ -1,0 +1,74 @@
+import org.gradle.api.GradleException
+import org.gradle.api.artifacts.result.UnresolvedDependencyResult
+
+// Print failures without relying on Gradle's broken multi-cause formatter.
+// This init script is diagnostic only: it never changes versions or repositories.
+gradle.projectsEvaluated {
+    def target = gradle.rootProject.findProject(':app')
+    if (target == null) throw new GradleException('Missing :app project')
+    target.tasks.register('seenDiagnoseDependencies') {
+        group = 'verification'
+        description = 'Describe unresolved dependencies safely, without building the application'
+        doLast {
+            def seen = Collections.newSetFromMap(new IdentityHashMap())
+            Closure describe
+            describe = { Throwable failure, String indent ->
+                if (failure == null || !seen.add(failure)) return
+                println("${indent}TYPE: ${failure.getClass().getName()}")
+                try {
+                    def message = failure.getMessage()
+                    if (message != null) println("${indent}DETAIL: ${message}")
+                } catch (Throwable ignored) {
+                    println("${indent}DETAIL: [Gradle could not format this exception; inspecting its causes]")
+                }
+                try {
+                    if (failure.metaClass.respondsTo(failure, 'getSelector')) {
+                        println("${indent}SELECTOR: ${failure.getSelector().displayName}")
+                    }
+                } catch (Throwable ignored) { }
+                if (failure instanceof org.gradle.internal.exceptions.MultiCauseException) {
+                    failure.getCauses().each { describe(it, indent + '  ') }
+                } else {
+                    describe(failure.getCause(), indent + '  ')
+                }
+            }
+            // Realize these tasks so AGP/KSP creates their lazy processor configurations.
+            ['javaPreCompileDebug', 'kspDebugKotlin'].each { target.tasks.findByName(it) }
+            def names = ['debugRuntimeClasspath', 'debugCompileClasspath', 'debugUnitTestRuntimeClasspath']
+            names.addAll(target.configurations.findAll {
+                it.canBeResolved && it.name.toLowerCase().contains('ksp') &&
+                    it.name.toLowerCase().contains('debug') &&
+                    !it.name.toLowerCase().contains('androidtest') &&
+                    !it.name.toLowerCase().contains('unittest')
+            }.collect { it.name })
+            names.unique().each { name ->
+                println("\n=== ${name} ===")
+                def configuration = target.configurations.findByName(name)
+                if (configuration == null || !configuration.canBeResolved) {
+                    println('Configuration is not available for resolution; skipped.')
+                    return
+                }
+                int count = 0
+                try {
+                    configuration.incoming.resolutionResult.allDependencies.each { dependency ->
+                        if (dependency instanceof UnresolvedDependencyResult) {
+                            count++
+                            println("UNRESOLVED: ${dependency.attempted.displayName}")
+                            println("REQUESTED BY: ${dependency.from.id.displayName}")
+                            describe(dependency.failure, '  ')
+                        }
+                    }
+                    println("Unresolved graph edges: ${count}")
+                    if (count == 0) {
+                        def failures = configuration.incoming.artifactView { lenient = true }.artifacts.failures
+                        failures.each { describe(it, '  ') }
+                        println("Artifact failures: ${failures.size()}")
+                    }
+                } catch (Throwable failure) {
+                    describe(failure, '  ')
+                }
+            }
+            println('\nDiagnostic completed. This does NOT mean the Android build passed.')
+        }
+    }
+}
