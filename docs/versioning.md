@@ -11,12 +11,12 @@
 | v0.3.0 | 同上，增加备份恢复和迁移质量 |
 | v1.0.0 | 真机回归完成的签名 Release APK、校验和、CHANGELOG、tag、正式 GitHub Release |
 
-每版源码、构建结果和人工验收完成后才打 tag。不能把版本号写进 Gradle 就视作该版已发布。当前本地构建、单测、lint、模拟器自动化、Studio Sync 与 Preview 已验证。交付顺序：提交并推送最终源码 → 确认该提交的远端 CI 的构建与 API 36 测试全部成功 → 创建并推送 annotated tag → 核对远端 tag 与对应提交。
+每版源码、构建结果和人工验收完成后才打 tag。不能把版本号写进 Gradle 就视作该版已发布。当前本地构建、单测、lint、模拟器自动化、Studio Sync 与 Preview 已验证。交付顺序：提交并推送最终源码 → 确认该提交的远端构建/单测/lint CI 成功，并核对本地 API 36 设备验收记录 → 创建并推送 annotated tag → 核对远端 tag 与对应提交。
 
 ## v0.1 tag 前检查
 
 - [ ] 有效、可写的 Git 仓库，取得本次提交/推送/tag 授权后核对 `origin` 和远端已有历史；不能在未知远端上强推或创建无关历史。
-- [ ] 最终源码通过 `assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`、`lintDebug`，同一提交的 GitHub CI 成功。
+- [ ] 最终源码通过 `assembleDebug`、`assembleDebugAndroidTest`、`testDebugUnitTest`、`lintDebug`，同一提交的 GitHub 基础 CI 成功（不运行云模拟器）。
 - [ ] API 36 模拟器 `connectedDebugAndroidTest` 通过。用户已选择先用模拟器验证，Redmi 真机验收后续另记；未测项目不标为已通过。
 - [ ] Room version 1 schema、标准 Gradle Wrapper、Gradle 生成的依赖锁文件与校验元数据已审查并提交。
 - [ ] README、CHANGELOG 和实际验证记录同步；APK 路径/校验和可复查。

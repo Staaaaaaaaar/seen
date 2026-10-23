@@ -136,7 +136,10 @@ Studio 还会解析 Gradle 分发源码、库的 sources/Javadoc JAR 和 Kotlin 
 
 提交 `app/gradle.lockfile`、`settings-gradle.lockfile`、其他根锁文件（若生成）、`gradle/verification-metadata.xml`；不手写假哈希，不为了构建通过添加任意可信通配符。校验失败先核对来源，遵循 [Gradle 校验说明](https://docs.gradle.org/current/userguide/dependency_verification.html)。
 
-Actions 只有一个顺序 job：环境脚本回归 → 构建/单测/lint → API 36 集成测试 → 上传已验证 APK 与两份记录。SDK/JDK/Gradle 只准备一次，设备测试复用前面编译的 APK；失败仍收集报告。模拟器显式使用 2 GB userdata、180 秒启动上限和 `-no-metrics`，启动前输出实际磁盘余量。使用 JDK 17、标准 Wrapper 与默认官方依赖源；SDK action 显式指定所需组件，不依赖其默认的旧 `tools` 包。远端是否通过以实际 workflow 结果为准。
+Actions 只有一个 job，执行环境脚本回归、App/测试 APK 编译、JVM 单测与 lint，成功后上传 Debug APK 和构建记录，失败时保留报告。JDK 17、Wrapper 与 SDK 组件均显式配置，使用默认官方依赖源，不依赖 SDK action 默认的旧 `tools` 包。
+
+**云模拟器不属于每次 push / PR 的强制检查。** 当前个人离线 MVP 的设备验收放在交付前本地执行 `bash scripts/verify-v0.1.sh`：真实 API 36 模拟器上的 7 项集成测试仍须通过，并与最终 commit/source/APK 记录对应。联网下载、磁盘余量和云端虚拟化不再影响每次提交的基础检查。正式交付需要“远端基础 CI 通过 + 本地设备验收通过”，两类证据分别记录，不宣称未执行的云端设备测试通过。
+
 
 ## 排障与日志
 

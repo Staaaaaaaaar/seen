@@ -24,7 +24,7 @@
 
 远端交付使用可直接核对的记录，避免在源码中维护“本提交已完成 CI”的自指状态：
 
-- [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml)：最终 tag 对应提交的顺序工作流中，构建/单测/lint 与 API 36 测试均须成功。
+- [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml)：最终 tag 对应提交的基础 CI（App/测试 APK 编译、JVM 单测、lint）须成功；云模拟器不作为强制门槛，本地 API 36 设备验收另有真实记录。
 - [版本 tag](https://github.com/Staaaaaaaaar/seen/tags)：`v0.1.0` 使用 annotated tag，远端 peeled commit 须与已验证提交一致。
 
 当前不新增框架或拆分模块，不因下载故障自动升降依赖版本。后续每版交付应包含实际变更、测试结果、APK 路径/校验和、设备记录与限制。
