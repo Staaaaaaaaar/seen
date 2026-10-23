@@ -1,0 +1,293 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1350" height="2040" viewBox="0 0 1350 2040"><title>Seen 第二稿：电影主体，单一主页</title><desc>无底部导航。海报视图、电影详情、添加观看、时间视图、添加电影和设置。海报为构图示意，并非原版海报。</desc><rect width="100%" height="100%" fill="#E8E9E7"/>
+<text x="42" y="27" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="38" font-weight="600" fill="#202124">Seen</text>
+<text x="42" y="87" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="23" font-weight="600" fill="#202124">第二稿  /  电影是主体</text>
+<text x="42" y="126" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="15" font-weight="400" fill="#64676C">单一电影主页 · 无底部导航 · 海报与片名优先 · 感受放在电影详情</text>
+<text x="42" y="183" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#64676C">01  电影主页 / 海报视图</text>
+<rect x="42" y="212" width="390" height="844" rx="24" fill="#F7F7F5" stroke="#CFD1CD"/>
+<text x="66" y="227" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#202124">9:41</text>
+<text x="334" y="227" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="11" font-weight="400" fill="#64676C">LTE 90%</text>
+<rect x="187" y="1038" width="100" height="3" rx="2" fill="#202124"/>
+<text x="62" y="266" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="26" font-weight="600" fill="#202124">Seen</text>
+<circle cx="298" cy="279" r="7" fill="none" stroke="#202124" stroke-width="2"/>
+<path d="M304 285 L311 292" stroke="#202124" stroke-width="2" fill="none"/>
+<path d="M348 272 L348 292" stroke="#202124" stroke-width="2" fill="none"/>
+<path d="M338 282 L358 282" stroke="#202124" stroke-width="2" fill="none"/>
+<ellipse cx="389.5" cy="281.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="397.5" cy="281.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="405.5" cy="281.5" rx="1.5" ry="1.5" fill="#202124"/>
+<text x="62" y="323" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="20" font-weight="600" fill="#202124">我的电影</text>
+<text x="317" y="328" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">4 部电影</text>
+<rect x="62" y="364" width="126" height="30" rx="8" fill="#E7E8E5"/>
+<rect x="64" y="366" width="60" height="26" rx="6" fill="#FFFFFF"/>
+<text x="78" y="372" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#202124">海报</text>
+<text x="140" y="372" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">时间</text>
+<text x="320" y="372" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">最近观看</text>
+<path d="M387 377 L392 382" stroke="#64676C" stroke-width="1" fill="none"/>
+<path d="M392 382 L397 377" stroke="#64676C" stroke-width="1" fill="none"/>
+<rect x="62" y="407" width="167" height="250" rx="8" fill="#173E43"/>
+<ellipse cx="183.075" cy="457.875" rx="20.875" ry="20.875" fill="#F3D991"/>
+<rect x="72.02" y="479.5" width="9.185" height="177.5" rx="0" fill="#2D6263"/>
+<rect x="108.76" y="534.5" width="9.185" height="122.5" rx="0" fill="#2D6263"/>
+<rect x="142.16" y="504.5" width="9.185" height="152.5" rx="0" fill="#2D6263"/>
+<rect x="198.94" y="462.0" width="9.185" height="195.0" rx="0" fill="#2D6263"/>
+<polygon points="62,592.0 229,522.0 229,657 62,657" fill="#769C8B"/>
+<polygon points="62,622.0 229,557.0 229,657 62,657" fill="#D6D1AE"/>
+<text x="72" y="422" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#FFF9DE">PERFECT</text>
+<text x="72" y="443" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#FFF9DE">DAYS</text>
+<text x="72" y="637" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="7" font-weight="400" fill="#FFF9DE">COMPOSITION STUDY</text>
+<text x="62" y="669" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#202124">完美的日子</text>
+<text x="62" y="696" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2023    ★ 4.5    · 2 次</text>
+<rect x="245" y="407" width="167" height="250" rx="8" fill="#7A2329"/>
+<rect x="258.36" y="407" width="36.74" height="250" rx="0" fill="#9E3E3A"/>
+<rect x="351.88" y="407" width="30.06" height="250" rx="0" fill="#C76B4D"/>
+<polygon points="291.76,487.0 358.56,437.0 395.3,594.5 325.15999999999997,642.0" fill="#24252B"/>
+<ellipse cx="324.32500000000005" cy="495.355" rx="10.855" ry="10.855" fill="#E3A96F"/>
+<text x="255" y="422" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#FCE4C4">IN THE MOOD</text>
+<text x="255" y="443" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#FCE4C4">FOR LOVE</text>
+<text x="255" y="637" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="7" font-weight="400" fill="#FCE4C4">COMPOSITION STUDY</text>
+<text x="245" y="669" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#202124">花样年华</text>
+<text x="245" y="696" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2000    ★ 5.0    · 2 次</text>
+<rect x="62" y="718" width="167" height="250" rx="8" fill="#E6AE86"/>
+<ellipse cx="188.92" cy="787.21" rx="21.71" ry="21.71" fill="#F3DBAD"/>
+<rect x="62" y="858.0" width="167" height="110.0" rx="0" fill="#5A91A1"/>
+<rect x="62" y="888.0" width="167" height="80.0" rx="0" fill="#346C80"/>
+<ellipse cx="107.09" cy="856.35" rx="8.35" ry="8.35" fill="#233B4B"/>
+<rect x="96.74000000000001" y="868.0" width="21.71" height="42.5" rx="2" fill="#263E4D"/>
+<ellipse cx="148.84" cy="856.35" rx="8.35" ry="8.35" fill="#233B4B"/>
+<rect x="138.49" y="868.0" width="21.71" height="42.5" rx="2" fill="#263E4D"/>
+<text x="72" y="733" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#FFEFDB">AFTERSUN</text>
+<text x="72" y="948" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="7" font-weight="400" fill="#FFEFDB">COMPOSITION STUDY</text>
+<text x="62" y="980" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#202124">晒后假日</text>
+<text x="62" y="1007" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2022    ★ 4.5</text>
+<rect x="245" y="718" width="167" height="250" rx="8" fill="#9CC5CE"/>
+<rect x="245" y="863.0" width="167" height="105.0" rx="0" fill="#467A8A"/>
+<polygon points="245,888.0 328.5,843.0 412,878.0 412,968 245,968" fill="#B1BC83"/>
+<ellipse cx="276.3125" cy="894.2625" rx="6.2625" ry="6.2625" fill="#3E4846"/>
+<rect x="269.05" y="900.5" width="15.03" height="25.0" rx="2" fill="#F0E3CD"/>
+<ellipse cx="306.3725" cy="894.2625" rx="6.2625" ry="6.2625" fill="#3E4846"/>
+<rect x="299.11" y="900.5" width="15.03" height="25.0" rx="2" fill="#F0E3CD"/>
+<ellipse cx="336.4325" cy="894.2625" rx="6.2625" ry="6.2625" fill="#3E4846"/>
+<rect x="329.17" y="900.5" width="15.03" height="25.0" rx="2" fill="#F0E3CD"/>
+<ellipse cx="366.4925" cy="894.2625" rx="6.2625" ry="6.2625" fill="#3E4846"/>
+<rect x="359.23" y="900.5" width="15.03" height="25.0" rx="2" fill="#F0E3CD"/>
+<text x="255" y="733" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#163F51">OUR LITTLE</text>
+<text x="255" y="754" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#163F51">SISTER</text>
+<text x="255" y="948" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="7" font-weight="400" fill="#163F51">COMPOSITION STUDY</text>
+<text x="245" y="980" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#202124">海街日记</text>
+<text x="245" y="1007" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2015    ★ 4.0</text>
+<text x="480" y="183" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#64676C">02  电影详情 / 资料与观看历史</text>
+<rect x="480" y="212" width="390" height="844" rx="24" fill="#F7F7F5" stroke="#CFD1CD"/>
+<text x="504" y="227" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#202124">9:41</text>
+<text x="772" y="227" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="11" font-weight="400" fill="#64676C">LTE 90%</text>
+<rect x="625" y="1038" width="100" height="3" rx="2" fill="#202124"/>
+<path d="M516 273 L507 282" stroke="#202124" stroke-width="2" fill="none"/>
+<path d="M507 282 L516 291" stroke="#202124" stroke-width="2" fill="none"/>
+<text x="542" y="271" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="17" font-weight="600" fill="#202124">电影详情</text>
+<ellipse cx="825.5" cy="281.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="833.5" cy="281.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="841.5" cy="281.5" rx="1.5" ry="1.5" fill="#202124"/>
+<rect x="500" y="321" width="124" height="186" rx="8" fill="#173E43"/>
+<ellipse cx="589.9" cy="358.82" rx="15.5" ry="15.5" fill="#F3D991"/>
+<rect x="507.44" y="374.94" width="6.82" height="132.06" rx="0" fill="#2D6263"/>
+<rect x="534.72" y="415.86" width="6.82" height="91.14" rx="0" fill="#2D6263"/>
+<rect x="559.52" y="393.54" width="6.82" height="113.46" rx="0" fill="#2D6263"/>
+<rect x="601.68" y="361.92" width="6.82" height="145.08" rx="0" fill="#2D6263"/>
+<polygon points="500,458.64 624,406.56 624,507 500,507" fill="#769C8B"/>
+<polygon points="500,480.96000000000004 624,432.6 624,507 500,507" fill="#D6D1AE"/>
+<text x="510" y="336" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#FFF9DE">PERFECT</text>
+<text x="510" y="353" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#FFF9DE">DAYS</text>
+<text x="510" y="487" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="7" font-weight="400" fill="#FFF9DE">COMPOSITION STUDY</text>
+<text x="642" y="327" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="23" font-weight="600" fill="#202124">完美的日子</text>
+<text x="642" y="365" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">Perfect Days</text>
+<text x="642" y="404" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2023 · 日本 / 德国</text>
+<text x="642" y="431" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">文姆·文德斯</text>
+<text x="642" y="464" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#202124">看过 2 次</text>
+<rect x="500" y="533" width="350" height="48" rx="12" fill="#202124"/>
+<text x="518" y="546" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="15" font-weight="600" fill="#FFFFFF">＋ 再看一次</text>
+<text x="500" y="614" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="18" font-weight="600" fill="#202124">观看记录</text>
+<text x="797" y="619" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2 次</text>
+<rect x="500" y="655" width="350" height="190" rx="12" fill="#FFFFFF"/>
+<text x="516" y="673" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="15" font-weight="600" fill="#202124">2026.10.22</text>
+<text x="746" y="673" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="400" fill="#202124">★ 4.5</text>
+<ellipse cx="811.5" cy="679.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="819.5" cy="679.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="827.5" cy="679.5" rx="1.5" ry="1.5" fill="#202124"/>
+<text x="516" y="704" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">家里 · 20:30</text>
+<path d="M516 735 L834 735" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<text x="516" y="752" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">感受</text>
+<text x="516" y="780" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="400" fill="#202124">电影结束后，想走路回家。</text>
+<text x="516" y="805" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="400" fill="#202124">那些很小的日常，也很好。</text>
+<rect x="500" y="862" width="350" height="99" rx="12" fill="#FFFFFF"/>
+<text x="516" y="880" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="15" font-weight="600" fill="#202124">2025.05.18</text>
+<text x="746" y="880" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="400" fill="#202124">★ 4.0</text>
+<ellipse cx="811.5" cy="886.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="819.5" cy="886.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="827.5" cy="886.5" rx="1.5" ry="1.5" fill="#202124"/>
+<text x="516" y="913" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">电影院 · 第 1 次观看</text>
+<text x="918" y="183" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#64676C">03  添加观看 / 感受可选</text>
+<rect x="918" y="212" width="390" height="844" rx="24" fill="#F7F7F5" stroke="#CFD1CD"/>
+<text x="942" y="227" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#202124">9:41</text>
+<text x="1210" y="227" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="11" font-weight="400" fill="#64676C">LTE 90%</text>
+<rect x="1063" y="1038" width="100" height="3" rx="2" fill="#202124"/>
+<path d="M954 273 L945 282" stroke="#202124" stroke-width="2" fill="none"/>
+<path d="M945 282 L954 291" stroke="#202124" stroke-width="2" fill="none"/>
+<text x="980" y="271" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="17" font-weight="600" fill="#202124">添加观看</text>
+<text x="1246" y="273" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#202124">保存</text>
+<rect x="938" y="323" width="56" height="84" rx="8" fill="#173E43"/>
+<ellipse cx="978.6" cy="340.08" rx="7.0" ry="7.0" fill="#F3D991"/>
+<rect x="941.36" y="347.36" width="3.08" height="59.64" rx="0" fill="#2D6263"/>
+<rect x="953.68" y="365.84000000000003" width="3.08" height="41.16" rx="0" fill="#2D6263"/>
+<rect x="964.88" y="355.76" width="3.08" height="51.24" rx="0" fill="#2D6263"/>
+<rect x="983.92" y="341.48" width="3.08" height="65.52" rx="0" fill="#2D6263"/>
+<polygon points="938,385.15999999999997 994,361.64 994,407 938,407" fill="#769C8B"/>
+<polygon points="938,395.24 994,373.4 994,407 938,407" fill="#D6D1AE"/>
+<text x="1011" y="333" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="18" font-weight="600" fill="#202124">完美的日子</text>
+<text x="1011" y="366" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2023 · Perfect Days</text>
+<path d="M938 431 L1288 431" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<text x="938" y="459" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#202124">观看日期</text>
+<rect x="938" y="493" width="350" height="52" rx="10" fill="#FFFFFF" stroke="#7B7E83"/>
+<text x="954" y="509" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="400" fill="#202124">2026 年 10 月 23 日</text>
+<path d="M1253 517 L1258 522" stroke="#202124" stroke-width="1" fill="none"/>
+<path d="M1258 522 L1263 517" stroke="#202124" stroke-width="1" fill="none"/>
+<text x="938" y="578" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#202124">个人评分</text>
+<text x="1209" y="579" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="400" fill="#64676C">4.5 / 5</text>
+<rect x="938" y="613" width="350" height="59" rx="10" fill="#FFFFFF"/>
+<text x="953" y="629" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="23" font-weight="400" fill="#202124">−</text>
+<text x="1002" y="629" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="21" font-weight="400" fill="#202124">★ ★ ★ ★ ◐</text>
+<text x="1249" y="629" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="21" font-weight="400" fill="#202124">＋</text>
+<text x="1253" y="688" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">清除</text>
+<path d="M938 732 L1288 732" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<text x="938" y="757" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="15" font-weight="600" fill="#202124">更多信息</text>
+<text x="938" y="786" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">时间、地点（可选）</text>
+<path d="M1260 768 L1265 773" stroke="#202124" stroke-width="1" fill="none"/>
+<path d="M1265 773 L1270 768" stroke="#202124" stroke-width="1" fill="none"/>
+<path d="M938 821 L1288 821" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<text x="938" y="848" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="15" font-weight="600" fill="#202124">添加感受</text>
+<text x="938" y="877" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">可选，想说的时候再写。</text>
+<path d="M1260 859 L1265 864" stroke="#202124" stroke-width="1" fill="none"/>
+<path d="M1265 864 L1270 859" stroke="#202124" stroke-width="1" fill="none"/>
+<text x="938" y="980" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">确认日期即可保存。</text>
+<text x="42" y="1117" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#64676C">04  同一主页 / 时间视图</text>
+<rect x="42" y="1146" width="390" height="844" rx="24" fill="#F7F7F5" stroke="#CFD1CD"/>
+<text x="66" y="1161" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#202124">9:41</text>
+<text x="334" y="1161" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="11" font-weight="400" fill="#64676C">LTE 90%</text>
+<rect x="187" y="1972" width="100" height="3" rx="2" fill="#202124"/>
+<text x="62" y="1200" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="26" font-weight="600" fill="#202124">Seen</text>
+<circle cx="298" cy="1213" r="7" fill="none" stroke="#202124" stroke-width="2"/>
+<path d="M304 1219 L311 1226" stroke="#202124" stroke-width="2" fill="none"/>
+<path d="M348 1206 L348 1226" stroke="#202124" stroke-width="2" fill="none"/>
+<path d="M338 1216 L358 1216" stroke="#202124" stroke-width="2" fill="none"/>
+<ellipse cx="389.5" cy="1215.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="397.5" cy="1215.5" rx="1.5" ry="1.5" fill="#202124"/>
+<ellipse cx="405.5" cy="1215.5" rx="1.5" ry="1.5" fill="#202124"/>
+<text x="62" y="1257" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="20" font-weight="600" fill="#202124">我的电影</text>
+<text x="317" y="1262" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">6 次观看</text>
+<rect x="62" y="1298" width="126" height="30" rx="8" fill="#E7E8E5"/>
+<rect x="126" y="1300" width="60" height="26" rx="6" fill="#FFFFFF"/>
+<text x="78" y="1306" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">海报</text>
+<text x="140" y="1306" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#202124">时间</text>
+<text x="320" y="1306" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">最近观看</text>
+<path d="M387 1311 L392 1316" stroke="#64676C" stroke-width="1" fill="none"/>
+<path d="M392 1316 L397 1311" stroke="#64676C" stroke-width="1" fill="none"/>
+<text x="62" y="1363" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="18" font-weight="600" fill="#202124">2026 年 10 月</text>
+<text x="346" y="1368" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">3 次</text>
+<rect x="62" y="1412" width="72" height="108" rx="8" fill="#173E43"/>
+<ellipse cx="114.19999999999999" cy="1433.96" rx="9.0" ry="9.0" fill="#F3D991"/>
+<rect x="66.32" y="1443.32" width="3.96" height="76.67999999999999" rx="0" fill="#2D6263"/>
+<rect x="82.16" y="1467.08" width="3.96" height="52.92" rx="0" fill="#2D6263"/>
+<rect x="96.56" y="1454.12" width="3.96" height="65.88" rx="0" fill="#2D6263"/>
+<rect x="121.03999999999999" y="1435.76" width="3.96" height="84.24000000000001" rx="0" fill="#2D6263"/>
+<polygon points="62,1491.92 134,1461.68 134,1520 62,1520" fill="#769C8B"/>
+<polygon points="62,1504.88 134,1476.8 134,1520 62,1520" fill="#D6D1AE"/>
+<text x="150" y="1413" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="17" font-weight="600" fill="#202124">完美的日子</text>
+<text x="150" y="1444" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2023</text>
+<text x="150" y="1470" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">10 月 22 日</text>
+<text x="334" y="1470" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#202124">★ 4.5</text>
+<text x="150" y="1497" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">第 2 次观看</text>
+<path d="M150 1537 L412 1537" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<rect x="62" y="1558" width="72" height="108" rx="8" fill="#7A2329"/>
+<rect x="67.76" y="1558" width="15.84" height="108" rx="0" fill="#9E3E3A"/>
+<rect x="108.08" y="1558" width="12.959999999999999" height="108" rx="0" fill="#C76B4D"/>
+<polygon points="82.16,1592.56 110.96000000000001,1570.96 126.8,1639.0 96.56,1659.52" fill="#24252B"/>
+<ellipse cx="96.19999999999999" cy="1596.16" rx="4.68" ry="4.68" fill="#E3A96F"/>
+<text x="150" y="1559" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="17" font-weight="600" fill="#202124">花样年华</text>
+<text x="150" y="1590" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2000</text>
+<text x="150" y="1616" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">10 月 18 日</text>
+<text x="334" y="1616" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#202124">★ 5.0</text>
+<text x="150" y="1643" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">第 2 次观看</text>
+<path d="M150 1683 L412 1683" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<rect x="62" y="1704" width="72" height="108" rx="8" fill="#E6AE86"/>
+<ellipse cx="116.72" cy="1733.8799999999999" rx="9.36" ry="9.36" fill="#F3DBAD"/>
+<rect x="62" y="1764.48" width="72" height="47.52" rx="0" fill="#5A91A1"/>
+<rect x="62" y="1777.44" width="72" height="34.56" rx="0" fill="#346C80"/>
+<ellipse cx="81.44" cy="1763.76" rx="3.6" ry="3.6" fill="#233B4B"/>
+<rect x="75.84" y="1768.8" width="9.36" height="18.360000000000003" rx="2" fill="#263E4D"/>
+<ellipse cx="99.44" cy="1763.76" rx="3.6" ry="3.6" fill="#233B4B"/>
+<rect x="93.84" y="1768.8" width="9.36" height="18.360000000000003" rx="2" fill="#263E4D"/>
+<text x="150" y="1705" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="17" font-weight="600" fill="#202124">晒后假日</text>
+<text x="150" y="1736" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">2022</text>
+<text x="150" y="1762" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">10 月 03 日</text>
+<text x="334" y="1762" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#202124">★ 4.5</text>
+<path d="M150 1829 L412 1829" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<text x="62" y="1873" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="18" font-weight="600" fill="#202124">2026 年 9 月</text>
+<text x="480" y="1117" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#64676C">05  添加电影 / 搜索与手动补录</text>
+<rect x="480" y="1146" width="390" height="844" rx="24" fill="#F7F7F5" stroke="#CFD1CD"/>
+<text x="504" y="1161" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#202124">9:41</text>
+<text x="772" y="1161" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="11" font-weight="400" fill="#64676C">LTE 90%</text>
+<rect x="625" y="1972" width="100" height="3" rx="2" fill="#202124"/>
+<path d="M516 1207 L507 1216" stroke="#202124" stroke-width="2" fill="none"/>
+<path d="M507 1216 L516 1225" stroke="#202124" stroke-width="2" fill="none"/>
+<text x="542" y="1205" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="17" font-weight="600" fill="#202124">添加电影</text>
+<rect x="500" y="1257" width="350" height="48" rx="12" fill="#FFFFFF" stroke="#7B7E83"/>
+<circle cx="524" cy="1280" r="7" fill="none" stroke="#64676C" stroke-width="2"/>
+<path d="M530 1286 L537 1293" stroke="#64676C" stroke-width="2" fill="none"/>
+<text x="552" y="1273" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="400" fill="#202124">完美的日子</text>
+<text x="500" y="1336" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">电影搜索</text>
+<rect x="500" y="1374" width="76" height="114" rx="8" fill="#173E43"/>
+<ellipse cx="555.1" cy="1397.18" rx="9.5" ry="9.5" fill="#F3D991"/>
+<rect x="504.56" y="1407.06" width="4.18" height="80.94" rx="0" fill="#2D6263"/>
+<rect x="521.28" y="1432.14" width="4.18" height="55.86" rx="0" fill="#2D6263"/>
+<rect x="536.48" y="1418.46" width="4.18" height="69.53999999999999" rx="0" fill="#2D6263"/>
+<rect x="562.3199999999999" y="1399.08" width="4.18" height="88.92" rx="0" fill="#2D6263"/>
+<polygon points="500,1458.36 576,1426.44 576,1488 500,1488" fill="#769C8B"/>
+<polygon points="500,1472.04 576,1442.4 576,1488 500,1488" fill="#D6D1AE"/>
+<text x="592" y="1377" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="17" font-weight="600" fill="#202124">完美的日子</text>
+<text x="592" y="1408" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">Perfect Days · 2023</text>
+<text x="592" y="1439" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">已看过 · 可再次记录</text>
+<text x="821" y="1416" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="23" font-weight="400" fill="#64676C">›</text>
+<path d="M500 1517 L850 1517" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<text x="500" y="1549" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#202124">找不到电影？</text>
+<text x="500" y="1582" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">手动填写片名，也可以直接添加。</text>
+<rect x="500" y="1623" width="350" height="48" rx="12" fill="#F7F7F5" stroke="#7B7E83"/>
+<text x="623" y="1636" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="15" font-weight="600" fill="#202124">手动添加</text>
+<text x="500" y="1886" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">搜索服务：TMDB</text>
+<text x="500" y="1913" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">无网络时仍可手动添加。</text>
+<text x="918" y="1117" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="14" font-weight="600" fill="#64676C">06  设置 / 从主页菜单进入</text>
+<rect x="918" y="1146" width="390" height="844" rx="24" fill="#F7F7F5" stroke="#CFD1CD"/>
+<text x="942" y="1161" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="600" fill="#202124">9:41</text>
+<text x="1210" y="1161" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="11" font-weight="400" fill="#64676C">LTE 90%</text>
+<rect x="1063" y="1972" width="100" height="3" rx="2" fill="#202124"/>
+<path d="M954 1207 L945 1216" stroke="#202124" stroke-width="2" fill="none"/>
+<path d="M945 1216 L954 1225" stroke="#202124" stroke-width="2" fill="none"/>
+<text x="980" y="1205" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="17" font-weight="600" fill="#202124">设置</text>
+<text x="938" y="1279" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="600" fill="#64676C">数据</text>
+<rect x="938" y="1309" width="350" height="83" rx="10" fill="#FFFFFF"/>
+<text x="954" y="1321" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#202124">导出完整备份</text>
+<text x="954" y="1352" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">电影、观看记录和已保存海报</text>
+<text x="1258" y="1329" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="23" font-weight="400" fill="#64676C">›</text>
+<rect x="938" y="1401" width="350" height="83" rx="10" fill="#FFFFFF"/>
+<text x="954" y="1413" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="16" font-weight="600" fill="#202124">从备份恢复</text>
+<text x="954" y="1444" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">先检查文件，再确认覆盖</text>
+<text x="1258" y="1421" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="23" font-weight="400" fill="#64676C">›</text>
+<text x="938" y="1517" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">上次导出：尚未导出</text>
+<text x="938" y="1578" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="600" fill="#64676C">外观</text>
+<text x="938" y="1621" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="15" font-weight="400" fill="#202124">主题</text>
+<text x="1240" y="1621" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">浅色</text>
+<path d="M938 1660 L1288 1660" stroke="#DFE0DE" stroke-width="1" fill="none"/>
+<text x="938" y="1699" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="600" fill="#64676C">关于</text>
+<text x="938" y="1740" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="25" font-weight="600" fill="#202124">Seen</text>
+<text x="938" y="1780" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#64676C">Personal Film Journal</text>
+<text x="938" y="1820" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">本地保存 · 无账号 · 无云同步</text>
+<text x="938" y="1863" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="13" font-weight="400" fill="#202124">版本与电影资料来源  ›</text>
+<text x="42" y="2011" dominant-baseline="text-before-edge" font-family="Noto Sans CJK SC,sans-serif" font-size="12" font-weight="400" fill="#64676C">当前审查稿 · 海报为矢量构图示意，非原版海报 · 资料与观看内容为布局示例 · 尚未开始应用编码</text>
+</svg>
