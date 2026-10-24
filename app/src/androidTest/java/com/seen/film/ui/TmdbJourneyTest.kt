@@ -35,7 +35,7 @@ class TmdbJourneyTest {
         ui.onNodeWithText("搜索片名或原名").performTextInput("timeout")
         closeSoftKeyboard()
         ui.onNodeWithText("搜索 TMDB").performClick()
-        waitFor("网络连接失败或超时，请重试；仍可手动添加电影")
+        waitFor("电影资料服务器连接超时，请稍后重试；仍可手动添加电影")
         ui.onNodeWithText("手动添加电影").assertIsEnabled()
         ui.onNodeWithText("搜索片名或原名").performTextClearance()
         ui.onNodeWithText("搜索片名或原名").performTextInput("Fixture")

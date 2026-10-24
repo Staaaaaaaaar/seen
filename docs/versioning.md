@@ -1,6 +1,6 @@
 # 版本与发布约定
 
-从 **v0.1.0 起发布 GitHub annotated tag**，**v1.0.0 正式发布 GitHub Release**。用户已授权 v0.2.0 的最终整理、commit、push 与 annotated tag；每版按下列门槛执行。开发分版见 [开发规划](roadmap.md)。
+从 **v0.1.0 起发布 GitHub annotated tag**，**v1.0.0 正式发布 GitHub Release**。用户已授权 v0.2.1 的整理、commit、push 与 annotated tag；本次明确不等待远端 CI，例外说明见下方。开发分版见 [开发规划](roadmap.md)。
 
 目标仓库：`git@github.com:Staaaaaaaaar/seen.git`。
 
@@ -8,10 +8,15 @@
 | --- | --- |
 | v0.1.0 | 经验证的离线 MVP 提交、annotated tag、Debug APK 与验证记录；不创建手工 GitHub Release |
 | v0.2.0 | 同上，增加 TMDB 资料能力 |
+| v0.2.1 | TMDB 可达性维护补丁，优先新域名、受限回退、分类网络错误；annotated tag 与本地 Debug APK |
 | v0.3.0 | 同上，增加备份恢复和迁移质量 |
 | v1.0.0 | 真机回归完成的签名 Release APK、校验和、CHANGELOG、tag、正式 GitHub Release |
 
 每版源码、构建结果和人工验收完成后才打 tag。不能把版本号写进 Gradle 就视作该版已发布。各版本实际验收范围见对应验证日志；v0.2 使用独立 API 36 模拟器验收，真机与本轮 Studio Preview 未测，不沿用 v0.1 的人工观察作为新版本证明。交付顺序：提交并推送最终源码 → 确认该提交的远端构建/单测/lint CI 成功，并核对本地 API 36 设备验收记录 → 创建并推送 annotated tag → 核对远端 tag 与对应提交。
+
+## v0.2.1 本次交付例外
+
+用户明确要求“commit，然后推送远程，并打上 tag。不必等 CI 检查”。本次保留本地构建、单测、lint、API 36 及摘要核对，提交/推送后直接创建并推送 annotated tag，不阻塞等待远端 CI。CI 仍按既有工作流自动触发，未查看或未完成不能写为通过；此例外不改变其他版本默认门槛。v0.3 备份协议草稿不混入维护补丁。
 
 ## v0.x tag 前检查
 

@@ -192,4 +192,8 @@ ANDROID_SERIAL=emulator-5558 bash scripts/check.sh --device
 git diff --check
 ```
 
-当前门槛是 8 项 JVM 与 19 项设备测试。最终打包前核对两份 JSON 中 sourceSha256 / apkSha256 与当前源码/APK 一致；基线 commit 上验证未提交代码不能冒充最终 commit 通过。真实联网与旧 APK 升级按 v0.2 验证日志单独留证，不用测试 Application 的固定响应替代。
+v0.2.0 的门槛是 8 项 JVM 与 19 项设备测试；v0.2.1 更新为 14 项 JVM 与 21 项设备测试。最终打包前核对两份 JSON 中 sourceSha256 / apkSha256 与当前源码/APK 一致；基线 commit 上验证未提交代码不能冒充最终 commit 通过。真实联网与旧 APK 升级按 v0.2 验证日志单独留证，不用测试 Application 的固定响应替代。
+
+## v0.2.1 API 入口与回退
+
+默认入口为 `https://api.tmdb.org/3`；网络连接或解析失败时最多尝试一次 `https://api.themoviedb.org/3`，并在本次进程复用成功入口。鉴权/权限/限流、TLS、响应解析错误不触发切换，取消后不继续请求；海报仍走原 CDN。没有自定义服务器、IP 或证书绕过。真机反馈和本地验证见 [v0.2.1 日志](v0.2.1-validation.md)。

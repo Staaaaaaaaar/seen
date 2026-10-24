@@ -2,7 +2,9 @@
 
 个人的已看电影库，Android 原生应用。以电影为主体，记录每次观看的日期、地点、可选评分与感受；本地保存，无 Seen 账号、广告或遥测；可选连接 TMDB 获取资料。
 
-当前版本 **v0.2.0**。版本通过 annotated tag 交付；Debug APK 与测试报告由 [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml) 提供，不创建正式 GitHub Release。提交、CI 与 tag 的实际交付状态以 [版本 tags](https://github.com/Staaaaaaaaar/seen/tags) 和对应 Actions 运行为准。本版功能与实际验收结果见 [v0.2 验证日志](docs/v0.2.0-validation.md)，历史记录见 [v0.1 验证日志](docs/v0.1.0-validation.md)，版本交付状态见 [CHANGELOG](CHANGELOG.md)。
+当前版本 **v0.2.1**。版本通过 annotated tag 交付；Debug APK 与测试报告由 [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml) 提供，不创建正式 GitHub Release。提交、CI 与 tag 的实际交付状态以 [版本 tags](https://github.com/Staaaaaaaaar/seen/tags) 和对应 Actions 运行为准。本版功能与实际验收结果见 [v0.2.1 验证日志](docs/v0.2.1-validation.md)，v0.2 功能基线见 [v0.2 验证日志](docs/v0.2.0-validation.md)，历史记录见 [v0.1 验证日志](docs/v0.1.0-validation.md)，版本交付状态见 [CHANGELOG](CHANGELOG.md)。
+
+v0.2.1 维护补丁：优先连接 `api.tmdb.org`，网络失败时回退原入口，详见 [补丁验证日志](docs/v0.2.1-validation.md)。已有 v0.2.0 tag 保持不变。
 
 ## 主要实现
 
@@ -62,4 +64,4 @@ Debug 包名 `com.seen.film.debug`，APK：`app/build/outputs/apk/debug/app-debu
 - [开发指南](docs/development.md)：准备、开发、运行、测试、排障。
 - [贡献指南](CONTRIBUTING.md) · [代理开发约定](AGENTS.md)：变更与验收规范。
 - [产品与设计](docs/design-review.md) · [UI 示意](docs/ui-review.svg) · [开发规划](docs/roadmap.md)。
-- [v0.2 验证日志](docs/v0.2.0-validation.md) · [v0.1 验证日志](docs/v0.1.0-validation.md) · [版本与发布](docs/versioning.md)。
+- [v0.2.1 验证日志](docs/v0.2.1-validation.md) · [v0.2 验证日志](docs/v0.2.0-validation.md) · [v0.1 验证日志](docs/v0.1.0-validation.md) · [版本与发布](docs/versioning.md)。

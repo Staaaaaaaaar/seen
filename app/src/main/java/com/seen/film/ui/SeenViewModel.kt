@@ -199,8 +199,13 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
             try { _search.value = app.tmdb.search(query, page) }
             catch (e: Exception) {
                 if (e is CancellationException) throw e
-                _searchMessage.value = if (e is IllegalStateException || e is IllegalArgumentException) e.message
-                    else "网络连接失败或超时，请重试；仍可手动添加电影"
+                _searchMessage.value = when (e) {
+                    is IllegalStateException, is IllegalArgumentException -> e.message
+                    is java.net.UnknownHostException -> "无法解析电影资料服务器，请检查网络或 DNS；仍可手动添加电影"
+                    is javax.net.ssl.SSLException -> "无法建立安全连接，请检查系统日期与网络；仍可手动添加电影"
+                    is java.net.SocketTimeoutException -> "电影资料服务器连接超时，请稍后重试；仍可手动添加电影"
+                    else -> "网络连接失败，请检查网络后重试；仍可手动添加电影"
+                }
             } finally { if (generation == searchGeneration) _searching.value = false }
         }
     }

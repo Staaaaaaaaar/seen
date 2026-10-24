@@ -12,13 +12,15 @@ class TmdbRepository(
     private val token: () -> String,
     private val fetch: (String, String?, Int) -> ByteArray = ::download,
 ) {
-    private fun request(path: String): JSONObject {
+    private val api = TmdbApiTransport(fetch)
+
+    private suspend fun request(path: String): JSONObject {
         val credential = token().trim()
         check(credential.isNotEmpty()) { "尚未配置 TMDB Read Access Token，仍可手动添加电影" }
         require(com.seen.film.domain.TmdbCredentials.valid(credential)) {
             "令牌格式无效，请在设置中检查 API Read Access Token"
         }
-        return JSONObject(String(fetch("https://api.themoviedb.org/3/$path", credential, 2 * 1024 * 1024), Charsets.UTF_8))
+        return JSONObject(String(api.request(path, credential, 2 * 1024 * 1024), Charsets.UTF_8))
     }
     suspend fun search(query: String, page: Int = 1): TmdbPage = withContext(Dispatchers.IO) {
         require(query.isNotBlank() && query.codePointCount(0, query.length) <= 300)

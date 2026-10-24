@@ -64,7 +64,7 @@ def main():
         if not required.issubset({cls for cls, _ in cases}):
             raise ValueError('Required Room/media/UI device test classes have not all run')
         expected = {'com.seen.film.data.RepositoryTest': 7, 'com.seen.film.data.PosterStoreTest': 3,
-                    'com.seen.film.ui.MovieJourneyTest': 1, 'com.seen.film.data.TmdbRepositoryTest': 3,
+                    'com.seen.film.ui.MovieJourneyTest': 1, 'com.seen.film.data.TmdbRepositoryTest': 5,
                     'com.seen.film.ui.TmdbJourneyTest': 1, 'com.seen.film.ui.TmdbFallbackJourneyTest': 1,
                     'com.seen.film.ui.TmdbSettingsTest': 1, 'com.seen.film.data.TmdbCredentialStoreTest': 2}
         for cls, minimum in expected.items():

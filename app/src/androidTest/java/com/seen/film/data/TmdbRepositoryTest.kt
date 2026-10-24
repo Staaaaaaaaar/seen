@@ -8,6 +8,35 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class TmdbRepositoryTest {
+    @Test fun networkFailureSwitchesApiHostAndKeepsPosterOnCdnWithoutCredential() = runBlocking {
+        val urls = mutableListOf<String>()
+        val repository = TmdbRepository(token = { "fixture-token" }, fetch = { url, token, _ ->
+            urls += url
+            when {
+                url.startsWith("https://api.tmdb.org/") -> throw java.net.UnknownHostException()
+                url.startsWith("https://image.tmdb.org/") -> { assertNull(token); byteArrayOf(42) }
+                url.contains("search/movie") -> {
+                    assertEquals("fixture-token", token)
+                    """{"results":[{"id":42,"title":"备用入口电影"}],"total_pages":1}""".toByteArray()
+                }
+                else -> """{"id":42,"title":"备用入口电影","runtime":90}""".toByteArray()
+            }
+        })
+        assertEquals(42L, repository.search("中文").movies.single().id)
+        assertEquals(90, repository.details(42).runtime)
+        assertArrayEquals(byteArrayOf(42), repository.poster("/fixture.jpg"))
+        assertEquals(4, urls.size)
+        assertTrue(urls[1].startsWith("https://api.themoviedb.org/3/search/movie"))
+        assertTrue(urls[2].startsWith("https://api.themoviedb.org/3/movie/42"))
+    }
+
+    @Test fun invalidJsonDoesNotTriggerAnotherHost() = runBlocking {
+        var calls = 0
+        val repository = TmdbRepository(token = { "fixture-token" }, fetch = { _, _, _ -> calls++; "broken".toByteArray() })
+        assertTrue(runCatching { repository.search("电影") }.isFailure)
+        assertEquals(1, calls)
+    }
+
     @Test fun malformedCredentialNeverReachesTransportOrErrorText() = runBlocking {
         var called = false
         val repository = TmdbRepository(token = { "sensitive-value\r\nInjected: secret" }, fetch = { _, _, _ -> called = true; byteArrayOf() })
@@ -19,7 +48,7 @@ class TmdbRepositoryTest {
 
     @Test fun searchEncodesQueryAndUsesBearerWithoutPuttingTokenInUrl() = runBlocking {
         val repository = TmdbRepository(token = { "fixture-token" }, fetch = { url, token, limit ->
-            assertTrue(url.startsWith("https://api.themoviedb.org/3/search/movie?"))
+            assertTrue(url.startsWith("https://api.tmdb.org/3/search/movie?"))
             assertTrue(url.contains("language=zh-CN"))
             assertTrue(url.contains("page=2"))
             assertTrue(url.contains("%E4%B8%AD%E6%96%87+%26+Original"))
