@@ -14,6 +14,11 @@ data class ViewingDraft(
     val originalTitle: String = "",
     val year: String = "",
     val posterKey: String? = null,
+    val tmdbId: Long? = null,
+    val releaseDate: String? = null,
+    val directorNames: String? = null,
+    val runtimeMinutes: Int? = null,
+    val productionCountries: String? = null,
     val date: String = LocalDate.now().toString(),
     val time: String = "",
     val location: String = "",
@@ -23,6 +28,7 @@ data class ViewingDraft(
 
 object ViewingRules {
     fun validate(draft: ViewingDraft, today: LocalDate = LocalDate.now()): Map<String, String> = buildMap {
+        if (draft.tmdbId != null && draft.tmdbId <= 0) put("title", "无效的 TMDB ID")
         if (draft.title.isBlank()) put("title", "请输入电影名称")
         else if (draft.title.codePointCount(0, draft.title.length) > 300) put("title", "片名最多 300 个字符")
         if (draft.originalTitle.codePointCount(0, draft.originalTitle.length) > 300) put("originalTitle", "原名最多 300 个字符")

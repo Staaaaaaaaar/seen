@@ -67,7 +67,7 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
                 }
                 route == "choose" -> ChooseScreen(vm, all, !busy && draftReady, { back() }, { movieId ->
                     vm.openEditor(movieId) { push("editor:$it") }
-                })
+                }, onChooseTmdb = { push("editor:$it") })
                 route.startsWith("movie:") -> MovieScreen(
                     id = route.removePrefix("movie:").substringBefore("/"),
                     focusViewingId = route.substringAfter("/", "").ifBlank { null }, vm = vm, all = all,
@@ -83,7 +83,7 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
                         stack = listOf("library", "movie:$movieId")
                     })
                 }
-                route == "settings" -> SettingsScreen { back() }
+                route == "settings" -> SettingsScreen(vm) { back() }
             }
         }
     }
@@ -98,7 +98,11 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
 }
 
 @Composable
-private fun SettingsScreen(onBack: () -> Unit) {
+private fun SettingsScreen(vm: SeenViewModel, onBack: () -> Unit) {
+    val configured by vm.credentialConfigured.collectAsStateWithLifecycle()
+    val busy by vm.busy.collectAsStateWithLifecycle()
+    var token by remember { mutableStateOf("") }
+    val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
     Scaffold(topBar = {
         TopAppBar(title = { Text("设置") }, navigationIcon = {
             IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
@@ -108,6 +112,25 @@ private fun SettingsScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Text("数据", style = MaterialTheme.typography.titleMedium)
             Text("电影与观看记录仅保存在本机。无账号、无云同步。", color = SeenSecondary)
+            HorizontalDivider()
+            Text("电影资料 · TMDB", style = MaterialTheme.typography.titleMedium)
+            Text(if (configured) "已配置访问凭据" else "未配置；可继续手动记录", color = SeenSecondary)
+            OutlinedTextField(token, { token = it }, Modifier.fillMaxWidth(), singleLine = true,
+                label = { Text("API Read Access Token") }, enabled = !busy,
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation())
+            Row {
+                TextButton(onClick = {
+                    vm.saveCredential(token) { token = "" }
+                }, enabled = !busy && token.isNotBlank()) { Text("保存凭据") }
+                TextButton(enabled = !busy, onClick = { vm.saveCredential("") { token = "" } }) { Text("移除凭据") }
+            }
+            Text("凭据仅保存在本机私有存储。搜索会向 TMDB 发送关键词；已保存资料和海报可离线使用。", color = SeenSecondary)
+            TextButton(onClick = { uriHandler.openUri("https://www.themoviedb.org/settings/api") }) { Text("获取 TMDB 凭据") }
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(com.seen.film.R.drawable.tmdb_logo),
+                contentDescription = "The Movie Database (TMDB)", modifier = Modifier.width(93.dp).height(67.dp))
+            Text("This product uses the TMDB API but is not endorsed or certified by TMDB.")
+            TextButton(onClick = { uriHandler.openUri("https://www.themoviedb.org") }) { Text("The Movie Database · TMDB") }
             HorizontalDivider()
             Text("外观", style = MaterialTheme.typography.titleMedium)
             Text("浅色", color = SeenSecondary)

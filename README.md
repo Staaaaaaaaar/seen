@@ -1,14 +1,16 @@
 # Seen
 
-个人的已看电影库，Android 原生应用。以电影为主体，记录每次观看的日期、地点、可选评分与感受；离线使用，无账号、广告或遥测。
+个人的已看电影库，Android 原生应用。以电影为主体，记录每次观看的日期、地点、可选评分与感受；本地保存，无 Seen 账号、广告或遥测；可选连接 TMDB 获取资料。
 
-当前版本 **v0.1.0**。版本通过 annotated tag 交付；Debug APK 与测试报告由 [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml) 提供，不创建正式 GitHub Release。功能与实际验收结果见 [验证日志](docs/v0.1.0-validation.md)，版本交付状态见 [CHANGELOG](CHANGELOG.md)。
+当前版本 **v0.2.0**。版本通过 annotated tag 交付；Debug APK 与测试报告由 [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml) 提供，不创建正式 GitHub Release。提交、CI 与 tag 的实际交付状态以 [版本 tags](https://github.com/Staaaaaaaaar/seen/tags) 和对应 Actions 运行为准。本版功能与实际验收结果见 [v0.2 验证日志](docs/v0.2.0-validation.md)，历史记录见 [v0.1 验证日志](docs/v0.1.0-validation.md)，版本交付状态见 [CHANGELOG](CHANGELOG.md)。
 
 ## 主要实现
 
 Kotlin + Jetpack Compose + Material 3，单 Activity、单 app 模块，手动依赖注入。Compose UI → ViewModel（StateFlow / 协程）→ Repository → Room（SQLite / Flow）。电影和每次观看分别存储；电影主页按电影去重，时间视图展示所有观看。系统图片选择器导入海报后复制到私有存储；编辑草稿用 AtomicFile 暂存，保存采用 Room 事务。
 
-v0.1 提供海报/时间视图、本地搜索、电影详情、手动建片、本地海报、观看增删改查、重复观看、0.5–5 星半星评分和可选感受。网络电影资料、备份恢复按 [规划](docs/roadmap.md) 在后续版本实现。
+v0.1 提供海报/时间视图、本地搜索、电影详情、手动建片、本地海报、观看增删改查、重复观看、0.5–5 星半星评分和可选感受。v0.2 增加 TMDB 中文/原名搜索、分页、导演/片长/国家资料、私有海报与 TMDB ID 复用；备份恢复属于 v0.3。
+
+在设置中输入 TMDB **API Read Access Token**（非 API Key），可从 [TMDB 账户 API 设置](https://www.themoviedb.org/settings/api) 获取。模拟器若因 DNS 异常搜索超时，见 [可选联网修复](docs/development.md#模拟器-tmdb-解析异常的可选修复)。凭据仅写入本机应用私有存储，不内置到 APK、不提交；移除凭据不影响已存资料。添加电影时可搜索 TMDB 或手动添加，搜索会发送关键词，失败可重试；保存后的资料与海报离线可读。海报失败不阻止建片，可选本地海报。
 
 ## 从拉取到运行（推荐 Android Studio）
 
@@ -60,4 +62,4 @@ Debug 包名 `com.seen.film.debug`，APK：`app/build/outputs/apk/debug/app-debu
 - [开发指南](docs/development.md)：准备、开发、运行、测试、排障。
 - [贡献指南](CONTRIBUTING.md) · [代理开发约定](AGENTS.md)：变更与验收规范。
 - [产品与设计](docs/design-review.md) · [UI 示意](docs/ui-review.svg) · [开发规划](docs/roadmap.md)。
-- [验证日志](docs/v0.1.0-validation.md) · [版本与发布](docs/versioning.md)。
+- [v0.2 验证日志](docs/v0.2.0-validation.md) · [v0.1 验证日志](docs/v0.1.0-validation.md) · [版本与发布](docs/versioning.md)。

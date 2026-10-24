@@ -36,6 +36,20 @@ class PosterStoreTest {
         } finally { source.delete() }
     }
 
+    @Test fun downloadedPosterIsPrivateAndReadableAfterStoreRecreation() = runBlocking {
+        val image = Bitmap.createBitmap(48, 72, Bitmap.Config.ARGB_8888)
+        val bytes = java.io.ByteArrayOutputStream()
+        image.compress(Bitmap.CompressFormat.PNG, 100, bytes)
+        image.recycle()
+        val store = PosterStore(context)
+        val key = store.importDownloaded(bytes.toByteArray())
+        try {
+            assertTrue(PosterStore(context).file(key)!!.length() > 0)
+            assertTrue(runCatching { store.importDownloaded("broken".toByteArray()) }.isFailure)
+            assertTrue(PosterStore(context).file(key)!!.isFile)
+        } finally { store.removeUnused(key, emptyList()) }
+    }
+
     @Test fun malformedImageDoesNotLeaveAPosterBehind() = runBlocking {
         val source = File(context.cacheDir, "${UUID.randomUUID()}.png").apply { writeText("not an image") }
         val directory = File(context.filesDir, "posters")

@@ -57,6 +57,14 @@ class PosterStore(private val context: Context) {
             key
         } finally { staging.delete() }
     }
+    suspend fun importDownloaded(bytes: ByteArray): String = withContext(Dispatchers.IO) {
+        require(bytes.size <= 20 * 1024 * 1024)
+        val staging = File.createTempFile("tmdb-", ".jpg", context.cacheDir)
+        try {
+            staging.writeBytes(bytes)
+            import(Uri.fromFile(staging))
+        } finally { staging.delete() }
+    }
     suspend fun removeUnused(key: String?, histories: List<MovieHistory>) = withContext(Dispatchers.IO) {
         if (histories.none { it.movie.posterKey == key }) file(key)?.delete()
     }

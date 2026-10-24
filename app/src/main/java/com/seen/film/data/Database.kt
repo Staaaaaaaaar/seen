@@ -50,6 +50,7 @@ interface SeenDao {
     @Transaction @Query("SELECT * FROM movies")
     fun observeLibrary(): Flow<List<MovieHistory>>
     @Query("SELECT * FROM movies WHERE id = :id") suspend fun movie(id: String): Movie?
+    @Query("SELECT * FROM movies WHERE tmdbId = :id") suspend fun movieByTmdbId(id: Long): Movie?
     @Query("SELECT * FROM viewings WHERE id = :id") suspend fun viewing(id: String): Viewing?
     @Insert suspend fun insertMovie(movie: Movie)
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertViewing(viewing: Viewing)

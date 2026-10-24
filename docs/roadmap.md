@@ -1,6 +1,6 @@
 # 开发规划
 
-当前交付版本为 **v0.1.0**；每版完成后暂停，不自动进入下一版。实际执行结果见 [验证日志](v0.1.0-validation.md)，提交、CI 与 tag 的交付顺序见 [发布约定](versioning.md)。
+当前版本为 **v0.2.0**；每版完成后暂停，不自动进入下一版。实际执行结果见 [v0.2 验证日志](v0.2.0-validation.md)，提交、CI 与 tag 的交付顺序见 [发布约定](versioning.md)。
 
 ## 版本范围
 
@@ -28,3 +28,18 @@
 - [版本 tag](https://github.com/Staaaaaaaaar/seen/tags)：`v0.1.0` 使用 annotated tag，远端 peeled commit 须与已验证提交一致。
 
 当前不新增框架或拆分模块，不因下载故障自动升降依赖版本。后续每版交付应包含实际变更、测试结果、APK 路径/校验和、设备记录与限制。
+
+## v0.2 功能范围
+
+已接入 TMDB 搜索/分页、中文与原名及年份辨识、详情字段持久化、私有海报、设置中的可移除访问凭据与官方署名。无凭据、超时和网络错误保留手动入口；重复 TMDB ID 在事务内复用电影。数据库沿用 v1 预留字段，历史 schema 保留，无结构迁移。
+
+实际验证与未完成验收见 [v0.2 日志](v0.2.0-validation.md)；本地功能验收已完成；提交、CI 与 tag 的实际交付状态以远端记录为准，不进入 v0.3。
+
+## v0.2 本地验收状态
+
+- [x] 8 项 JVM、19 项 API 36 集成测试、lint 和 13 项脚本回归通过，当前构建/设备记录的源码与 APK 哈希一致。
+- [x] 模拟器真实中文/原名搜索、资料/海报、无效凭据、断网保存/重启与 TMDB ID 复用验证；联网依赖已记录的可选 DNS 辅助。
+- [x] 独立 API 36 模拟器实际 v0.1 APK → v0.2 APK 同签名覆盖升级，保留字段/ID/海报/草稿；旧草稿可继续保存。
+- 版本交付：最终提交的远端基础 CI、本地最终提交复验和 annotated tag 按 [发布约定](versioning.md) 核对，实际状态见 [Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml) 与 [tags](https://github.com/Staaaaaaaaar/seen/tags)；用户真机验收仍后续另记。
+
+详情、哈希与环境限制以 [验证日志最新结论](v0.2.0-validation.md#最新本地验收结论) 为准，不将辅助网络下通过误记为默认网络已修复。

@@ -15,23 +15,27 @@ class SeenRepository(private val database: SeenDatabase) {
         require(ViewingRules.validate(draft).isEmpty()) { "请检查输入内容" }
         return database.withTransaction {
             val now = Instant.now().toString()
-            if (draft.isNewMovie && dao.movie(draft.movieId) == null) {
+            val movieId = draft.tmdbId?.let { dao.movieByTmdbId(it)?.id } ?: draft.movieId
+            if (draft.isNewMovie && dao.movie(movieId) == null) {
                 dao.insertMovie(Movie(
-                    id = draft.movieId, title = draft.title.trim(), originalTitle = draft.originalTitle.trim().ifEmpty { null },
+                    id = movieId, title = draft.title.trim(), originalTitle = draft.originalTitle.trim().ifEmpty { null },
+                    tmdbId = draft.tmdbId, source = if (draft.tmdbId == null) "MANUAL" else "TMDB",
+                    releaseDate = draft.releaseDate, directorNames = draft.directorNames,
+                    runtimeMinutes = draft.runtimeMinutes, productionCountries = draft.productionCountries,
                     releaseYear = draft.year.toIntOrNull(), posterKey = draft.posterKey, createdAt = now, updatedAt = now,
                 ))
             }
-            check(dao.movie(draft.movieId) != null) { "电影已不存在，请重新选择" }
+            check(dao.movie(movieId) != null) { "电影已不存在，请重新选择" }
             val previous = dao.viewing(draft.key)
             check(!draft.isEditing || previous != null) { "这次观看已被删除" }
             val viewing = Viewing(
-                id = draft.key, movieId = draft.movieId, viewedDate = draft.date,
+                id = draft.key, movieId = movieId, viewedDate = draft.date,
                 viewedTime = draft.time.ifBlank { null }, location = draft.location.trim().ifEmpty { null },
                 ratingHalfStars = draft.rating, notes = draft.notes.takeIf { it.isNotBlank() },
                 createdAt = previous?.createdAt ?: now, updatedAt = now,
             )
             if (previous == null) dao.insertViewing(viewing) else check(dao.updateViewing(viewing) == 1)
-            draft.movieId
+            movieId
         }
     }
     suspend fun deleteViewing(id: String) { dao.deleteViewing(id) }

@@ -146,15 +146,40 @@ private fun TimeLibrary(posterFile: (String?) -> File?, movies: List<MovieHistor
 }
 
 @Composable
-fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, onBack: () -> Unit, onChoose: (String?) -> Unit) {
+fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, onBack: () -> Unit, onChoose: (String?) -> Unit, onChooseTmdb: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
+    DisposableEffect(vm) { onDispose { vm.clearSearch() } }
+    val busy by vm.busy.collectAsState()
+    val remote by vm.search.collectAsState()
+    val searching by vm.searching.collectAsState()
+    val message by vm.searchMessage.collectAsState()
     val matches = all.orEmpty().filter { it.movie.title.contains(query.trim(), true) || it.movie.originalTitle.orEmpty().contains(query.trim(), true) }
     Scaffold(topBar = { TopAppBar(title = { Text("添加电影") }, navigationIcon = {
         IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
     }) }) { padding ->
         LazyColumn(Modifier.padding(padding), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            item { OutlinedTextField(query, { query = it }, Modifier.fillMaxWidth(), label = { Text("搜索已存电影") }, singleLine = true) }
+            item { OutlinedTextField(query, { query = it; vm.clearSearch() }, Modifier.fillMaxWidth(), label = { Text("搜索片名或原名") }, singleLine = true) }
             item { Button(onClick = { onChoose(null) }, Modifier.fillMaxWidth(), enabled = enabled) { Text("手动添加电影") } }
+            item { OutlinedButton(onClick = { vm.searchTmdb(query) }, enabled = enabled && !searching && query.isNotBlank() && query.codePointCount(0, query.length) <= 300) { Text("搜索 TMDB") } }
+            if (searching) item { CircularProgressIndicator() }
+            if (busy) item { Text("正在获取电影资料…", color = SeenSecondary) }
+            message?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
+            remote?.let { page ->
+                item { Text("TMDB · 第 ${page.page} 页 · 资料来源 The Movie Database", color = SeenSecondary) }
+                if (page.movies.isEmpty()) item { Text("没有找到电影，可修改关键词或手动添加。") }
+                items(page.movies, key = { "tmdb:${it.id}" }) { movie ->
+                    OutlinedButton(onClick = { vm.chooseTmdb(movie.id) { onChooseTmdb(it) } }, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+                        Column(Modifier.fillMaxWidth()) {
+                            Text(movie.title)
+                            Text(listOfNotNull(movie.originalTitle, movie.releaseDate?.take(4)).joinToString(" · "))
+                        }
+                    }
+                }
+                item { Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (page.page > 1) TextButton(onClick = { vm.searchTmdb(query, page.page - 1) }, enabled = !searching) { Text("上一页") }
+                    if (page.page < page.totalPages) TextButton(onClick = { vm.searchTmdb(query, page.page + 1) }, enabled = !searching) { Text("下一页") }
+                } }
+            }
             if (matches.isNotEmpty()) item { Text("已存电影 · 选择后添加一次观看", color = SeenSecondary) }
             items(matches, key = { it.movie.id }) { history ->
                 Surface(onClick = { if (enabled) onChoose(history.movie.id) }, shape = RoundedCornerShape(12.dp)) {

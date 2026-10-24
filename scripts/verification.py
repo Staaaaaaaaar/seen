@@ -58,11 +58,15 @@ def main():
     if device:
         cases = junit(ROOT / 'app/build/outputs/androidTest-results/connected')
         required = {'com.seen.film.data.RepositoryTest', 'com.seen.film.data.PosterStoreTest',
-                    'com.seen.film.ui.MovieJourneyTest'}
+                    'com.seen.film.ui.MovieJourneyTest', 'com.seen.film.data.TmdbRepositoryTest',
+                    'com.seen.film.ui.TmdbJourneyTest', 'com.seen.film.ui.TmdbFallbackJourneyTest',
+                    'com.seen.film.ui.TmdbSettingsTest', 'com.seen.film.data.TmdbCredentialStoreTest'}
         if not required.issubset({cls for cls, _ in cases}):
             raise ValueError('Required Room/media/UI device test classes have not all run')
-        expected = {'com.seen.film.data.RepositoryTest': 4, 'com.seen.film.data.PosterStoreTest': 2,
-                    'com.seen.film.ui.MovieJourneyTest': 1}
+        expected = {'com.seen.film.data.RepositoryTest': 7, 'com.seen.film.data.PosterStoreTest': 3,
+                    'com.seen.film.ui.MovieJourneyTest': 1, 'com.seen.film.data.TmdbRepositoryTest': 3,
+                    'com.seen.film.ui.TmdbJourneyTest': 1, 'com.seen.film.ui.TmdbFallbackJourneyTest': 1,
+                    'com.seen.film.ui.TmdbSettingsTest': 1, 'com.seen.film.data.TmdbCredentialStoreTest': 2}
         for cls, minimum in expected.items():
             if sum(c == cls for c, _ in cases) < minimum:
                 raise ValueError(f'Not all required tests ran in {cls}')
@@ -70,7 +74,7 @@ def main():
         command = [str(adb)]
         if os.environ.get('ANDROID_SERIAL'): command.extend(['-s', os.environ['ANDROID_SERIAL']])
         api = subprocess.check_output(command + ['shell', 'getprop', 'ro.build.version.sdk'], text=True).strip()
-        if api != '36': raise ValueError('The v0.1 device gate requires actual Android API 36')
+        if api != '36': raise ValueError('The device gate requires actual Android API 36')
         result['androidApi'] = int(api)
         result['testCases'] = cases
         result['serial'] = os.environ.get('ANDROID_SERIAL', 'CI-managed')

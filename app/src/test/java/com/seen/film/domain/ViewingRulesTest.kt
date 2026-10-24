@@ -8,6 +8,12 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ViewingRulesTest {
+    @org.junit.Test fun rejectsInvalidTmdbIdAndCountsSupplementaryUnicodeAsOne() {
+        org.junit.Assert.assertTrue(ViewingRules.validate(ViewingDraft(title = "电影", tmdbId = 0)).containsKey("title"))
+        org.junit.Assert.assertFalse(ViewingRules.validate(ViewingDraft(title = "🎬".repeat(300))).containsKey("title"))
+        org.junit.Assert.assertTrue(ViewingRules.validate(ViewingDraft(title = "🎬".repeat(301))).containsKey("title"))
+    }
+
     private val today = LocalDate.of(2026, 10, 23)
     private fun draft() = ViewingDraft(title = "电影", date = today.toString())
 

@@ -15,6 +15,21 @@ import kotlinx.coroutines.flow.*
 class SeenViewModel(application: Application) : AndroidViewModel(application) {
     val app = application as SeenApplication
     private val preferences = app.getSharedPreferences("appearance", 0)
+    private val _credentialConfigured = MutableStateFlow(app.credentials.token().isNotBlank())
+    val credentialConfigured = _credentialConfigured.asStateFlow()
+    fun saveCredential(value: String, onSaved: () -> Unit) {
+        if (_busy.value) return
+        _busy.value = true
+        viewModelScope.launch {
+            try {
+                app.credentials.save(value)
+                _credentialConfigured.value = app.credentials.token().isNotBlank()
+                clearSearch()
+                onSaved()
+            } catch (e: Exception) { report(e, "凭据保存失败，输入仍保留，请重试") }
+            finally { _busy.value = false }
+        }
+    }
     private val _library = MutableStateFlow<List<MovieHistory>?>(null)
     val library = _library.asStateFlow()
     private val _loadFailed = MutableStateFlow(false)
@@ -163,6 +178,55 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                 app.drafts.write(updated)
                 app.posters.removeUnused(current.posterKey, _library.value.orEmpty())
             } catch (e: Exception) { report(e, "无法保存海报，请选择其他图片") }
+            finally { _busy.value = false }
+        }
+    }
+    private val _search = MutableStateFlow<com.seen.film.data.TmdbPage?>(null)
+    val search = _search.asStateFlow()
+    private val _searchMessage = MutableStateFlow<String?>(null)
+    val searchMessage = _searchMessage.asStateFlow()
+    private val _searching = MutableStateFlow(false)
+    val searching = _searching.asStateFlow()
+    private var searchJob: Job? = null
+    private var searchGeneration = 0
+    fun clearSearch() { searchGeneration++; searchJob?.cancel(); _search.value = null; _searchMessage.value = null; _searching.value = false }
+    fun searchTmdb(query: String, page: Int = 1) {
+        val generation = ++searchGeneration
+        searchJob?.cancel()
+        _search.value = null; _searchMessage.value = null
+        _searching.value = true
+        searchJob = viewModelScope.launch {
+            try { _search.value = app.tmdb.search(query, page) }
+            catch (e: Exception) {
+                if (e is CancellationException) throw e
+                _searchMessage.value = if (e is IllegalStateException || e is IllegalArgumentException) e.message
+                    else "网络连接失败或超时，请重试；仍可手动添加电影"
+            } finally { if (generation == searchGeneration) _searching.value = false }
+        }
+    }
+    fun chooseTmdb(id: Long, navigate: (String) -> Unit) {
+        if (_busy.value || !_draftReady.value) return
+        _draft.value?.let { navigate(it.key); return }
+        val existing = _library.value.orEmpty().firstOrNull { it.movie.tmdbId == id }
+        if (existing != null) { openEditor(existing.movie.id, navigate = navigate); return }
+        _busy.value = true
+        viewModelScope.launch {
+            try {
+                val movie = app.tmdb.details(id)
+                var poster: String? = null
+                try { movie.posterPath?.let { poster = app.posters.importDownloaded(app.tmdb.poster(it)) } }
+                catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    _error.value = "海报下载失败，电影资料已保留；可在编辑中选择本地海报"
+                }
+                val value = ViewingDraft(title = movie.title, originalTitle = movie.originalTitle.orEmpty(),
+                    year = movie.releaseDate?.take(4).orEmpty(), tmdbId = movie.id,
+                    releaseDate = movie.releaseDate, directorNames = movie.directors,
+                    runtimeMinutes = movie.runtime, productionCountries = movie.countries, posterKey = poster)
+                app.drafts.write(value)
+                baseline = value; _draft.value = value; _fieldErrors.value = emptyMap()
+                navigate(value.key)
+            } catch (e: Exception) { report(e, "无法获取电影资料，请重试或手动添加") }
             finally { _busy.value = false }
         }
     }

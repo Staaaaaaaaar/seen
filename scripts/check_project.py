@@ -31,7 +31,7 @@ def main():
     manifest = ET.parse(ROOT / 'app/src/main/AndroidManifest.xml').getroot()
     app = manifest.find('application')
     assert app is not None and app.get(ANDROID + 'allowBackup') == 'false'
-    assert not manifest.findall('uses-permission'), 'Offline v0.1 must not request network/media-library permissions'
+    assert [p.get(ANDROID + 'name') for p in manifest.findall('uses-permission')] == ['android.permission.INTERNET']
     for path in ['backup_rules.xml', 'data_extraction_rules.xml']:
         assert (ROOT / 'app/src/main/res/xml' / path).is_file()
     build = (ROOT / 'app/build.gradle.kts').read_text()

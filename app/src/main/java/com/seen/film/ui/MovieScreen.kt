@@ -110,6 +110,13 @@ private fun FilmInfo(history: MovieHistory) {
         Text(history.movie.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
         history.movie.originalTitle?.let { Text(it, color = SeenSecondary) }
         history.movie.releaseYear?.let { Text(it.toString(), color = SeenSecondary) }
+        history.movie.directorNames?.let { Text("导演 · $it", color = SeenSecondary) }
+        history.movie.runtimeMinutes?.let { Text("片长 · $it 分钟", color = SeenSecondary) }
+        history.movie.productionCountries?.let { Text(it, color = SeenSecondary) }
+        history.movie.tmdbId?.let { id ->
+            val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+            TextButton(onClick = { uriHandler.openUri("https://www.themoviedb.org/movie/$id") }) { Text("资料来源 · TMDB") }
+        }
         Text("看过 ${history.viewings.size} 次", fontWeight = FontWeight.Medium)
     }
 }

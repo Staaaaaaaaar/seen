@@ -154,3 +154,42 @@ Actions 只有一个 job，执行环境脚本回归、App/测试 APK 编译、JV
 | 安装运行 | 明确 serial；检查签名、磁盘及 `adb -s SERIAL logcat` |
 
 构建日志 `.tools/build-latest.log`，验证记录 `.tools/check-result.json` / `device-result.json`，完整验收 `.tools/v0.1-verification.log`。报告来自实际执行；配置预检和依赖诊断不代表 App 成功运行。受限会话的 socket、X11 或 KVM 可见性与宿主机不同，应在正常终端复核，不默认清缓存、删 AVD 或重装系统。
+
+## v0.2 联网资料开发
+
+TMDB 使用平台 HTTPS 连接（10 秒连接/读取超时、禁重定向、JSON 2 MiB/图片 20 MiB 上限），不新增网络框架或依赖。请求 `search/movie` 与 `movie/{id}?append_to_response=credits`，语言 `zh-CN`；海报使用官方 `image.tmdb.org/t/p/w500`。Bearer 凭据从设置读取，不写 URL、构建配置或日志。
+
+API 36 测试 Application 使用隔离 Room/文件/偏好和固定 TMDB 响应，覆盖错误与交互，不访问真实服务。真实网络、账号有效性、海报 CDN 与署名视觉仍需另行验收。数据库沿用 v1 预留资料字段，历史 schema 自动化重建并检查保留记录；这不等同于真实设备 APK 覆盖升级。
+
+官方标志资源 `tmdb_logo.xml` 由 [TMDB Primary full (blue) SVG](https://www.themoviedb.org/assets/v4/logos/v2/blue_square_2-d537fb228cf3ded904ef09b136fe3fec72548ebc1fea3fbbd1ad9e36364db38b.svg) 转换为 VectorDrawable，保留路径、比例与渐变，使用要求见 [官方署名说明](https://developer.themoviedb.org/docs/faq)。
+
+## 模拟器 TMDB 解析异常的可选修复
+
+遇到默认搜索超时，而正常证书校验下使用加密 DNS 返回的地址可以连接时，可在电脑上运行辅助入口（仅 Linux、项目专用 Seen_API36）：
+
+```bash
+# 先启动模拟器；本命令保持前台运行，另开终端操作应用
+ANDROID_SERIAL=emulator-5556 bash scripts/emulator-network.sh
+# 结束时在辅助终端 Ctrl+C，或另开终端执行：
+ANDROID_SERIAL=emulator-5556 bash scripts/emulator-network.sh --stop
+```
+
+启动前检查真实 AVD 名称并验证加密 DNS 可用，再把该模拟器的系统 HTTP 代理指向电脑本机。只对 `api.themoviedb.org`、`image.tmdb.org` 动态查询 Cloudflare DNS-over-HTTPS，根据 TTL 缓存，不固定 IP；其他 HTTPS 域名沿用电脑普通解析。工具只转发 CONNECT 隧道中的原始 TLS 字节，不解密、读取或记录 TMDB 令牌，应用仍校验官方域名证书。不修改 APK、系统 hosts、电脑 DNS、代理软件配置或应用数据；不自动启动/安装 App。
+
+加密 DNS 请求使用 Python 标准库，并读取开发者已有的环境代理；若当前网络连加密 DNS 或返回地址也不可达，本工具不能保证解决。它仅支持 HTTPS CONNECT，不是通用浏览器代理或真机联网方案。状态保存在忽略的 `.tools/emulator-network-SERIAL.json`。关闭时仅在当前代理仍属于工具的情况下恢复原设置，保留用户中途手改的代理；异常退出后用 `--stop` 恢复。模拟器不可达时先重新启动同一 AVD，再执行 `--stop`。
+
+首次启用后若 App 尚未切换代理，可退出重开应用；无需重新填写令牌、卸载或清数据。模拟器重启后若工具已退出且设置仍残留，先执行 `--stop`，再启动工具。此入口不承诺修复真实手机或所有网络，也不能代替默认网络可达性验收。
+
+## v0.2 本地验收入口
+
+`verify-v0.1.sh` 仅用于历史 v0.1 版本，不能用于当前 v0.2。当前使用标准检查入口；API 36 集成测试应选择独立验收 AVD，避免 Gradle 的测试安装/移除过程影响已有实例：
+
+```bash
+python3 -m unittest discover -s scripts/tests -v
+bash scripts/check.sh
+# emulator-5558 为本轮独立验收实例；换设备时显式设置真实 serial
+ANDROID_SERIAL=emulator-5558 bash scripts/check.sh --device
+git diff --check
+```
+
+当前门槛是 8 项 JVM 与 19 项设备测试。最终打包前核对两份 JSON 中 sourceSha256 / apkSha256 与当前源码/APK 一致；基线 commit 上验证未提交代码不能冒充最终 commit 通过。真实联网与旧 APK 升级按 v0.2 验证日志单独留证，不用测试 Application 的固定响应替代。

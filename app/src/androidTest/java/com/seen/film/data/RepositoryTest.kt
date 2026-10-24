@@ -17,6 +17,84 @@ import org.junit.runner.RunWith
 class RepositoryTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
+    @Test fun opensHistoricalV1SchemaWithoutLosingRecords() = runBlocking {
+        val name = "historical-${UUID.randomUUID()}.db"
+        val path = context.getDatabasePath(name).apply { parentFile!!.mkdirs() }
+        val testContext = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().context
+        val schema = org.json.JSONObject(testContext.assets.open("com.seen.film.data.SeenDatabase/1.json").bufferedReader().use { it.readText() }).getJSONObject("database")
+        val old = android.database.sqlite.SQLiteDatabase.openOrCreateDatabase(path, null)
+        try {
+            val entities = schema.getJSONArray("entities")
+            for (n in 0 until entities.length()) {
+                val entity = entities.getJSONObject(n)
+                val table = entity.getString("tableName")
+                old.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
+                val indices = entity.getJSONArray("indices")
+                for (i in 0 until indices.length()) old.execSQL(indices.getJSONObject(i).getString("createSql").replace("\${TABLE_NAME}", table))
+            }
+            val setup = schema.getJSONArray("setupQueries")
+            for (n in 0 until setup.length()) old.execSQL(setup.getString(n))
+            old.execSQL("INSERT INTO movies (id,title,source,createdAt,updatedAt) VALUES ('old-movie','旧版记录','MANUAL','2000','2000')")
+            old.execSQL("INSERT INTO viewings (id,movieId,viewedDate,createdAt,updatedAt) VALUES ('old-viewing','old-movie','2000-01-01','2000','2000')")
+            old.version = 1
+        } finally { old.close() }
+        val db = Room.databaseBuilder(context, SeenDatabase::class.java, name).build()
+        try {
+            val history = db.dao().observeLibrary().first().single()
+            assertEquals("旧版记录", history.movie.title)
+            assertEquals("old-viewing", history.viewings.single().id)
+            assertNull(history.viewings.single().ratingHalfStars)
+            SeenRepository(db).save(ViewingDraft(title = "新电影", tmdbId = 42, date = "2000-01-01"))
+            assertEquals(2, db.dao().observeLibrary().first().size)
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+
+    @Test fun tmdbReusePreservesManualRecordsAndSurvivesReopen() = runBlocking {
+        val name = "tmdb-${UUID.randomUUID()}.db"
+        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).build()
+        try {
+            val manual = ViewingDraft(title = "旧版手动电影", date = "2000-01-01")
+            SeenRepository(db).save(manual)
+            val online = ViewingDraft(title = "中文片名", originalTitle = "Original", year = "2001",
+                date = "2002-01-01", tmdbId = 123, releaseDate = "2001-06-01",
+                directorNames = "导演", runtimeMinutes = 120, productionCountries = "China")
+            val id = SeenRepository(db).save(online)
+            val repeat = online.copy(key = UUID.randomUUID().toString(), movieId = UUID.randomUUID().toString())
+            assertEquals(id, SeenRepository(db).save(repeat))
+            SeenRepository(db).save(repeat)
+            db.close()
+            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).build()
+            val library = db.dao().observeLibrary().first()
+            assertEquals(2, library.size)
+            val movie = library.single { it.movie.tmdbId == 123L }
+            assertEquals(2, movie.viewings.size)
+            assertEquals("导演", movie.movie.directorNames)
+            assertEquals("TMDB", movie.movie.source)
+            assertNotNull(db.dao().movie(manual.movieId))
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
+
+    @Test fun tmdbParsingAndDraftMetadataRoundTrip() = runBlocking {
+        val parsed = TmdbRepository.parse(org.json.JSONObject("""{"id":42,"title":"中文","original_title":"Original","release_date":"","poster_path":null,"runtime":0,"credits":{"crew":[{"job":"Director","name":"导演"}]}}"""))
+        assertNull(parsed.releaseDate)
+        assertNull(parsed.posterPath)
+        assertNull(parsed.runtime)
+        assertEquals("导演", parsed.directors)
+        val folder = File(context.cacheDir, "tmdb-draft-${UUID.randomUUID()}").apply { mkdirs() }
+        val isolated = object : android.content.ContextWrapper(context) { override fun getFilesDir() = folder }
+        try {
+            val store = DraftStore(isolated)
+            val draft = ViewingDraft(title = "资料", tmdbId = 42, releaseDate = "2020-01-01", directorNames = "导演", runtimeMinutes = 90, productionCountries = "中国")
+            store.write(draft)
+            assertEquals(draft, store.read())
+            val json = org.json.JSONObject(File(folder, "viewing-draft.json").readText())
+            listOf("tmdbId", "releaseDate", "directorNames", "runtimeMinutes", "productionCountries").forEach { json.remove(it) }
+            File(folder, "viewing-draft.json").writeText(json.toString())
+            assertNull(store.read()!!.tmdbId)
+        } finally { folder.deleteRecursively() }
+        assertTrue(runCatching { TmdbRepository(token = { "" }).search("电影") }.isFailure)
+    }
+
     @Test fun repeatedSaveIsIdempotentRepeatViewingIsIndependentAndDeletePreservesMovie() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(context, SeenDatabase::class.java).build()
         try {
