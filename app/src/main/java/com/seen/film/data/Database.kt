@@ -52,6 +52,17 @@ interface SeenDao {
     @Query("SELECT * FROM movies WHERE id = :id") suspend fun movie(id: String): Movie?
     @Query("SELECT * FROM movies WHERE tmdbId = :id") suspend fun movieByTmdbId(id: Long): Movie?
     @Query("SELECT * FROM viewings WHERE id = :id") suspend fun viewing(id: String): Viewing?
+    @Query("SELECT COALESCE(SUM(length(CAST(title || COALESCE(originalTitle,'') || COALESCE(directorNames,'') || COALESCE(productionCountries,'') AS BLOB))),0) FROM movies")
+    suspend fun movieTextBytes(): Long
+    @Query("SELECT COALESCE(SUM(length(CAST(COALESCE(notes,'') || COALESCE(location,'') AS BLOB))),0) FROM viewings")
+    suspend fun viewingTextBytes(): Long
+    @Query("SELECT posterKey FROM movies WHERE posterKey IS NOT NULL") suspend fun posterKeys(): List<String>
+    @Query("SELECT COUNT(*) FROM movies") suspend fun movieCount(): Int
+    @Query("SELECT COUNT(*) FROM viewings") suspend fun viewingCount(): Int
+    @Query("SELECT * FROM movies LIMIT 10001") suspend fun allMovies(): List<Movie>
+    @Query("SELECT * FROM viewings LIMIT 100001") suspend fun allViewings(): List<Viewing>
+    @Query("DELETE FROM viewings") suspend fun deleteAllViewings()
+    @Query("DELETE FROM movies") suspend fun deleteAllMovies()
     @Insert suspend fun insertMovie(movie: Movie)
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertViewing(viewing: Viewing)
     @Update suspend fun updateViewing(viewing: Viewing): Int

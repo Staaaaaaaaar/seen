@@ -2,7 +2,7 @@
 
 个人的已看电影库，Android 原生应用。以电影为主体，记录每次观看的日期、地点、可选评分与感受；本地保存，无 Seen 账号、广告或遥测；可选连接 TMDB 获取资料。
 
-当前版本 **v0.2.1**。版本通过 annotated tag 交付；Debug APK 与测试报告由 [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml) 提供，不创建正式 GitHub Release。提交、CI 与 tag 的实际交付状态以 [版本 tags](https://github.com/Staaaaaaaaar/seen/tags) 和对应 Actions 运行为准。本版功能与实际验收结果见 [v0.2.1 验证日志](docs/v0.2.1-validation.md)，v0.2 功能基线见 [v0.2 验证日志](docs/v0.2.0-validation.md)，历史记录见 [v0.1 验证日志](docs/v0.1.0-validation.md)，版本交付状态见 [CHANGELOG](CHANGELOG.md)。
+当前版本 **v0.3.0**。版本通过 annotated tag 交付；Debug APK 与测试报告由 [GitHub Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml) 提供，不创建正式 GitHub Release。提交、CI 与 tag 的实际交付状态以 [版本 tags](https://github.com/Staaaaaaaaar/seen/tags) 和对应 Actions 运行为准。本版功能与实际验收结果见 [v0.3 验证日志](docs/v0.3.0-validation.md)，最近交付见 [v0.2.1 验证日志](docs/v0.2.1-validation.md)，v0.2 功能基线见 [v0.2 验证日志](docs/v0.2.0-validation.md)，历史记录见 [v0.1 验证日志](docs/v0.1.0-validation.md)，版本交付状态见 [CHANGELOG](CHANGELOG.md)。
 
 v0.2.1 维护补丁：优先连接 `api.tmdb.org`，网络失败时回退原入口，详见 [补丁验证日志](docs/v0.2.1-validation.md)。已有 v0.2.0 tag 保持不变。
 
@@ -10,9 +10,11 @@ v0.2.1 维护补丁：优先连接 `api.tmdb.org`，网络失败时回退原入�
 
 Kotlin + Jetpack Compose + Material 3，单 Activity、单 app 模块，手动依赖注入。Compose UI → ViewModel（StateFlow / 协程）→ Repository → Room（SQLite / Flow）。电影和每次观看分别存储；电影主页按电影去重，时间视图展示所有观看。系统图片选择器导入海报后复制到私有存储；编辑草稿用 AtomicFile 暂存，保存采用 Room 事务。
 
-v0.1 提供海报/时间视图、本地搜索、电影详情、手动建片、本地海报、观看增删改查、重复观看、0.5–5 星半星评分和可选感受。v0.2 增加 TMDB 中文/原名搜索、分页、导演/片长/国家资料、私有海报与 TMDB ID 复用；备份恢复属于 v0.3。
+v0.1 提供海报/时间视图、本地搜索、电影详情、手动建片、本地海报、观看增删改查、重复观看、0.5–5 星半星评分和可选感受。v0.2 增加 TMDB 中文/原名搜索、分页、导演/片长/国家资料、私有海报与 TMDB ID 复用；v0.3 提供全部电影/观看/海报 JSON 导出、预检与确认后覆盖恢复。
 
 在设置中输入 TMDB **API Read Access Token**（非 API Key），可从 [TMDB 账户 API 设置](https://www.themoviedb.org/settings/api) 获取。模拟器若因 DNS 异常搜索超时，见 [可选联网修复](docs/development.md#模拟器-tmdb-解析异常的可选修复)。凭据仅写入本机应用私有存储，不内置到 APK、不提交；移除凭据不影响已存资料。添加电影时可搜索 TMDB 或手动添加，搜索会发送关键词，失败可重试；保存后的资料与海报离线可读。海报失败不阻止建片，可选本地海报。
+
+在「设置 → 备份与恢复」导出全部已保存数据，或选择备份预检。备份为明文，含感受和海报，请保存到可信位置。恢复会替换本机全部电影与观看，不能合并；可先导出原库。未完成的编辑须先保存或放弃。凭据与偏好保留，损坏/不支持的备份在写库前拒绝。协议和限制见 [备份格式](docs/backup-format.md)。
 
 ## 从拉取到运行（推荐 Android Studio）
 

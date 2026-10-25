@@ -1,6 +1,6 @@
 # 版本与发布约定
 
-从 **v0.1.0 起发布 GitHub annotated tag**，**v1.0.0 正式发布 GitHub Release**。用户已授权 v0.2.1 的整理、commit、push 与 annotated tag；本次明确不等待远端 CI，例外说明见下方。开发分版见 [开发规划](roadmap.md)。
+从 **v0.1.0 起发布 GitHub annotated tag**，**v1.0.0 正式发布 GitHub Release**。用户已确认 v0.3.0 真机测试无大问题，并授权 review、commit、push 与 annotated tag；本版遵循默认 CI 门槛。v0.2.1 的不等待 CI 例外仅适用于该补丁。开发分版见 [开发规划](roadmap.md)。
 
 目标仓库：`git@github.com:Staaaaaaaaar/seen.git`。
 
@@ -41,9 +41,9 @@ gh run list --workflow android.yml --branch main --limit 5
 # RUN_ID 替换成上述运行 ID；失败时先修复，不执行后面的 tag 命令。
 gh run watch RUN_ID --exit-status
 git status --short --branch
-git tag -a v0.2.0 -m 'Seen v0.2.0 — TMDB movie metadata'
-git push origin refs/tags/v0.2.0
-git ls-remote origin refs/tags/v0.2.0 'refs/tags/v0.2.0^{}'
+git tag -a v0.3.0 -m 'Seen v0.3.0 — JSON backup and safe restore'
+git push origin refs/tags/v0.3.0
+git ls-remote origin refs/tags/v0.3.0 'refs/tags/v0.3.0^{}'
 ```
 
 不得使用 `--force` 更新已发布 tag。tag 触发 CI，Debug APK 从 Actions artifact 获取或从本机构建交付。GitHub 可能显示自动生成的 tag/source 页面，它不同于手工发布的正式 Release。

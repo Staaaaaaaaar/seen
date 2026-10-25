@@ -5,15 +5,15 @@ import com.seen.film.domain.ViewingDraft
 import com.seen.film.domain.ViewingRules
 import java.time.Instant
 
-class SeenRepository(private val database: SeenDatabase) {
+class SeenRepository(private val database: SeenDatabase, private val access: LibraryAccess = LibraryAccess()) {
     private val dao = database.dao()
     val library = dao.observeLibrary()
     suspend fun movie(id: String): Movie? = dao.movie(id)
     suspend fun viewing(id: String): Viewing? = dao.viewing(id)
 
-    suspend fun save(draft: ViewingDraft): String {
+    suspend fun save(draft: ViewingDraft): String = access.write {
         require(ViewingRules.validate(draft).isEmpty()) { "请检查输入内容" }
-        return database.withTransaction {
+        database.withTransaction {
             val now = Instant.now().toString()
             val movieId = draft.tmdbId?.let { dao.movieByTmdbId(it)?.id } ?: draft.movieId
             if (draft.isNewMovie && dao.movie(movieId) == null) {
@@ -38,5 +38,5 @@ class SeenRepository(private val database: SeenDatabase) {
             movieId
         }
     }
-    suspend fun deleteViewing(id: String) { dao.deleteViewing(id) }
+    suspend fun deleteViewing(id: String) = access.write { dao.deleteViewing(id); Unit }
 }

@@ -12,7 +12,7 @@ import java.io.FileOutputStream
 import java.util.UUID
 import kotlin.math.max
 
-class PosterStore(private val context: Context) {
+class PosterStore(private val context: Context, internal val backupCheckpoint: (Long) -> Unit = {}) {
     private val directory = File(context.filesDir, "posters").apply { mkdirs() }
     fun file(key: String?): File? = key?.takeIf { it.matches(Regex("[a-f0-9-]{36}\\.jpg")) }
         ?.let { File(directory, it) }?.takeIf { it.isFile }
@@ -65,7 +65,23 @@ class PosterStore(private val context: Context) {
             import(Uri.fromFile(staging))
         } finally { staging.delete() }
     }
-    suspend fun removeUnused(key: String?, histories: List<MovieHistory>) = withContext(Dispatchers.IO) {
-        if (histories.none { it.movie.posterKey == key }) file(key)?.delete()
+    // Delayed reclamation: keep old and abandoned media until a coordinated collector
+    // can verify database, draft and in-flight references together.
+    @Suppress("UNUSED_PARAMETER")
+    suspend fun removeUnused(key: String?, histories: List<MovieHistory>) = Unit
+
+    suspend fun importBackup(source: File, onCreated: (String) -> Unit = {}): String = withContext(Dispatchers.IO) {
+        var target: File
+        do { target = File(directory, "${UUID.randomUUID()}.jpg") } while (!target.createNewFile())
+        onCreated(target.name)
+        FileOutputStream(target).use { output ->
+            source.inputStream().use { input ->
+                val buffer = ByteArray(128); var total = 0L
+                while (true) { val n = input.read(buffer); if (n < 0) break; output.write(buffer, 0, n); total += n; backupCheckpoint(total) }
+            }
+            output.flush(); output.fd.sync()
+        }
+        check(target.length() == source.length() && target.sha256() == source.sha256()) { "恢复海报写入不完整" }
+        target.name
     }
 }

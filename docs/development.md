@@ -197,3 +197,9 @@ v0.2.0 的门槛是 8 项 JVM 与 19 项设备测试；v0.2.1 更新为 14 项 J
 ## v0.2.1 API 入口与回退
 
 默认入口为 `https://api.tmdb.org/3`；网络连接或解析失败时最多尝试一次 `https://api.themoviedb.org/3`，并在本次进程复用成功入口。鉴权/权限/限流、TLS、响应解析错误不触发切换，取消后不继续请求；海报仍走原 CDN。没有自定义服务器、IP 或证书绕过。真机反馈和本地验证见 [v0.2.1 日志](v0.2.1-validation.md)。
+
+## v0.3 备份开发与验收
+
+备份由 `BackupCodec`（流式协议）、`BackupRules`（纯规则）、`BackupRepository`（私有暂存/导出/恢复）、`LibraryAccess`（应用级写入协调）构成，设置通过 ViewModel 调用。恢复不修改 Room schema，不导入凭据或草稿。详细契约见 [备份格式](backup-format.md)。
+
+日常仍运行 `bash scripts/check.sh` 与专用 API 36 `check.sh --device`。备份规则进入 JVM 门槛，平台 JSON、JPEG、文档提供器、Room 回滚、恢复界面/旋转进入普通设备门槛；真正 SIGKILL 检查独立使用 `scripts/verify-backup-crash.py`，普通 Gradle 测试不运行需外部控制的测试类。真实旧 APK 升级脚本 `scripts/verify-backup-upgrade.py` 要求空的隔离模拟器，不卸载已有包。完整命令、报告和人工待验项见 [v0.3 验证日志](v0.3.0-validation.md)。

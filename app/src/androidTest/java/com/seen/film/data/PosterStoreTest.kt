@@ -32,7 +32,8 @@ class PosterStoreTest {
             assertEquals(48, decoded.width)
             decoded.recycle()
             store.removeUnused(key, emptyList())
-            assertNull(store.file(key))
+            // Reclamation is deferred so concurrent snapshots/drafts cannot lose media.
+            assertNotNull(store.file(key))
         } finally { source.delete() }
     }
 

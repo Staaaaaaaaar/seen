@@ -14,6 +14,81 @@ import kotlinx.coroutines.flow.*
 
 class SeenViewModel(application: Application) : AndroidViewModel(application) {
     val app = application as SeenApplication
+    private val _restorePreview = MutableStateFlow<com.seen.film.data.RestorePreview?>(null)
+    val restorePreview = _restorePreview.asStateFlow()
+    private val _preparedExport = MutableStateFlow<com.seen.film.data.PreparedExport?>(null)
+    val preparedExport = _preparedExport.asStateFlow()
+    private val _backupMessage = MutableStateFlow<String?>(null)
+    val backupMessage = _backupMessage.asStateFlow()
+    private var backupJob: Job? = null
+    private var exportPickerLaunched = false
+    fun claimExportPicker(): Boolean {
+        if (exportPickerLaunched) return false
+        exportPickerLaunched = true; return true
+    }
+    fun prepareExport() {
+        if (_busy.value) return
+        _busy.value = true; _backupMessage.value = "正在准备并校验备份…"
+        backupJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try { withContext(NonCancellable) { _preparedExport.value = app.backups.prepareExport() } }
+            catch (e: Exception) { report(e, "无法导出备份，请检查海报和可用空间"); _busy.value = false; _backupMessage.value = null }
+        }
+    }
+    fun finishExport(uri: Uri?) {
+        val prepared = _preparedExport.value
+        if (prepared == null) {
+            // Activity results can outlive the process that prepared the private export.
+            if (uri != null) _error.value = "导出会话已结束，请重新导出；所选位置可能留下空文件"
+            return
+        }
+        _preparedExport.value = null; exportPickerLaunched = false
+        backupJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try {
+                if (uri == null) { app.backups.cancelExport(prepared); _backupMessage.value = "已取消导出" }
+                else { app.backups.finishExport(prepared, uri); _backupMessage.value = "已导出备份；云端同步状态请在文档提供器中查看" }
+            } catch (e: Exception) { report(e, "导出失败，文档提供器可能留下不完整文件"); _backupMessage.value = null }
+            finally { _busy.value = false }
+        }
+    }
+    fun previewBackup(uri: Uri?) {
+        if (uri == null || _busy.value || _restorePreview.value != null) return
+        if (!_draftReady.value || _draft.value != null) { _error.value = "请先保存或放弃未完成的编辑，再恢复备份"; return }
+        _busy.value = true; _backupMessage.value = "正在读取并预检备份…"
+        backupJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try { withContext(NonCancellable) { _restorePreview.value = app.backups.preview(uri); _backupMessage.value = null } }
+            catch (e: Exception) { report(e, "备份预检失败，原有数据未改变"); _backupMessage.value = null }
+            finally { _busy.value = false }
+        }
+    }
+    fun cancelRestore(onDone: () -> Unit = {}) {
+        val preview = _restorePreview.value ?: return onDone()
+        if (_busy.value) return
+        _busy.value = true
+        backupJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try { app.backups.cancel(preview); _restorePreview.value = null; _backupMessage.value = "已取消恢复"; onDone() }
+            finally { _busy.value = false }
+        }
+    }
+    fun restoreBackup() {
+        val preview = _restorePreview.value ?: return
+        if (_busy.value) return
+        _busy.value = true; _backupMessage.value = "正在恢复，请稍候…"
+        backupJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try { app.backups.restore(preview); _restorePreview.value = null; _backupMessage.value = "恢复已完成" }
+            catch (e: Exception) { report(e, "恢复未完成，请检查存储空间后重试"); _backupMessage.value = null }
+            finally { _busy.value = false }
+        }
+    }
+    override fun onCleared() {
+        val operation = backupJob
+        // ViewModel is retained on rotation; a discarded activity releases its private session.
+        CoroutineScope(Dispatchers.IO).launch {
+            operation?.join()
+            _restorePreview.value?.let { app.backups.cancel(it) }
+            _preparedExport.value?.let { app.backups.cancelExport(it) }
+        }
+        super.onCleared()
+    }
     private val preferences = app.getSharedPreferences("appearance", 0)
     private val _credentialConfigured = MutableStateFlow(app.credentials.token().isNotBlank())
     val credentialConfigured = _credentialConfigured.asStateFlow()
@@ -81,7 +156,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     fun setTimeView(value: Boolean) { timeView = value; preferences.edit { putBoolean("timeView", value) } }
 
     fun openEditor(movieId: String? = null, viewingId: String? = null, navigate: (String) -> Unit) {
-        if (_busy.value || !_draftReady.value) return
+        if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
         _draft.value?.let {
             _error.value = "已恢复未完成的编辑，请先保存或放弃，再添加其他观看"
             navigate(it.key); return
@@ -210,7 +285,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun chooseTmdb(id: Long, navigate: (String) -> Unit) {
-        if (_busy.value || !_draftReady.value) return
+        if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
         _draft.value?.let { navigate(it.key); return }
         val existing = _library.value.orEmpty().firstOrNull { it.movie.tmdbId == id }
         if (existing != null) { openEditor(existing.movie.id, navigate = navigate); return }

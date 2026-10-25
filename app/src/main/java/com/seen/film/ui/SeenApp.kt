@@ -29,6 +29,7 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
     val draftReady by vm.draftReady.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
+    val restorePreview by vm.restorePreview.collectAsStateWithLifecycle()
     val loadFailed by vm.loadFailed.collectAsStateWithLifecycle()
     val pageStates = rememberSaveableStateHolder()
     var confirmExit by remember { mutableStateOf(false) }
@@ -43,6 +44,7 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
     fun pop() { if (stack.size > 1) stack = stack.dropLast(1) }
     fun back() {
         if (busy) return
+        if (restorePreview != null) { vm.cancelRestore { pop() }; return }
         if (route.startsWith("editor:") && draft != null) {
             if (vm.isDirty) confirmExit = true else vm.discard { pop() }
         } else pop()
@@ -60,7 +62,7 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
                 route == "library" -> pageStates.SaveableStateProvider("library") {
                     if (loadFailed) PageMessage("无法读取电影库", "请重新打开应用后重试，原有数据库不会被清空。")
                     else LibraryScreen(
-                    all = all, draft = draft, canEdit = draftReady && !busy,
+                    all = all, draft = draft, canEdit = draftReady && !busy && restorePreview == null,
                     initialTimeView = vm.timeView, posterFile = vm.app.posters::file, onTimeViewChange = vm::setTimeView,
                     onAdd = { push("choose") }, onMovie = { push("movie:$it") },
                     onResume = { draft?.let { push("editor:${it.key}") } }, onSettings = { push("settings") })
@@ -112,6 +114,7 @@ private fun SettingsScreen(vm: SeenViewModel, onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Text("数据", style = MaterialTheme.typography.titleMedium)
             Text("电影与观看记录仅保存在本机。无账号、无云同步。", color = SeenSecondary)
+            BackupControls(vm)
             HorizontalDivider()
             Text("电影资料 · TMDB", style = MaterialTheme.typography.titleMedium)
             Text(if (configured) "已配置访问凭据" else "未配置；可继续手动记录", color = SeenSecondary)

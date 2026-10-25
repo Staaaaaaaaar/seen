@@ -12,7 +12,7 @@ import java.io.File
 
 private fun JSONObject.optional(key: String): String? = if (isNull(key)) null else getString(key)
 
-class DraftStore(context: Context) {
+class DraftStore(context: Context, private val access: LibraryAccess = LibraryAccess()) {
     private val file = AtomicFile(File(context.filesDir, "viewing-draft.json"))
     private val lock = Mutex()
     suspend fun read(): ViewingDraft? = withContext(Dispatchers.IO) { lock.withLock {
@@ -34,7 +34,7 @@ class DraftStore(context: Context) {
             rating = if (j.isNull("rating")) null else j.getInt("rating"), notes = j.optString("notes", ""),
         )
     } }
-    suspend fun write(draft: ViewingDraft) = withContext(Dispatchers.IO) { lock.withLock {
+    suspend fun write(draft: ViewingDraft) = access.write { withContext(Dispatchers.IO) { lock.withLock {
         val j = JSONObject().put("schemaVersion", 1)
             .put("key", draft.key).put("movieId", draft.movieId)
             .put("isNewMovie", draft.isNewMovie).put("isEditing", draft.isEditing)
@@ -49,6 +49,6 @@ class DraftStore(context: Context) {
         val stream = file.startWrite()
         try { stream.write(j.toString().toByteArray(Charsets.UTF_8)); file.finishWrite(stream) }
         catch (e: Exception) { file.failWrite(stream); throw e }
-    } }
-    suspend fun clear() = withContext(Dispatchers.IO) { lock.withLock { file.delete() } }
+    } } }
+    suspend fun clear() = access.write { withContext(Dispatchers.IO) { lock.withLock { file.delete() } } }
 }
