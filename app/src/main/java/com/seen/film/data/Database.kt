@@ -63,6 +63,8 @@ interface SeenDao {
     @Query("SELECT * FROM viewings LIMIT 100001") suspend fun allViewings(): List<Viewing>
     @Query("DELETE FROM viewings") suspend fun deleteAllViewings()
     @Query("DELETE FROM movies") suspend fun deleteAllMovies()
+    @Query("DELETE FROM viewings WHERE movieId = :movieId") suspend fun deleteMovieViewings(movieId: String)
+    @Query("DELETE FROM movies WHERE id = :id") suspend fun deleteMovie(id: String): Int
     @Insert suspend fun insertMovie(movie: Movie)
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertViewing(viewing: Viewing)
     @Update suspend fun updateViewing(viewing: Viewing): Int

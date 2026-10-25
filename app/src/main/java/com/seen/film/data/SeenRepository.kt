@@ -38,5 +38,11 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
             movieId
         }
     }
+    suspend fun deleteMovie(id: String) = access.write {
+        database.withTransaction {
+            dao.deleteMovieViewings(id)
+            check(dao.deleteMovie(id) == 1) { "电影已不存在" }
+        }
+    }
     suspend fun deleteViewing(id: String) = access.write { dao.deleteViewing(id); Unit }
 }

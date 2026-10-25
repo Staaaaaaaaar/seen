@@ -30,10 +30,20 @@ fun MovieScreen(id: String, focusViewingId: String?, vm: SeenViewModel, all: Lis
     val history = all?.firstOrNull { it.movie.id == id }
     val busy by vm.busy.collectAsState()
     var expanded by rememberSaveable(id, focusViewingId) { mutableStateOf(focusViewingId) }
+    var deletingMovie by rememberSaveable(id) { mutableStateOf(false) }
+    var movieMenu by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf<Viewing?>(null) }
     val listState = rememberLazyListState()
     Scaffold(topBar = { TopAppBar(title = { Text("电影详情") }, navigationIcon = {
         IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
+    }, actions = {
+        Box {
+            IconButton(onClick = { movieMenu = true }, enabled = !busy && history != null) { Icon(Icons.Outlined.MoreHoriz, "电影操作") }
+            DropdownMenu(movieMenu, { movieMenu = false }) {
+                DropdownMenuItem(text = { Text("删除电影", color = MaterialTheme.colorScheme.error) },
+                    onClick = { movieMenu = false; deletingMovie = true })
+            }
+        }
     }) }) { padding ->
         when {
             all == null -> Box(Modifier.padding(padding)) { CircularProgressIndicator() }
@@ -103,6 +113,13 @@ fun MovieScreen(id: String, focusViewingId: String?, vm: SeenViewModel, all: Lis
                 }
             }
         }
+    }
+    if (deletingMovie && history != null) {
+        AlertDialog(onDismissRequest = { if (!busy) deletingMovie = false }, title = { Text("删除这部电影？") },
+            text = { Text("将删除《${history.movie.title}》及全部 ${history.viewings.size} 次观看记录。此操作无法撤销，之后可重新搜索添加。") },
+            confirmButton = { TextButton(enabled = !busy, onClick = { vm.deleteMovie(id) { deletingMovie = false; onBack() } }) { Text("删除电影", color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { TextButton(enabled = !busy, onClick = { deletingMovie = false }) { Text("取消") } },
+        )
     }
     deleting?.let { viewing ->
         AlertDialog(onDismissRequest = { deleting = null }, title = { Text("删除这次观看？") },

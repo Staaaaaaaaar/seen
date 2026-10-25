@@ -318,6 +318,22 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
             finally { _busy.value = false }
         }
     }
+    fun deleteMovie(id: String, onDeleted: () -> Unit) {
+        if (_busy.value || _restorePreview.value != null) return
+        if (!_draftReady.value) return
+        if (_draft.value?.movieId == id) {
+            _error.value = "请先保存或放弃这部电影未完成的编辑"
+            return
+        }
+        _busy.value = true
+        viewModelScope.launch {
+            var deleted = false
+            try { app.repository.deleteMovie(id); deleted = true }
+            catch (e: Exception) { report(e, "删除失败，请重试") }
+            finally { _busy.value = false }
+            if (deleted) onDeleted()
+        }
+    }
     fun deleteViewing(id: String) {
         if (_busy.value) return
         _busy.value = true

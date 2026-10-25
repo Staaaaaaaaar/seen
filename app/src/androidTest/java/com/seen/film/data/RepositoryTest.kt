@@ -17,6 +17,35 @@ import org.junit.runner.RunWith
 class RepositoryTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
+    @Test fun deletingMovieIsAtomicPreservesOtherMoviesAndAllowsTmdbReimport() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(context, SeenDatabase::class.java).build()
+        try {
+            val access = LibraryAccess()
+            val repository = SeenRepository(db, access)
+            val draft = ViewingDraft(title = "待删除电影", tmdbId = 42, date = "2020-01-01", notes = "第一次")
+            val id = repository.save(draft)
+            repository.save(draft.copy(key = UUID.randomUUID().toString(), isNewMovie = false, notes = "第二次"))
+            val other = repository.save(ViewingDraft(title = "保留电影", date = "2021-01-01"))
+            val before = db.dao().allViewings()
+            val reservation = access.reserve { }
+            assertTrue(runCatching { repository.deleteMovie(id) }.isFailure)
+            assertEquals(before, db.dao().allViewings())
+            access.release(reservation)
+            db.openHelper.writableDatabase.execSQL("CREATE TRIGGER refuse_delete BEFORE DELETE ON movies BEGIN SELECT RAISE(ABORT, 'fixture failure'); END")
+            assertTrue(runCatching { repository.deleteMovie(id) }.isFailure)
+            assertNotNull(repository.movie(id))
+            assertEquals(before, db.dao().allViewings())
+            db.openHelper.writableDatabase.execSQL("DROP TRIGGER refuse_delete")
+            repository.deleteMovie(id)
+            assertNull(repository.movie(id))
+            assertEquals(before.filter { it.movieId == other }, db.dao().allViewings())
+            assertNotNull(repository.movie(other))
+            val replacement = repository.save(ViewingDraft(title = "重新导入", tmdbId = 42, date = "2022-01-01"))
+            assertNotEquals(id, replacement)
+            assertEquals(42L, repository.movie(replacement)!!.tmdbId)
+        } finally { db.close() }
+    }
+
     @Test fun opensHistoricalV1SchemaWithoutLosingRecords() = runBlocking {
         val name = "historical-${UUID.randomUUID()}.db"
         val path = context.getDatabasePath(name).apply { parentFile!!.mkdirs() }
