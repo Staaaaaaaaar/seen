@@ -43,7 +43,14 @@ class PosterStoreTest {
         image.compress(Bitmap.CompressFormat.PNG, 100, bytes)
         image.recycle()
         val store = PosterStore(context)
-        val key = store.importDownloaded(bytes.toByteArray())
+        var attempts = 0
+        val repository = TmdbRepository({ error("No credential for CDN") }) { _, token, _ ->
+            assertNull(token)
+            if (++attempts == 1) throw java.net.SocketTimeoutException()
+            bytes.toByteArray()
+        }
+        val key = store.importDownloaded(repository.poster("/fixture.png"))
+        assertEquals(2, attempts)
         try {
             assertTrue(PosterStore(context).file(key)!!.length() > 0)
             assertTrue(runCatching { store.importDownloaded("broken".toByteArray()) }.isFailure)

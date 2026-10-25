@@ -1,5 +1,8 @@
 package com.seen.film.data
 
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -35,7 +38,17 @@ class TmdbRepository(
     }
     suspend fun poster(path: String): ByteArray = withContext(Dispatchers.IO) {
         require(path.matches(Regex("/[A-Za-z0-9._-]+")))
-        fetch("https://image.tmdb.org/t/p/w500$path", null, 20 * 1024 * 1024)
+        val url = "https://image.tmdb.org/t/p/w500$path"
+        currentCoroutineContext().ensureActive()
+        try {
+            fetch(url, null, 20 * 1024 * 1024)
+        } catch (error: java.io.IOException) {
+            // Retry a transient connection failure once, retaining normal TLS checks.
+            if (error is javax.net.ssl.SSLException) throw error
+            delay(300)
+            currentCoroutineContext().ensureActive()
+            fetch(url, null, 20 * 1024 * 1024)
+        }.also { currentCoroutineContext().ensureActive() }
     }
     companion object {
         internal fun parse(j: JSONObject): TmdbMovie {
@@ -55,7 +68,7 @@ class TmdbRepository(
                 connection.connectTimeout = 10_000; connection.readTimeout = 10_000
                 connection.instanceFollowRedirects = false
                 credential?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
-                connection.setRequestProperty("Accept", "application/json")
+                connection.setRequestProperty("Accept", if (credential == null) "image/*" else "application/json")
                 when (connection.responseCode) {
                     200 -> Unit
                     401, 403 -> error("TMDB 凭据无效或无权限，请在设置中检查；仍可手动添加")

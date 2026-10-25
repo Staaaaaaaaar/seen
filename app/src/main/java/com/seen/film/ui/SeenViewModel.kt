@@ -289,10 +289,23 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val movie = app.tmdb.details(id)
                 var poster: String? = null
-                try { movie.posterPath?.let { poster = app.posters.importDownloaded(app.tmdb.poster(it)) } }
+                var posterDownloaded = false
+                try { movie.posterPath?.let {
+                    val bytes = app.tmdb.poster(it)
+                    posterDownloaded = true
+                    poster = app.posters.importDownloaded(bytes)
+                } }
                 catch (e: Exception) {
                     if (e is CancellationException) throw e
-                    _error.value = "海报下载失败，电影资料已保留；可在编辑中选择本地海报"
+                    val reason = when {
+                        posterDownloaded -> "海报无法读取或保存"
+                        e is java.net.SocketTimeoutException -> "海报下载超时"
+                        e is java.net.UnknownHostException -> "无法解析海报服务器"
+                        e is javax.net.ssl.SSLException -> "海报服务器安全连接失败"
+                        e is java.io.IOException -> "无法连接海报服务器"
+                        else -> "海报服务器未能提供图片"
+                    }
+                    _error.value = "$reason，电影资料已保留；可在编辑中选择本地海报"
                 }
                 val value = ViewingDraft(title = movie.title, originalTitle = movie.originalTitle.orEmpty(),
                     year = movie.releaseDate?.take(4).orEmpty(), tmdbId = movie.id,
