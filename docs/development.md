@@ -62,7 +62,7 @@ bash scripts/setup.sh --install-sdk
 
 ## 日常开发与 Preview
 
-在 Studio 完成 Gradle Sync，选择 `app` / `debug`；Run 用于正常启动，Debug 可断点。Preview 在 `app/src/debug/java/com/seen/film/ui/LibraryPreviews.kt`，包含海报、时间、空状态与 200% 字号。若文件在首次成功同步前已经打开，关闭该标签再重新打开，让 Studio 重新识别 Compose Split / Design 编辑器。可在 Settings → Editor → UI Tools 检查 Kotlin 的视图设置。Preview 是布局辅助；真实系统选图、保存、返回栈和持久化仍需设备验证。
+在 Studio 完成 Gradle Sync，选择 `app` / `debug`；Run 用于正常启动，Debug 可断点。Preview 在 `app/src/debug/java/com/seen/film/ui/LibraryPreviews.kt`，包含海报、深色、空状态与 200% 字号，根页面预览包含底栏。若文件在首次成功同步前已经打开，关闭该标签再重新打开，让 Studio 重新识别 Compose Split / Design 编辑器。可在 Settings → Editor → UI Tools 检查 Kotlin 的视图设置。Preview 是布局辅助；真实系统选图、保存、返回栈和持久化仍需设备验证。
 
 标准命令（可绕过所有辅助脚本）：
 

@@ -1,6 +1,8 @@
 # 版本与发布约定
 
-从 **v0.1.0 起发布 GitHub annotated tag**，**v1.0.0 正式发布 GitHub Release**。用户已确认 v0.3.0 真机测试无大问题，并授权 review、commit、push 与 annotated tag；本版遵循默认 CI 门槛。v0.2.1 的不等待 CI 例外仅适用于该补丁。开发分版见 [开发规划](roadmap.md)。
+用户已于 2026-10-25 查看 v0.4.0 模拟器并授权整理仓库、commit、push 与 annotated tag。本版遵循默认 CI 门槛；实际状态以远端记录为准。
+
+从 **v0.1.0 起发布 GitHub annotated tag**，**v1.0.0 正式发布 GitHub Release**。v0.3.0 的真机反馈仅作为该版历史记录，不代替 v0.4.0 真机验收。v0.2.1 的不等待 CI 例外仅适用于该补丁。开发分版见 [开发规划](roadmap.md)。
 
 目标仓库：`git@github.com:Staaaaaaaaar/seen.git`。
 
@@ -10,6 +12,7 @@
 | v0.2.0 | 同上，增加 TMDB 资料能力 |
 | v0.2.1 | TMDB 可达性维护补丁，优先新域名、受限回退、分类网络错误；annotated tag 与本地 Debug APK |
 | v0.3.0 | 同上，增加备份恢复和迁移质量 |
+| v0.4.0 | 底部入口与海报电影库、记录流程和视觉调整；annotated tag、Debug APK 与验证记录 |
 | v1.0.0 | 真机回归完成的签名 Release APK、校验和、CHANGELOG、tag、正式 GitHub Release |
 
 每版源码、构建结果和人工验收完成后才打 tag。不能把版本号写进 Gradle 就视作该版已发布。各版本实际验收范围见对应验证日志；v0.2 使用独立 API 36 模拟器验收，真机与本轮 Studio Preview 未测，不沿用 v0.1 的人工观察作为新版本证明。交付顺序：提交并推送最终源码 → 确认该提交的远端构建/单测/lint CI 成功，并核对本地 API 36 设备验收记录 → 创建并推送 annotated tag → 核对远端 tag 与对应提交。
@@ -41,9 +44,9 @@ gh run list --workflow android.yml --branch main --limit 5
 # RUN_ID 替换成上述运行 ID；失败时先修复，不执行后面的 tag 命令。
 gh run watch RUN_ID --exit-status
 git status --short --branch
-git tag -a v0.3.0 -m 'Seen v0.3.0 — JSON backup and safe restore'
-git push origin refs/tags/v0.3.0
-git ls-remote origin refs/tags/v0.3.0 'refs/tags/v0.3.0^{}'
+git tag -a v0.4.0 -m 'Seen v0.4.0 — poster library and bottom navigation'
+git push origin refs/tags/v0.4.0
+git ls-remote origin refs/tags/v0.4.0 'refs/tags/v0.4.0^{}'
 ```
 
 不得使用 `--force` 更新已发布 tag。tag 触发 CI，Debug APK 从 Actions artifact 获取或从本机构建交付。GitHub 可能显示自动生成的 tag/source 页面，它不同于手工发布的正式 Release。
