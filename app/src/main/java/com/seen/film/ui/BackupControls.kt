@@ -18,7 +18,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun BackupControls(vm: SeenViewModel) {
+fun BackupControls(vm: SeenViewModel, allowExport: Boolean = true, allowImport: Boolean = true) {
     val busy by vm.busy.collectAsStateWithLifecycle()
     val ready by vm.draftReady.collectAsStateWithLifecycle()
     val draft by vm.draft.collectAsStateWithLifecycle()
@@ -43,8 +43,8 @@ fun BackupControls(vm: SeenViewModel) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text("备份与恢复", style = MaterialTheme.typography.titleMedium)
         Text("备份是明文 JSON，包含全部电影、观看记录、感受和海报。请保存到可信位置；不包含 TMDB 凭据和未保存草稿。", color = SeenSecondary)
-        OutlinedButton(onClick = vm::prepareExport, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("导出全部数据") }
-        if (preview == null) {
+        if (allowExport) Button(onClick = vm::prepareExport, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("导出全部数据") }
+        if (allowImport && preview == null) {
             OutlinedButton(onClick = { open.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) },
                 enabled = !busy && ready && draft == null, modifier = Modifier.fillMaxWidth()) { Text("选择备份恢复") }
             if (draft != null) Text("请先保存或放弃未完成的编辑，再恢复备份。")

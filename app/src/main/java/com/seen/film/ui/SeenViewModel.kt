@@ -4,7 +4,6 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.core.content.edit
 import com.seen.film.SeenApplication
 import com.seen.film.data.MovieHistory
 import com.seen.film.domain.ViewingDraft
@@ -89,7 +88,6 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         }
         super.onCleared()
     }
-    private val preferences = app.getSharedPreferences("appearance", 0)
     private val _credentialConfigured = MutableStateFlow(app.credentials.token().isNotBlank())
     val credentialConfigured = _credentialConfigured.asStateFlow()
     fun saveCredential(value: String, onSaved: () -> Unit) {
@@ -119,8 +117,6 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     val draftReady = _draftReady.asStateFlow()
     private val _fieldErrors = MutableStateFlow<Map<String, String>>(emptyMap())
     val fieldErrors = _fieldErrors.asStateFlow()
-    var timeView = preferences.getBoolean("timeView", false)
-        private set
     private var baseline: ViewingDraft? = null
     private var pendingWrite: Job? = null
     val isDirty get() = _draft.value != baseline
@@ -153,7 +149,6 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun clearError() { _error.value = null }
-    fun setTimeView(value: Boolean) { timeView = value; preferences.edit { putBoolean("timeView", value) } }
 
     fun openEditor(movieId: String? = null, viewingId: String? = null, navigate: (String) -> Unit) {
         if (_busy.value || !_draftReady.value || _restorePreview.value != null) return

@@ -1,6 +1,9 @@
 package com.seen.film.ui
 
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Scaffold
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.seen.film.data.Movie
@@ -24,14 +27,16 @@ private fun previewMovies(): List<MovieHistory> = listOf(
 }
 
 @Composable
-private fun PreviewLibrary(time: Boolean = false, empty: Boolean = false) {
-    SeenTheme {
-        Surface {
+private fun PreviewLibrary(dark: Boolean = false, empty: Boolean = false) {
+    SeenTheme(darkTheme = dark) {
+        Scaffold(bottomBar = { SeenBottomBar(false, true, true, {}, {}, {}) }) { padding ->
+            Surface(Modifier.padding(padding).consumeWindowInsets(padding)) {
             LibraryScreen(
                 all = if (empty) emptyList() else previewMovies(), draft = null, canEdit = true,
-                initialTimeView = time, posterFile = { null }, onTimeViewChange = {},
-                onAdd = {}, onMovie = {}, onResume = {}, onSettings = {},
+                posterFile = { null },
+                onAdd = {}, onMovie = {}, onResume = {},
             )
+            }
         }
     }
 }
@@ -41,9 +46,9 @@ private fun PreviewLibrary(time: Boolean = false, empty: Boolean = false) {
 @Composable
 private fun PosterHomePreview() = PreviewLibrary()
 
-@Preview(name = "电影主页 · 时间", widthDp = 390, heightDp = 844, showBackground = true, locale = "zh")
+@Preview(name = "电影主页 · 深色", widthDp = 390, heightDp = 844, showBackground = true, locale = "zh")
 @Composable
-private fun TimeHomePreview() = PreviewLibrary(time = true)
+private fun DarkHomePreview() = PreviewLibrary(dark = true)
 
 @Preview(name = "电影主页 · 空状态", widthDp = 390, heightDp = 844, showBackground = true, locale = "zh")
 @Composable

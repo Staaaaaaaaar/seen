@@ -27,7 +27,7 @@ class TmdbFallbackJourneyTest {
         val app = ui.activity.application as SeenTestApplication
         runBlocking { withContext(Dispatchers.IO) { app.database.clearAllTables() }; app.credentials.save("fixture.token") }
         waitFor("还没有电影")
-        ui.onNodeWithContentDescription("添加看过的电影").performClick()
+        ui.onNodeWithContentDescription("添加记录").performClick()
         search("empty")
         waitFor("没有找到电影，可修改关键词或手动添加。")
         ui.onNodeWithText("手动添加电影").assertIsEnabled()
@@ -44,10 +44,11 @@ class TmdbFallbackJourneyTest {
         search("posterfailure")
         waitFor("海报失败验收电影")
         ui.onNodeWithText("海报失败验收电影").performScrollTo().performClick()
-        waitFor("电影名称 *")
+        waitFor("添加观看")
         ui.onNodeWithText("选择海报（可选）").performScrollTo().assertExists()
         ui.onNodeWithText("保存").performClick()
-        waitFor("看过 1 次")
+        waitFor("观看记录 · 1 次")
+        ui.onNodeWithTag("movie-detail-list").performScrollToIndex(0)
         ui.onNodeWithText("海报失败验收电影").assertExists()
     }
 }

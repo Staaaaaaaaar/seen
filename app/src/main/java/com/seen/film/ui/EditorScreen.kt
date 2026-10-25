@@ -1,6 +1,7 @@
 @file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.seen.film.ui
 
+import androidx.activity.compose.BackHandler
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -39,6 +40,22 @@ fun EditorScreen(vm: SeenViewModel, draft: ViewingDraft, onBack: () -> Unit, onS
     val errors by vm.fieldErrors.collectAsState()
     var more by rememberSaveable(draft.key) { mutableStateOf(draft.time.isNotBlank() || draft.location.isNotBlank()) }
     var thoughts by rememberSaveable(draft.key) { mutableStateOf(draft.notes.isNotEmpty()) }
+    val manual = draft.isNewMovie && draft.tmdbId == null
+    var movieStep by rememberSaveable(draft.key) { mutableStateOf(manual) }
+    var movieErrors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
+    fun back() {
+        if (manual && !movieStep) movieStep = true
+        else if (!manual && movieStep) movieStep = false
+        else onBack()
+    }
+    BackHandler(((manual && !movieStep) || (!manual && movieStep)) && !busy) { back() }
+    LaunchedEffect(errors) {
+        val metadataErrors = errors.filterKeys { it in setOf("title", "originalTitle", "year") }
+        if (draft.isNewMovie && metadataErrors.isNotEmpty()) {
+            movieErrors = metadataErrors
+            movieStep = true
+        }
+    }
     val context = LocalContext.current
     val pickPoster = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> uri?.let(vm::selectPoster) }
     fun openDate() {
@@ -58,21 +75,25 @@ fun EditorScreen(vm: SeenViewModel, draft: ViewingDraft, onBack: () -> Unit, onS
         }, time.hour, time.minute, true).show()
     }
     Scaffold(topBar = {
-        TopAppBar(title = { Text(if (draft.isEditing) "编辑观看" else "添加观看") }, navigationIcon = {
-            IconButton(onBack, enabled = !busy) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
+        TopAppBar(title = { Text(if (movieStep) "电影资料" else if (draft.isEditing) "编辑观看" else "添加观看", style = MaterialTheme.typography.titleMedium) }, navigationIcon = {
+            IconButton(::back, enabled = !busy) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
         }, actions = {
-            TextButton(onClick = { vm.save(onSaved) }, enabled = !busy) { Text(if (busy) "处理中…" else "保存") }
+            TextButton(onClick = {
+                if (movieStep) {
+                    movieErrors = ViewingRules.validate(draft).filterKeys { it in setOf("title", "originalTitle", "year") }
+                    if (movieErrors.isEmpty()) movieStep = false
+                } else vm.save(onSaved)
+            }, enabled = !busy) { Text(if (busy) "处理中…" else if (movieStep) "下一步" else "保存") }
         })
     }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            if (draft.isNewMovie) {
-                Text("电影资料", style = MaterialTheme.typography.titleLarge)
+            if (movieStep) {
                 OutlinedTextField(draft.title, { value -> vm.update { it.copy(title = value) } }, Modifier.fillMaxWidth(), label = { Text("电影名称 *") }, enabled = !busy, singleLine = true,
-                    isError = errors.containsKey("title"), supportingText = { errors["title"]?.let { Text(it) } })
+                    isError = movieErrors.containsKey("title"), supportingText = { movieErrors["title"]?.let { Text(it) } })
                 OutlinedTextField(draft.originalTitle, { value -> vm.update { it.copy(originalTitle = value) } }, Modifier.fillMaxWidth(), label = { Text("原名（可选）") }, enabled = !busy, singleLine = true,
-                    isError = errors.containsKey("originalTitle"), supportingText = { errors["originalTitle"]?.let { Text(it) } })
+                    isError = movieErrors.containsKey("originalTitle"), supportingText = { movieErrors["originalTitle"]?.let { Text(it) } })
                 OutlinedTextField(draft.year, { value -> vm.update { it.copy(year = value) } }, Modifier.fillMaxWidth(), label = { Text("上映年份（可选）") }, enabled = !busy, singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = errors.containsKey("year"), supportingText = { errors["year"]?.let { Text(it) } })
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), isError = movieErrors.containsKey("year"), supportingText = { movieErrors["year"]?.let { Text(it) } })
                 Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (draft.posterKey != null) Poster(vm.app.posters.file(draft.posterKey), Modifier.width(72.dp))
                     OutlinedButton(enabled = !busy, onClick = { pickPoster.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
@@ -86,50 +107,62 @@ fun EditorScreen(vm: SeenViewModel, draft: ViewingDraft, onBack: () -> Unit, onS
                     Text(listOf(draft.year, draft.originalTitle).filter { it.isNotBlank() }.joinToString(" · "), color = SeenSecondary)
                 }
             }
-            HorizontalDivider()
-            Text("观看日期 *", style = MaterialTheme.typography.titleMedium)
-            OutlinedButton(onClick = { openDate() }, Modifier.fillMaxWidth().heightIn(min = 48.dp), enabled = !busy) { Text(draft.date) }
-            errors["date"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            Text("个人评分 · ${ViewingRules.ratingLabel(draft.rating)}", style = MaterialTheme.typography.titleMedium)
-            BoxWithConstraints {
-                val starSize = if (maxWidth < 300.dp) 24.dp else 30.dp
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                    IconButton(enabled = !busy && draft.rating != null && draft.rating > 1, onClick = { vm.update { it.copy(rating = ((it.rating ?: 2) - 1).coerceAtLeast(1)) } }) {
-                        Icon(Icons.Outlined.Remove, "减少半星")
+            if (!movieStep) {
+                if (draft.isNewMovie) TextButton(onClick = { movieStep = true }, enabled = !busy) { Text("修改电影资料") }
+                if (draft.isNewMovie && draft.tmdbId != null) {
+                    OutlinedButton(enabled = !busy, onClick = { pickPoster.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
+                        Text(if (draft.posterKey == null) "选择海报（可选）" else "更换海报")
                     }
-                    Row(Modifier.semantics { contentDescription = "${ViewingRules.ratingLabel(draft.rating)}，共 5 星" }) {
-                        for (i in 1..5) {
-                            val rating = draft.rating ?: 0
-                            val icon = if (rating >= i * 2) Icons.Outlined.Star else if (rating == i * 2 - 1) Icons.AutoMirrored.Outlined.StarHalf else Icons.Outlined.StarBorder
-                            Icon(icon, null, Modifier.size(starSize))
+                }
+                HorizontalDivider()
+                Surface(onClick = { openDate() }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp), shape = MaterialTheme.shapes.medium) {
+                    FlowRow(Modifier.padding(vertical = 12.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("观看日期", style = MaterialTheme.typography.titleMedium)
+                        Text(draft.date, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
+                    }
+                }
+                errors["date"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                Text("个人评分 · ${ViewingRules.ratingLabel(draft.rating)}", style = MaterialTheme.typography.titleMedium)
+                BoxWithConstraints {
+                    val starSize = ((maxWidth.value - 96f) / 5f).coerceIn(12f, 30f).dp
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        IconButton(enabled = !busy && draft.rating != null && draft.rating > 1, onClick = { vm.update { it.copy(rating = ((it.rating ?: 2) - 1).coerceAtLeast(1)) } }) {
+                            Icon(Icons.Outlined.Remove, "减少半星")
+                        }
+                        Row(Modifier.semantics { contentDescription = "${ViewingRules.ratingLabel(draft.rating)}，共 5 星" }) {
+                            for (i in 1..5) {
+                                val rating = draft.rating ?: 0
+                                val icon = if (rating >= i * 2) Icons.Outlined.Star else if (rating == i * 2 - 1) Icons.AutoMirrored.Outlined.StarHalf else Icons.Outlined.StarBorder
+                                Icon(icon, null, Modifier.size(starSize))
+                            }
+                        }
+                        IconButton(enabled = !busy && (draft.rating == null || draft.rating < 10), onClick = { vm.update { it.copy(rating = ((it.rating ?: 0) + 1).coerceAtMost(10)) } }) {
+                            Icon(Icons.Outlined.Add, "增加半星")
                         }
                     }
-                    IconButton(enabled = !busy && (draft.rating == null || draft.rating < 10), onClick = { vm.update { it.copy(rating = ((it.rating ?: 0) + 1).coerceAtMost(10)) } }) {
-                        Icon(Icons.Outlined.Add, "增加半星")
+                }
+                if (draft.rating != null) TextButton(enabled = !busy, onClick = { vm.update { it.copy(rating = null) } }) { Text("清除评分") }
+                HorizontalDivider()
+                TextButton(onClick = { more = !more }, enabled = !busy) { Text(if (more) "收起时间与地点" else "更多信息 · 时间、地点（可选）") }
+                if (more) {
+                    FlowRow(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = { openTime() }, enabled = !busy) { Text(draft.time.ifBlank { "选择时间" }) }
+                        if (draft.time.isNotBlank()) TextButton(enabled = !busy, onClick = { vm.update { it.copy(time = "") } }) { Text("清除时间") }
                     }
+                    errors["time"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    OutlinedTextField(draft.location, { value -> vm.update { it.copy(location = value) } }, Modifier.fillMaxWidth(), label = { Text("地点（可选）") }, enabled = !busy, singleLine = true,
+                        isError = errors.containsKey("location"), supportingText = { errors["location"]?.let { Text(it) } })
                 }
+                HorizontalDivider()
+                TextButton(onClick = { thoughts = !thoughts }, enabled = !busy) { Text(if (thoughts) "收起感受" else "添加感受（可选）") }
+                if (thoughts) OutlinedTextField(draft.notes, { value -> vm.update { it.copy(notes = value) } }, Modifier.fillMaxWidth().heightIn(min = 160.dp),
+                    label = { Text("想法与感受") }, enabled = !busy, minLines = 5,
+                    isError = errors.containsKey("notes"), supportingText = { errors["notes"]?.let { Text(it) } })
+                errors["rating"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                // Also keep validation visible when an optional section is collapsed.
+                if (!more) listOfNotNull(errors["time"], errors["location"]).forEach { Text(it, color = MaterialTheme.colorScheme.error) }
+                if (!thoughts) errors["notes"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             }
-            if (draft.rating != null) TextButton(enabled = !busy, onClick = { vm.update { it.copy(rating = null) } }) { Text("清除评分") }
-            HorizontalDivider()
-            TextButton(onClick = { more = !more }, enabled = !busy) { Text(if (more) "收起时间与地点" else "更多信息 · 时间、地点（可选）") }
-            if (more) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedButton(onClick = { openTime() }, enabled = !busy) { Text(draft.time.ifBlank { "选择时间" }) }
-                    if (draft.time.isNotBlank()) TextButton(enabled = !busy, onClick = { vm.update { it.copy(time = "") } }) { Text("清除时间") }
-                }
-                errors["time"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                OutlinedTextField(draft.location, { value -> vm.update { it.copy(location = value) } }, Modifier.fillMaxWidth(), label = { Text("地点（可选）") }, enabled = !busy, singleLine = true,
-                    isError = errors.containsKey("location"), supportingText = { errors["location"]?.let { Text(it) } })
-            }
-            HorizontalDivider()
-            TextButton(onClick = { thoughts = !thoughts }, enabled = !busy) { Text(if (thoughts) "收起感受" else "添加感受（可选）") }
-            if (thoughts) OutlinedTextField(draft.notes, { value -> vm.update { it.copy(notes = value) } }, Modifier.fillMaxWidth().heightIn(min = 160.dp),
-                label = { Text("想法与感受") }, enabled = !busy, minLines = 5,
-                isError = errors.containsKey("notes"), supportingText = { errors["notes"]?.let { Text(it) } })
-            errors["rating"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            // Also keep validation visible when an optional section is collapsed.
-            if (!more) listOfNotNull(errors["time"], errors["location"]).forEach { Text(it, color = MaterialTheme.colorScheme.error) }
-            if (!thoughts) errors["notes"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
             Spacer(Modifier.height(24.dp))
         }
     }

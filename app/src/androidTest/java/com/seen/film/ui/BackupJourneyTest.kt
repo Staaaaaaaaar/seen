@@ -22,7 +22,7 @@ class BackupJourneyTest {
     @get:Rule val ui = createAndroidComposeRule<MainActivity>()
     private fun waitFor(text: String) = ui.waitUntil(15000) { ui.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
     @Test fun previewSurvivesRotationCancelPreservesLibraryAndExplicitRestoreReplacesIt() {
-        waitFor("Seen")
+        waitFor("电影库")
         val app = ui.activity.application as SeenApplication
         val vm = ViewModelProvider(ui.activity)[SeenViewModel::class.java]
         ui.waitUntil { vm.draftReady.value }
@@ -33,8 +33,8 @@ class BackupJourneyTest {
             app.repository.save(ViewingDraft(title = "覆盖前的合成记录", date = "2000-01-01"))
             BackupCodec().write(empty, BackupData("0.3.0", "2020-01-01T00:00:00Z", emptyList(), emptyList(), emptyMap()))
         }
-        ui.onNodeWithContentDescription("更多").performClick()
-        ui.onNodeWithText("设置与关于").performClick()
+        ui.onNodeWithText("设置").performClick()
+        ui.onNodeWithText("导入备份").performClick()
         ui.onNodeWithText("备份与恢复").performScrollTo().assertIsDisplayed()
         ui.runOnIdle { vm.previewBackup(Uri.fromFile(empty)) }
         waitFor("确认覆盖恢复")
@@ -57,7 +57,7 @@ class BackupJourneyTest {
         empty.delete()
     }
     @Test fun lostExportSessionReportsFailureAndPreservesExistingData() {
-        waitFor("Seen")
+        waitFor("电影库")
         val app = ui.activity.application as SeenApplication
         val vm = ViewModelProvider(ui.activity)[SeenViewModel::class.java]
         val before = runBlocking { app.database.dao().allMovies() to app.database.dao().allViewings() }

@@ -32,12 +32,13 @@ class MovieJourneyTest {
 
     @Test fun manualMovieRatingRotationRepeatEditAndDelete() {
         waitFor("还没有电影")
-        ui.onNodeWithContentDescription("添加看过的电影").performClick()
+        ui.onNodeWithContentDescription("添加记录").performClick()
         waitFor("手动添加电影")
         ui.onNodeWithText("手动添加电影").performClick()
         waitFor("电影名称 *")
         ui.onNodeWithText("电影名称 *").performTextInput("模拟器验收电影")
         closeSoftKeyboard()
+        ui.onNodeWithText("下一步").performClick()
 
         // Exercise the actual UI controls, including the previously disabled '+'.
         for (halfStars in 1..10) {
@@ -50,11 +51,11 @@ class MovieJourneyTest {
         ui.onNodeWithText("清除评分").performScrollTo().performClick()
         waitFor("个人评分 · 未评分")
         ui.onNodeWithText("保存").performClick()
-        waitFor("看过 1 次")
+        waitFor("观看记录 · 1 次")
         ui.onNodeWithText("感受").assertDoesNotExist()
 
         ui.activityRule.scenario.recreate()
-        waitFor("看过 1 次")
+        waitFor("观看记录 · 1 次")
         ui.onNodeWithText("再看一次").performClick()
         waitFor("添加感受（可选）")
         ui.onNodeWithText("添加感受（可选）").performScrollTo().performClick()
@@ -63,12 +64,12 @@ class MovieJourneyTest {
         ui.activityRule.scenario.recreate()
         waitFor("重看后的感受 🎬\n第二行")
         ui.onNodeWithText("保存").performClick()
-        waitFor("看过 2 次")
+        waitFor("观看记录 · 2 次")
 
         ui.onNodeWithContentDescription("返回").performClick()
-        waitFor("1 部电影")
-        ui.onNodeWithText("时间").performClick()
-        waitFor("2 次观看")
+        waitFor("电影库")
+        ui.onNodeWithText("时间").assertDoesNotExist()
+        ui.onNodeWithText("2 次观看").assertExists()
         ui.onAllNodesWithText("模拟器验收电影")[0].performClick()
         waitFor("重看后的感受 🎬\n第二行")
         recordMenu()
@@ -78,7 +79,7 @@ class MovieJourneyTest {
         ui.onNodeWithText("想法与感受").performTextInput("修改后的感受")
         closeSoftKeyboard()
         ui.onNodeWithText("保存").performClick()
-        waitFor("看过 2 次")
+        waitFor("观看记录 · 2 次")
         ui.onNodeWithText("观看记录 · 2 次").performScrollTo()
         recordMenu()
         ui.onNodeWithText("删除本次观看").performClick()
