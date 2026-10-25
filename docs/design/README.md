@@ -2,12 +2,14 @@
 
 ## 当前设计
 
-- [产品与设计约定](../design-review.md)：v0.4 当前页面职责、数据语义、视觉与无障碍规范。
+- [产品与设计约定](../design-review.md)：v1.0 沿用的页面职责、数据语义、视觉与无障碍规范。
 - [v0.4 布局与记录流程](../v0.4.0-navigation-design.md)：用户确认的底栏、海报电影库与设置方案。
 - [四屏静态稿 PNG](v0.4.0-layout-v3.png) / [SVG 源稿](v0.4.0-layout-v3.svg)：布局参考；不是 App 运行截图。
 - [实际验证记录](../v0.4.0-validation.md)：命令、源码/APK 摘要、设备结果与人工待验收；本机真实截图保存在该日志指明的 `.tools/v0.4.0/`，不提交合成库或 APK。
 
 ## 历史归档
+
+- [早期六屏 PNG](archive/pre-v0.4/ui-review.png) / [SVG](archive/pre-v0.4/ui-review.svg)、[主页](archive/pre-v0.4/ui-home-v2.png)、[详情](archive/pre-v0.4/ui-movie-detail-v2.png)：v0.4 以前的参考。
 
 - [v0.1–v0.3 设计约定](archive/pre-v0.4-design.md)：旧版无底栏、海报/时间切换与早期备份草案，仅作历史。
 - [v0.4 第一稿视觉方案](archive/v0.4.0/visual-proposal.md)：苹果风格方向，后续已调整。

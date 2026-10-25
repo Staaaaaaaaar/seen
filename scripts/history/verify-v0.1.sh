@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Complete local build + API 36 instrumentation gate. Does not publish or tag.
 set -Eeuo pipefail
-seen_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+seen_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$seen_root"
 python3 - <<'VERSION'
 from pathlib import Path

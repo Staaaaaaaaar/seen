@@ -2,15 +2,13 @@
 
 个人的已看电影库，Android 原生应用。以电影为主体，记录每次观看的日期、地点、可选评分与感受；本地保存，无 Seen 账号、广告或遥测；可选连接 TMDB 获取资料。
 
-当前版本 **v0.4.1**，包含海报下载容错与整部电影删除。构建、设备验收和交付记录见 [v0.4.1 验证日志](docs/v0.4.1-validation.md)，变更见 [CHANGELOG](CHANGELOG.md)。远端交付以 [Actions](https://github.com/Staaaaaaaaar/seen/actions/workflows/android.yml) 与 [tags](https://github.com/Staaaaaaaaar/seen/tags) 为准，不创建正式 GitHub Release。历史界面验证见 [v0.4 日志](docs/v0.4.0-validation.md)。
-
-v0.2.1 维护补丁：优先连接 `api.tmdb.org`，网络失败时回退原入口，详见 [补丁验证日志](docs/v0.2.1-validation.md)。已有 v0.2.0 tag 保持不变。
+当前版本 **v1.0.0**，第一阶段正式版本：离线电影与观看记录、可选 TMDB 资料、JSON 备份和系统浅深色界面。[下载正式安装包](https://github.com/Staaaaaaaaar/seen/releases/tag/v1.0.0) · [安装与调试版迁移](docs/release.md) · [验证记录](docs/v1.0.0-validation.md) · [CHANGELOG](CHANGELOG.md)。
 
 ## 主要实现
 
 Kotlin + Jetpack Compose + Material 3，单 Activity、单 app 模块，手动依赖注入。Compose UI → ViewModel（StateFlow / 协程）→ Repository → Room（SQLite / Flow）。电影和每次观看分别存储；底部提供电影库、添加记录、设置，电影库以海报去重展示，详情保留每次观看历史。手动建片先填写资料，再添加观看，最终事务保存；外观跟随系统浅深色。系统图片选择器导入海报后复制到私有存储；编辑草稿用 AtomicFile 暂存。
 
-v0.1 提供海报/时间视图、本地搜索、电影详情、手动建片、本地海报、观看增删改查、重复观看、0.5–5 星半星评分和可选感受。v0.2 增加 TMDB 中文/原名搜索、分页、导演/片长/国家资料、私有海报与 TMDB ID 复用；v0.3 提供全部电影/观看/海报 JSON 导出、预检与确认后覆盖恢复；v0.4 调整为底部三入口与纯海报电影库，完善记录流程并支持系统浅深色。
+主页按电影展示海报，详情保留每次观看；支持本地搜索、重复观看、观影日期、可选半星评分/时间/地点/感受。TMDB 提供中文/原名搜索与资料，JSON 备份含全部电影、观看与海报。删除电影须确认，并删除该片全部观看记录。
 
 在「设置 → TMDB 凭证」输入 TMDB **API Read Access Token**（非 API Key），可从 [TMDB 账户 API 设置](https://www.themoviedb.org/settings/api) 获取。模拟器若因 DNS 异常搜索超时，见 [可选联网修复](docs/development.md#模拟器-tmdb-解析异常的可选修复)。凭据仅写入本机应用私有存储，不内置到 APK、不提交；移除凭据不影响已存资料。添加电影时可搜索 TMDB 或手动添加，搜索会发送关键词，失败可重试；保存后的资料与海报离线可读。海报失败不阻止建片，可选本地海报。需要重新导入时，可在电影详情右上角“电影操作 → 删除电影”，确认后删除该电影及全部观看记录，再重新搜索添加。
 
@@ -50,7 +48,7 @@ ANDROID_SERIAL=emulator-5556 bash scripts/check.sh --device
 
 SDK 的显式 CLI 安装、路径优先级、模拟器准备、代理与排障见 [开发指南](docs/development.md)。多设备时必须选择测试设备；请使用隔离模拟器，保留承载真实记录的实例，签名不一致时不能靠卸载解决。
 
-Debug 包名 `com.seen.film.debug`，APK：`app/build/outputs/apk/debug/app-debug.apk`。测试报告：`app/build/reports/`。
+Debug 包名 `com.seen.film.debug`，APK：`app/build/outputs/apk/debug/app-debug.apk`；正式包名 `com.seen.film`，签名构建见 [发布流程](docs/release.md)。测试报告：`app/build/reports/`。
 
 ## 项目导航
 
@@ -65,6 +63,7 @@ Debug 包名 `com.seen.film.debug`，APK：`app/build/outputs/apk/debug/app-debu
 
 - [开发指南](docs/development.md)：准备、开发、运行、测试、排障。
 - [贡献指南](CONTRIBUTING.md) · [代理开发约定](AGENTS.md)：变更与验收规范。
-- [产品与设计](docs/design-review.md) · [UI 示意](docs/ui-review.svg) · [开发规划](docs/roadmap.md)。
+- [产品与设计](docs/design-review.md) · [设计资料与归档](docs/design/README.md) · [开发规划](docs/roadmap.md)。
 - [v0.4 底栏与海报电影库方案](docs/v0.4.0-navigation-design.md) · [最新四屏布局稿](docs/design/v0.4.0-layout-v3.png)（设计依据；实际验收见 [验证日志](docs/v0.4.0-validation.md)）。
+- [发布流程](docs/release.md) · [脚本索引](scripts/README.md)。
 - [v0.2.1 验证日志](docs/v0.2.1-validation.md) · [v0.2 验证日志](docs/v0.2.0-validation.md) · [v0.1 验证日志](docs/v0.1.0-validation.md) · [版本与发布](docs/versioning.md)。

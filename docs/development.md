@@ -103,7 +103,7 @@ ANDROID_SERIAL=emulator-5556 bash scripts/check.sh --device
 
 设备测试含 Room/事务/重启、私有海报、草稿与完整观看界面流程，测试 Application 与数据隔离。使用专用模拟器：Gradle 为安装测试 APK 可能处理包状态，不要对真实个人数据实例运行集成测试。不同机器的 Debug 签名可能不同；签名冲突请选择隔离设备或匹配密钥，不能卸载真实实例。Redmi 真机的选图、手势区、TalkBack、大字号和覆盖升级需单独人工回归。
 
-完整本地门槛 `bash scripts/verify-v0.1.sh` 串联构建与专用 API 36 测试，已有模拟器保留，自行启动的退出时关闭。要求组件和依赖保护已准备；不会隐式安装或修改锁。成功收集到 `.tools/v0.1.0/`。本地门槛不查询 GitHub、不要求 gh 登录；发布前可单独运行 `python3 scripts/git_preflight.py` 做只读连通性检查。CI/tag 属发布检查，不由本地测试成功代替。
+当前本地门槛为 `bash scripts/check.sh` 与 `ANDROID_SERIAL=隔离设备 bash scripts/check.sh --device`；正式包另运行 [发布流程](release.md) 中的签名构建与升级检查。脚本职责见 [脚本索引](../scripts/README.md)。历史 v0.1/v0.3 专项入口已移入 `scripts/history/`，不适用于当前界面。
 
 ## 依赖与 CI
 
@@ -138,7 +138,7 @@ Studio 还会解析 Gradle 分发源码、库的 sources/Javadoc JAR 和 Kotlin 
 
 Actions 只有一个 job，执行环境脚本回归、App/测试 APK 编译、JVM 单测与 lint，成功后上传 Debug APK 和构建记录，失败时保留报告。JDK 17、Wrapper 与 SDK 组件均显式配置，使用默认官方依赖源，不依赖 SDK action 默认的旧 `tools` 包。
 
-**云模拟器不属于每次 push / PR 的强制检查。** 当前个人离线 MVP 的设备验收放在交付前本地执行 `bash scripts/verify-v0.1.sh`：真实 API 36 模拟器上的 7 项集成测试仍须通过，并与最终 commit/source/APK 记录对应。联网下载、磁盘余量和云端虚拟化不再影响每次提交的基础检查。正式交付需要“远端基础 CI 通过 + 本地设备验收通过”，两类证据分别记录，不宣称未执行的云端设备测试通过。
+**云模拟器不属于每次 push / PR 的强制检查。** 交付前在隔离 API 36 设备实际运行全部集成测试，保留命令、源码/APK 摘要和报告；当前门槛见 [v1.0 验证日志](v1.0.0-validation.md)。正式交付要求远端基础 CI、本地设备验收和签名 Release 校验分别通过，不用配置检查或旧版本报告替代。
 
 
 ## 排障与日志
@@ -153,7 +153,7 @@ Actions 只有一个 job，执行环境脚本回归、App/测试 APK 编译、JV
 | 设备测试 | `app/build/reports/androidTests/connected/` 与 `.tools/device-tests-latest.log` |
 | 安装运行 | 明确 serial；检查签名、磁盘及 `adb -s SERIAL logcat` |
 
-构建日志 `.tools/build-latest.log`，验证记录 `.tools/check-result.json` / `device-result.json`，完整验收 `.tools/v0.1-verification.log`。报告来自实际执行；配置预检和依赖诊断不代表 App 成功运行。受限会话的 socket、X11 或 KVM 可见性与宿主机不同，应在正常终端复核，不默认清缓存、删 AVD 或重装系统。
+构建日志 `.tools/build-latest.log`，验证记录 `.tools/check-result.json` / `device-result.json`；正式包产物与收据 `.tools/releases/版本号/`。报告来自实际执行；配置预检和依赖诊断不代表 App 成功运行。受限会话的 socket、X11 或 KVM 可见性与宿主机不同，应在正常终端复核，不默认清缓存、删 AVD 或重装系统。
 
 ## v0.2 联网资料开发
 
@@ -180,9 +180,9 @@ ANDROID_SERIAL=emulator-5556 bash scripts/emulator-network.sh --stop
 
 首次启用后若 App 尚未切换代理，可退出重开应用；无需重新填写令牌、卸载或清数据。模拟器重启后若工具已退出且设置仍残留，先执行 `--stop`，再启动工具。此入口不承诺修复真实手机或所有网络，也不能代替默认网络可达性验收。
 
-## v0.2 本地验收入口
+## 当前本地验收入口
 
-`verify-v0.1.sh` 仅用于历史 v0.1 版本，不能用于当前 v0.2。当前使用标准检查入口；API 36 集成测试应选择独立验收 AVD，避免 Gradle 的测试安装/移除过程影响已有实例：
+当前使用标准检查入口；API 36 集成测试应选择独立验收 AVD，避免 Gradle 的测试安装/移除过程影响已有实例：
 
 ```bash
 python3 -m unittest discover -s scripts/tests -v
@@ -192,7 +192,7 @@ ANDROID_SERIAL=emulator-5558 bash scripts/check.sh --device
 git diff --check
 ```
 
-v0.2.0 的门槛是 8 项 JVM 与 19 项设备测试；v0.2.1 更新为 14 项 JVM 与 21 项设备测试。最终打包前核对两份 JSON 中 sourceSha256 / apkSha256 与当前源码/APK 一致；基线 commit 上验证未提交代码不能冒充最终 commit 通过。真实联网与旧 APK 升级按 v0.2 验证日志单独留证，不用测试 Application 的固定响应替代。
+最终打包前核对两份 JSON 的 sourceSha256 / apkSha256 与当前源码/APK 一致。基线 commit 上验证未提交代码不能冒充最终 commit 通过；提交后的摘要绑定须保留原验证时间和原 commit。真实联网、正式签名与旧包升级另行留证，不用测试 Application 的固定响应替代。
 
 ## v0.2.1 API 入口与回退
 
@@ -202,4 +202,8 @@ v0.2.0 的门槛是 8 项 JVM 与 19 项设备测试；v0.2.1 更新为 14 项 J
 
 备份由 `BackupCodec`（流式协议）、`BackupRules`（纯规则）、`BackupRepository`（私有暂存/导出/恢复）、`LibraryAccess`（应用级写入协调）构成，设置通过 ViewModel 调用。恢复不修改 Room schema，不导入凭据或草稿。详细契约见 [备份格式](backup-format.md)。
 
-日常仍运行 `bash scripts/check.sh` 与专用 API 36 `check.sh --device`。备份规则进入 JVM 门槛，平台 JSON、JPEG、文档提供器、Room 回滚、恢复界面/旋转进入普通设备门槛；真正 SIGKILL 检查独立使用 `scripts/verify-backup-crash.py`，普通 Gradle 测试不运行需外部控制的测试类。真实旧 APK 升级脚本 `scripts/verify-backup-upgrade.py` 要求空的隔离模拟器，不卸载已有包。完整命令、报告和人工待验项见 [v0.3 验证日志](v0.3.0-validation.md)。
+日常仍运行 `bash scripts/check.sh` 与专用 API 36 `check.sh --device`。备份规则进入 JVM 门槛，平台 JSON、JPEG、文档提供器、Room 回滚、恢复界面/旋转进入普通设备门槛；真正 SIGKILL 检查独立使用 `scripts/verify-backup-crash.py`，普通 Gradle 测试不运行需外部控制的测试类。历史旧 APK 升级脚本 `scripts/history/verify-backup-upgrade.py` 仅对应 v0.3 当时的界面；当前正式包升级按 [发布流程](release.md) 验证，不卸载已有包。完整命令、报告和人工待验项见 [v0.3 验证日志](v0.3.0-validation.md)。
+
+## 正式签名与发布
+
+Release 使用仓库外的长期密钥，通过四个环境变量配置；日常 Debug 构建不要求密钥。签名构建、校验、调试版迁移与 GitHub Release 步骤见 [发布流程](release.md)。CI 保持单 job，不保存或使用私人正式密钥。

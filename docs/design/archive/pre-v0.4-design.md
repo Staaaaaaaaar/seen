@@ -8,7 +8,7 @@
 
 本页保留现行产品、交互与视觉约定，取代原始 brief 和第一稿。设计目标不等于已实现或已通过设备验收；功能分版见 [开发规划](../../roadmap.md)，实际证据见 [验证日志](../../v0.1.0-validation.md)。
 
-[六屏 UI 示意（PNG）](../../ui-review.png) / [SVG 源文件](../../ui-review.svg) · [主页](../../ui-home-v2.png) · [电影详情](../../ui-movie-detail-v2.png) 包含后续版本能力；示意海报为矢量构图，不是实际电影数据。
+[六屏 UI 示意（PNG）](pre-v0.4/ui-review.png) / [SVG 源文件](pre-v0.4/ui-review.svg) · [主页](pre-v0.4/ui-home-v2.png) · [电影详情](pre-v0.4/ui-movie-detail-v2.png) 包含后续版本能力；示意海报为矢量构图，不是实际电影数据。
 
 ## 产品与数据原则
 
