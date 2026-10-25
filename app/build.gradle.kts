@@ -5,6 +5,11 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
 }
+val releaseSigningNames = listOf("SEEN_KEYSTORE_FILE", "SEEN_KEYSTORE_PASSWORD", "SEEN_KEY_ALIAS", "SEEN_KEY_PASSWORD")
+val releaseSigning = releaseSigningNames.associateWith { providers.environmentVariable(it).orNull }
+require(releaseSigning.values.all { it == null } || releaseSigning.values.all { !it.isNullOrBlank() }) {
+    "Release signing requires all four SEEN_KEYSTORE/KEY environment variables"
+}
 android {
     namespace = "com.seen.film"
     compileSdk = 36
@@ -12,15 +17,26 @@ android {
         applicationId = "com.seen.film"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.4.1"
+        versionCode = 7
+        versionName = "1.0.0"
         testInstrumentationRunner = "com.seen.film.SeenTestRunner"
         // External SIGKILL harness is run separately; ordinary connected tests never skip it.
         testInstrumentationRunnerArguments["notClass"] = "com.seen.film.data.BackupCrashTest"
     }
+    signingConfigs {
+        if (releaseSigning.values.all { !it.isNullOrBlank() }) create("release") {
+            storeFile = file(releaseSigning.getValue("SEEN_KEYSTORE_FILE")!!)
+            storePassword = releaseSigning.getValue("SEEN_KEYSTORE_PASSWORD")
+            keyAlias = releaseSigning.getValue("SEEN_KEY_ALIAS")
+            keyPassword = releaseSigning.getValue("SEEN_KEY_PASSWORD")
+        }
+    }
     buildTypes {
         debug { applicationIdSuffix = ".debug"; versionNameSuffix = "-debug" }
-        release { isMinifyEnabled = false }
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
+        }
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions {

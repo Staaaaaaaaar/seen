@@ -5,6 +5,9 @@
 local.properties
 *.jks
 *.keystore
+*.p12
+*.pfx
+signing.env
 keystore.properties
 secrets.properties
 .env

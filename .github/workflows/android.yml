@@ -28,7 +28,9 @@ jobs:
       - name: Test development helpers
         run: python3 -m unittest discover -s scripts/tests -v
       - name: Build, unit tests and lint
-        run: bash scripts/check.sh
+        run: |
+          bash scripts/check.sh
+          ./gradlew :app:assembleRelease :app:lintRelease --console=plain
       - name: Upload verified APKs and receipts
         if: success()
         uses: actions/upload-artifact@v4
