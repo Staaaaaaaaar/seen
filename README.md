@@ -2,11 +2,13 @@
 
 个人的已看电影库，Android 原生应用。以电影为主体，记录每次观看的日期、地点、可选评分与感受；本地保存，无 Seen 账号、广告或遥测；可选连接 TMDB 获取资料。
 
-当前版本 **v1.0.0**，第一阶段正式版本：离线电影与观看记录、可选 TMDB 资料、JSON 备份和系统浅深色界面。[下载正式安装包](https://github.com/Staaaaaaaaar/seen/releases/tag/v1.0.0) · [安装与调试版迁移](docs/release.md) · [验证记录](docs/v1.0.0-validation.md) · [CHANGELOG](CHANGELOG.md)。
+已发布版本 **v1.0.0**，第一阶段正式版本：离线电影与观看记录、可选 TMDB 资料、JSON 备份和系统浅深色界面。[下载正式安装包](https://github.com/Staaaaaaaaar/seen/releases/tag/v1.0.0) · [安装与调试版迁移](docs/release.md) · [验证记录](docs/v1.0.0-validation.md) · [CHANGELOG](CHANGELOG.md)。
+
+当前开发版本 **v1.1.0**（未发布）新增简单片单：支持手动/TMDB 添加、移出和记录观看，保存观看成功后移出片单。无自定义集合。变更与验证见 [片单验证日志](docs/v1.1.0-validation.md)。
 
 ## 主要实现
 
-Kotlin + Jetpack Compose + Material 3，单 Activity、单 app 模块，手动依赖注入。Compose UI → ViewModel（StateFlow / 协程）→ Repository → Room（SQLite / Flow）。电影和每次观看分别存储；底部提供电影库、添加记录、设置，电影库以海报去重展示，详情保留每次观看历史。手动建片先填写资料，再添加观看，最终事务保存；外观跟随系统浅深色。系统图片选择器导入海报后复制到私有存储；编辑草稿用 AtomicFile 暂存。
+Kotlin + Jetpack Compose + Material 3，单 Activity、单 app 模块，手动依赖注入。Compose UI → ViewModel（StateFlow / 协程）→ Repository → Room（SQLite / Flow）。电影和每次观看分别存储；底部提供记录、片单、设置；记录页右下角添加观看，片单以列表保存想看的电影，电影库以海报去重展示，详情保留每次观看历史。手动建片先填写资料，再添加观看，最终事务保存；外观跟随系统浅深色。系统图片选择器导入海报后复制到私有存储；编辑草稿用 AtomicFile 暂存。
 
 主页按电影展示海报，详情保留每次观看；支持本地搜索、重复观看、观影日期、可选半星评分/时间/地点/感受。TMDB 提供中文/原名搜索与资料，JSON 备份含全部电影、观看与海报。删除电影须确认，并删除该片全部观看记录。
 

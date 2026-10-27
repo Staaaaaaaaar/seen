@@ -17,8 +17,8 @@ android {
         applicationId = "com.seen.film"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0.0"
+        versionCode = 8
+        versionName = "1.1.0"
         testInstrumentationRunner = "com.seen.film.SeenTestRunner"
         // External SIGKILL harness is run separately; ordinary connected tests never skip it.
         testInstrumentationRunnerArguments["notClass"] = "com.seen.film.data.BackupCrashTest"
