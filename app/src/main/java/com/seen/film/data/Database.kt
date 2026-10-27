@@ -18,6 +18,7 @@ data class Movie(
     val productionCountries: String? = null,
     val createdAt: String,
     val updatedAt: String,
+    @ColumnInfo(defaultValue = "0") val wantToWatch: Boolean = false,
 )
 
 @Entity(
@@ -65,13 +66,21 @@ interface SeenDao {
     @Query("DELETE FROM movies") suspend fun deleteAllMovies()
     @Query("DELETE FROM viewings WHERE movieId = :movieId") suspend fun deleteMovieViewings(movieId: String)
     @Query("DELETE FROM movies WHERE id = :id") suspend fun deleteMovie(id: String): Int
+    @Query("UPDATE movies SET wantToWatch = :wanted WHERE id = :id") suspend fun setWanted(id: String, wanted: Boolean): Int
     @Insert suspend fun insertMovie(movie: Movie)
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertViewing(viewing: Viewing)
     @Update suspend fun updateViewing(viewing: Viewing): Int
     @Query("DELETE FROM viewings WHERE id = :id") suspend fun deleteViewing(id: String): Int
 }
 
-@Database(entities = [Movie::class, Viewing::class], version = 1, exportSchema = true)
+@Database(entities = [Movie::class, Viewing::class], version = 2, exportSchema = true)
 abstract class SeenDatabase : RoomDatabase() {
     abstract fun dao(): SeenDao
+    companion object {
+        val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE movies ADD COLUMN wantToWatch INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+    }
 }

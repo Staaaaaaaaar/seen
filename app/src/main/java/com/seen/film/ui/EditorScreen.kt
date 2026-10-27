@@ -41,14 +41,14 @@ fun EditorScreen(vm: SeenViewModel, draft: ViewingDraft, onBack: () -> Unit, onS
     var more by rememberSaveable(draft.key) { mutableStateOf(draft.time.isNotBlank() || draft.location.isNotBlank()) }
     var thoughts by rememberSaveable(draft.key) { mutableStateOf(draft.notes.isNotEmpty()) }
     val manual = draft.isNewMovie && draft.tmdbId == null
-    var movieStep by rememberSaveable(draft.key) { mutableStateOf(manual) }
+    var movieStep by rememberSaveable(draft.key) { mutableStateOf(manual || draft.forWatchlist && draft.isNewMovie) }
     var movieErrors by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     fun back() {
-        if (manual && !movieStep) movieStep = true
-        else if (!manual && movieStep) movieStep = false
+        if (!draft.forWatchlist && manual && !movieStep) movieStep = true
+        else if (!draft.forWatchlist && !manual && movieStep) movieStep = false
         else onBack()
     }
-    BackHandler(((manual && !movieStep) || (!manual && movieStep)) && !busy) { back() }
+    BackHandler(!draft.forWatchlist && ((manual && !movieStep) || (!manual && movieStep)) && !busy) { back() }
     LaunchedEffect(errors) {
         val metadataErrors = errors.filterKeys { it in setOf("title", "originalTitle", "year") }
         if (draft.isNewMovie && metadataErrors.isNotEmpty()) {
@@ -75,15 +75,15 @@ fun EditorScreen(vm: SeenViewModel, draft: ViewingDraft, onBack: () -> Unit, onS
         }, time.hour, time.minute, true).show()
     }
     Scaffold(topBar = {
-        TopAppBar(title = { Text(if (movieStep) "电影资料" else if (draft.isEditing) "编辑观看" else "添加观看", style = MaterialTheme.typography.titleMedium) }, navigationIcon = {
+        TopAppBar(title = { Text(if (movieStep) "电影资料" else if (draft.forWatchlist) "加入片单" else if (draft.isEditing) "编辑观看" else "添加观看", style = MaterialTheme.typography.titleMedium) }, navigationIcon = {
             IconButton(::back, enabled = !busy) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
         }, actions = {
             TextButton(onClick = {
-                if (movieStep) {
+                if (movieStep && !draft.forWatchlist) {
                     movieErrors = ViewingRules.validate(draft).filterKeys { it in setOf("title", "originalTitle", "year") }
                     if (movieErrors.isEmpty()) movieStep = false
                 } else vm.save(onSaved)
-            }, enabled = !busy) { Text(if (busy) "处理中…" else if (movieStep) "下一步" else "保存") }
+            }, enabled = !busy) { Text(if (busy) "处理中…" else if (movieStep && !draft.forWatchlist) "下一步" else "保存") }
         })
     }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -107,7 +107,7 @@ fun EditorScreen(vm: SeenViewModel, draft: ViewingDraft, onBack: () -> Unit, onS
                     Text(listOf(draft.year, draft.originalTitle).filter { it.isNotBlank() }.joinToString(" · "), color = SeenSecondary)
                 }
             }
-            if (!movieStep) {
+            if (!movieStep && !draft.forWatchlist) {
                 if (draft.isNewMovie) TextButton(onClick = { movieStep = true }, enabled = !busy) { Text("修改电影资料") }
                 if (draft.isNewMovie && draft.tmdbId != null) {
                     OutlinedButton(enabled = !busy, onClick = { pickPoster.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {

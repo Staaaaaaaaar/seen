@@ -31,27 +31,14 @@ import androidx.compose.ui.unit.dp
 import com.seen.film.BuildConfig
 
 @Composable
-fun SeenBottomBar(settings: Boolean, enabled: Boolean, canAdd: Boolean, onLibrary: () -> Unit, onAdd: () -> Unit, onSettings: () -> Unit) {
-    val compactLabels = LocalConfiguration.current.screenWidthDp < 360 && LocalDensity.current.fontScale >= 1.5f
+fun SeenBottomBar(route: String, enabled: Boolean, onLibrary: () -> Unit, onWatchlist: () -> Unit, onSettings: () -> Unit) {
     Surface(color = MaterialTheme.colorScheme.surface) {
         Column {
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                BottomDestination("电影库", Icons.Outlined.GridView, !settings, enabled, onLibrary)
-                Column(
-                    Modifier.weight(1f).clip(MaterialTheme.shapes.medium)
-                        .clickable(enabled = canAdd, role = Role.Button, onClick = onAdd)
-                        .semantics { contentDescription = "添加记录" }
-                        .testTag("bottom-add").padding(vertical = 6.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(Modifier.clip(RoundedCornerShape(10.dp)).background(if (canAdd) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant).padding(horizontal = 16.dp, vertical = 7.dp)) {
-                        Icon(Icons.Outlined.Add, null, Modifier.size(24.dp), tint = if (canAdd) MaterialTheme.colorScheme.onPrimary else SeenSecondary)
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    Text(if (compactLabels) "记录" else "添加记录", style = MaterialTheme.typography.labelMedium, color = if (canAdd) MaterialTheme.colorScheme.onSurface else SeenSecondary)
-                }
-                BottomDestination("设置", Icons.Outlined.Tune, settings, enabled, onSettings)
+            Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
+                BottomDestination("记录", Icons.Outlined.GridView, route == "library", enabled, onLibrary)
+                BottomDestination("片单", Icons.Outlined.BookmarkBorder, route == "watchlist", enabled, onWatchlist)
+                BottomDestination("设置", Icons.Outlined.Tune, route == "settings", enabled, onSettings)
             }
         }
     }
@@ -60,7 +47,7 @@ fun SeenBottomBar(settings: Boolean, enabled: Boolean, canAdd: Boolean, onLibrar
 @Composable
 private fun RowScope.BottomDestination(label: String, icon: ImageVector, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
     Column(
-        Modifier.weight(1f).clip(MaterialTheme.shapes.medium)
+        Modifier.weight(1f).testTag("tab-$label").clip(MaterialTheme.shapes.medium)
             .selectable(selected = selected, enabled = enabled, role = Role.Tab, onClick = onClick)
             .padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally,
     ) {

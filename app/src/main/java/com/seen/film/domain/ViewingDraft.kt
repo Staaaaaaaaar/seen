@@ -24,6 +24,7 @@ data class ViewingDraft(
     val location: String = "",
     val rating: Int? = null,
     val notes: String = "",
+    val forWatchlist: Boolean = false,
 )
 
 object ViewingRules {
@@ -40,6 +41,6 @@ object ViewingRules {
         if (draft.rating != null && draft.rating !in 1..10) put("rating", "评分为 0.5–5 星")
         if (draft.location.codePointCount(0, draft.location.length) > 200) put("location", "地点最多 200 个字符")
         if (draft.notes.codePointCount(0, draft.notes.length) > 50_000) put("notes", "感受最多 50,000 个字符")
-    }
+    }.filterKeys { !draft.forWatchlist || it in setOf("title", "originalTitle", "year") }
     fun ratingLabel(value: Int?): String = value?.let { "%.1f".format(java.util.Locale.ROOT, it / 2.0) } ?: "未评分"
 }

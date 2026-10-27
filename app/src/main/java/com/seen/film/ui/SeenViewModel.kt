@@ -150,7 +150,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun clearError() { _error.value = null }
 
-    fun openEditor(movieId: String? = null, viewingId: String? = null, navigate: (String) -> Unit) {
+    fun openEditor(movieId: String? = null, viewingId: String? = null, forWatchlist: Boolean = false, navigate: (String) -> Unit) {
         if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
         _draft.value?.let {
             _error.value = "已恢复未完成的编辑，请先保存或放弃，再添加其他观看"
@@ -163,7 +163,8 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                 check(movieId == null || movie != null) { "电影已不存在" }
                 val viewing = viewingId?.let { app.repository.viewing(it) }
                 check(viewingId == null || viewing != null) { "这次观看已被删除" }
-                val value = if (movie == null) ViewingDraft() else ViewingDraft(
+                val value = if (movie == null) ViewingDraft(forWatchlist = forWatchlist) else ViewingDraft(
+                    forWatchlist = forWatchlist,
                     key = viewing?.id ?: java.util.UUID.randomUUID().toString(), movieId = movie.id,
                     isNewMovie = false, isEditing = viewing != null,
                     title = movie.title, originalTitle = movie.originalTitle.orEmpty(), year = movie.releaseYear?.toString().orEmpty(),
@@ -279,11 +280,11 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
             } finally { if (generation == searchGeneration) _searching.value = false }
         }
     }
-    fun chooseTmdb(id: Long, navigate: (String) -> Unit) {
+    fun chooseTmdb(id: Long, forWatchlist: Boolean = false, navigate: (String) -> Unit) {
         if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
         _draft.value?.let { navigate(it.key); return }
         val existing = _library.value.orEmpty().firstOrNull { it.movie.tmdbId == id }
-        if (existing != null) { openEditor(existing.movie.id, navigate = navigate); return }
+        if (existing != null) { openEditor(existing.movie.id, forWatchlist = forWatchlist, navigate = navigate); return }
         _busy.value = true
         viewModelScope.launch {
             try {
@@ -307,7 +308,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                     }
                     _error.value = "$reason，电影资料已保留；可在编辑中选择本地海报"
                 }
-                val value = ViewingDraft(title = movie.title, originalTitle = movie.originalTitle.orEmpty(),
+                val value = ViewingDraft(forWatchlist = forWatchlist, title = movie.title, originalTitle = movie.originalTitle.orEmpty(),
                     year = movie.releaseDate?.take(4).orEmpty(), tmdbId = movie.id,
                     releaseDate = movie.releaseDate, directorNames = movie.directors,
                     runtimeMinutes = movie.runtime, productionCountries = movie.countries, posterKey = poster)
@@ -332,6 +333,15 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
             catch (e: Exception) { report(e, "删除失败，请重试") }
             finally { _busy.value = false }
             if (deleted) onDeleted()
+        }
+    }
+    fun removeFromWatchlist(id: String) {
+        if (_busy.value || _restorePreview.value != null) return
+        _busy.value = true
+        viewModelScope.launch {
+            try { app.repository.removeFromWatchlist(id) }
+            catch (e: Exception) { report(e, "移除失败，请重试") }
+            finally { _busy.value = false }
         }
     }
     fun deleteViewing(id: String) {

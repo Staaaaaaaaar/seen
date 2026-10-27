@@ -42,9 +42,9 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
         if (restorePreview != null) { vm.cancelRestore { pop() }; return }
         if (route.startsWith("editor:") && draft != null) {
             if (vm.isDirty) confirmExit = true else vm.discard { pop() }
-        } else if (route == "settings") stack = listOf("library") else pop()
+        } else if (route in listOf("settings", "watchlist")) stack = listOf("library") else pop()
     }
-    BackHandler(stack.size > 1 || route == "settings") { back() }
+    BackHandler(stack.size > 1 || route in listOf("settings", "watchlist")) { back() }
     LaunchedEffect(error) {
         error?.let { snackbar.showSnackbar(it, withDismissAction = true); vm.clearError() }
     }
@@ -53,13 +53,12 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
     }
     fun addRecord() {
         if (busy || !draftReady || restorePreview != null) return
-        if (draft != null) confirmNew = true else push("choose")
+        if (draft != null) confirmNew = true else push(if (route == "watchlist") "choose:watchlist" else "choose")
     }
     Scaffold(snackbarHost = { SnackbarHost(snackbar) }, bottomBar = {
-        if (route == "library" || route == "settings") SeenBottomBar(
-            settings = route == "settings", enabled = !busy && restorePreview == null,
-            canAdd = !busy && draftReady && restorePreview == null && all != null && !loadFailed,
-            onLibrary = { stack = listOf("library") }, onAdd = ::addRecord,
+        if (route in listOf("library", "watchlist", "settings")) SeenBottomBar(
+            route = route, enabled = !busy && restorePreview == null,
+            onLibrary = { stack = listOf("library") }, onWatchlist = { stack = listOf("watchlist") },
             onSettings = { stack = listOf("settings") },
         )
     }) { padding ->
@@ -73,9 +72,14 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
                     onAdd = ::addRecord, onMovie = { push("movie:$it") },
                     onResume = { draft?.let { push("editor:${it.key}") } })
                 }
-                route == "choose" -> ChooseScreen(vm, all, !busy && draftReady, { back() }, { movieId ->
-                    vm.openEditor(movieId) { push("editor:$it") }
-                }, onChooseTmdb = { push("editor:$it") })
+                route == "watchlist" -> pageStates.SaveableStateProvider("watchlist") {
+                    if (loadFailed) PageMessage("无法读取片单", "请重新打开应用后重试。")
+                    else WatchlistScreen(all, draftReady && !busy && restorePreview == null, vm.app.posters::file, ::addRecord,
+                        { id -> vm.openEditor(id) { push("editor:$it") } }, vm::removeFromWatchlist)
+                }
+                route.startsWith("choose") -> ChooseScreen(vm, all, !busy && draftReady, { back() }, { movieId ->
+                    vm.openEditor(movieId, forWatchlist = route == "choose:watchlist") { push("editor:$it") }
+                }, onChooseTmdb = { push("editor:$it") }, forWatchlist = route == "choose:watchlist")
                 route.startsWith("movie:") -> MovieScreen(
                     id = route.removePrefix("movie:").substringBefore("/"),
                     focusViewingId = route.substringAfter("/", "").ifBlank { null }, vm = vm, all = all,
@@ -88,7 +92,7 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
                     if (value == null) Box(Modifier.fillMaxSize())
                     else EditorScreen(vm, value, onBack = { back() }, onSaved = { movieId, viewingId ->
                         // Remove chooser/editor from history. A detail page never duplicates itself.
-                        stack = listOf("library", "movie:$movieId/$viewingId")
+                        stack = if (value.forWatchlist) listOf("watchlist") else listOf("library", "movie:$movieId/$viewingId")
                     })
                 }
                 route == "settings" -> pageStates.SaveableStateProvider("settings") {
@@ -103,7 +107,7 @@ fun SeenApp(vm: SeenViewModel = viewModel()) = SeenTheme {
         text = { Text("可以继续编辑，或放弃后开始新的观看记录。") },
         confirmButton = { TextButton(enabled = !busy, onClick = { confirmNew = false; draft?.let { push("editor:${it.key}") } }) { Text("继续编辑") } },
         dismissButton = { Column {
-            TextButton(enabled = !busy, onClick = { vm.discard { confirmNew = false; push("choose") } }) { Text("放弃后新建", color = MaterialTheme.colorScheme.error) }
+            TextButton(enabled = !busy, onClick = { vm.discard { confirmNew = false; push(if (stack.first() == "watchlist") "choose:watchlist" else "choose") } }) { Text("放弃后新建", color = MaterialTheme.colorScheme.error) }
             TextButton(onClick = { confirmNew = false }) { Text("取消") }
         } },
     )

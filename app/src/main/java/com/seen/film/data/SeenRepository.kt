@@ -26,6 +26,10 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
                 ))
             }
             check(dao.movie(movieId) != null) { "电影已不存在，请重新选择" }
+            if (draft.forWatchlist) {
+                check(dao.setWanted(movieId, true) == 1)
+                return@withTransaction movieId
+            }
             val previous = dao.viewing(draft.key)
             check(!draft.isEditing || previous != null) { "这次观看已被删除" }
             val viewing = Viewing(
@@ -35,8 +39,12 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
                 createdAt = previous?.createdAt ?: now, updatedAt = now,
             )
             if (previous == null) dao.insertViewing(viewing) else check(dao.updateViewing(viewing) == 1)
+            if (!draft.isEditing) dao.setWanted(movieId, false)
             movieId
         }
+    }
+    suspend fun removeFromWatchlist(id: String) = access.write {
+        check(dao.setWanted(id, false) == 1) { "电影已不存在" }
     }
     suspend fun deleteMovie(id: String) = access.write {
         database.withTransaction {

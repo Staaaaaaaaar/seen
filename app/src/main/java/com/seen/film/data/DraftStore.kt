@@ -21,6 +21,7 @@ class DraftStore(context: Context, private val access: LibraryAccess = LibraryAc
         val j = JSONObject(file.openRead().bufferedReader().use { it.readText() })
         require(j.getInt("schemaVersion") == 1) { "暂不支持此草稿版本" }
         ViewingDraft(
+            forWatchlist = j.optBoolean("forWatchlist", false),
             key = j.getString("key"), movieId = j.getString("movieId"),
             isNewMovie = j.getBoolean("isNewMovie"), isEditing = j.getBoolean("isEditing"),
             title = j.getString("title"), originalTitle = j.optString("originalTitle", ""),
@@ -36,7 +37,7 @@ class DraftStore(context: Context, private val access: LibraryAccess = LibraryAc
     } }
     suspend fun write(draft: ViewingDraft) = access.write { withContext(Dispatchers.IO) { lock.withLock {
         val j = JSONObject().put("schemaVersion", 1)
-            .put("key", draft.key).put("movieId", draft.movieId)
+            .put("forWatchlist", draft.forWatchlist).put("key", draft.key).put("movieId", draft.movieId)
             .put("isNewMovie", draft.isNewMovie).put("isEditing", draft.isEditing)
             .put("title", draft.title).put("originalTitle", draft.originalTitle).put("year", draft.year)
             .put("posterKey", draft.posterKey ?: JSONObject.NULL).put("date", draft.date).put("time", draft.time)

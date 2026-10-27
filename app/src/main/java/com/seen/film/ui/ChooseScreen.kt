@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.seen.film.data.MovieHistory
 
 @Composable
-fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, onBack: () -> Unit, onChoose: (String?) -> Unit, onChooseTmdb: (String) -> Unit) {
+fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, onBack: () -> Unit, onChoose: (String?) -> Unit, onChooseTmdb: (String) -> Unit, forWatchlist: Boolean = false) {
     var query by rememberSaveable { mutableStateOf("") }
     DisposableEffect(vm) { onDispose { vm.clearSearch() } }
     val busy by vm.busy.collectAsState()
@@ -63,7 +63,7 @@ fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, 
                 item { Text("TMDB · 第 ${page.page} 页 · 资料来源 The Movie Database", style = MaterialTheme.typography.bodySmall, color = SeenSecondary) }
                 if (page.movies.isEmpty()) item { Text("没有找到电影，可修改关键词或手动添加。") }
                 items(page.movies, key = { "tmdb:${it.id}" }) { movie ->
-                    Surface(onClick = { vm.chooseTmdb(movie.id) { onChooseTmdb(it) } }, enabled = enabled, shape = MaterialTheme.shapes.medium) {
+                    Surface(onClick = { vm.chooseTmdb(movie.id, forWatchlist) { onChooseTmdb(it) } }, enabled = enabled, shape = MaterialTheme.shapes.medium) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(movie.title, style = MaterialTheme.typography.titleMedium)

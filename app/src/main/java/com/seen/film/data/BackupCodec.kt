@@ -39,15 +39,15 @@ class BackupCodec {
             else -> scalar(r)
         }
     }
-    private fun record(r: JsonReader, fields: Set<String>): Map<String, Any?> {
+    private fun record(r: JsonReader, fields: Set<String>, optional: Set<String> = emptySet()): Map<String, Any?> {
         val result = linkedMapOf<String, Any?>(); val names = hashSetOf<String>()
         r.beginObject()
         while (r.hasNext()) {
             val name = r.nextName(); BackupRules.text(name, 1000000)
             require(names.add(name)) { "JSON 含重复字段" }
-            if (name in fields) result[name] = scalar(r) else skip(r, 4)
+            if (name in fields || name in optional) result[name] = scalar(r) else skip(r, 4)
         }
-        r.endObject(); require(result.keys == fields) { "备份缺少必需字段" }; return result
+        r.endObject(); require(result.keys.containsAll(fields)) { "备份缺少必需字段" }; return result
     }
     private fun Map<String, Any?>.string(key: String): String = get(key) as? String ?: error("$key 必须为字符串")
     private fun Map<String, Any?>.nullableString(key: String): String? = if (get(key) == null) null else string(key)
@@ -76,8 +76,8 @@ class BackupCodec {
                     "movies" -> {
                         r.beginArray(); while (r.hasNext()) {
                             require(movies.size < 10000) { "电影数量超限" }
-                            val m = record(r, movieFields)
-                            movies += Movie(m.string("id"), m.string("title"), m.nullableString("originalTitle"), m.int("releaseYear"), m.nullableString("releaseDate"), m.nullableLong("tmdbId"), m.nullableString("posterAssetId"), m.string("source"), m.nullableString("directorNames"), m.int("runtimeMinutes"), m.nullableString("productionCountries"), m.string("createdAt"), m.string("updatedAt")).also(BackupRules::movie)
+                            val m = record(r, movieFields, setOf("wantToWatch"))
+                            movies += Movie(m.string("id"), m.string("title"), m.nullableString("originalTitle"), m.int("releaseYear"), m.nullableString("releaseDate"), m.nullableLong("tmdbId"), m.nullableString("posterAssetId"), m.string("source"), m.nullableString("directorNames"), m.int("runtimeMinutes"), m.nullableString("productionCountries"), m.string("createdAt"), m.string("updatedAt"), if ("wantToWatch" in m) m["wantToWatch"] as? Boolean ?: error("wantToWatch 必须为布尔值") else false).also(BackupRules::movie)
                         }; r.endArray()
                     }
                     "viewings" -> {
@@ -134,6 +134,7 @@ class BackupCodec {
                 w.field("releaseYear", m.releaseYear); w.field("releaseDate", m.releaseDate); w.field("tmdbId", m.tmdbId)
                 w.field("posterAssetId", m.posterKey); w.field("source", m.source); w.field("directorNames", m.directorNames)
                 w.field("runtimeMinutes", m.runtimeMinutes); w.field("productionCountries", m.productionCountries)
+                w.name("wantToWatch").value(m.wantToWatch)
                 w.field("createdAt", m.createdAt); w.field("updatedAt", m.updatedAt); w.endObject()
             }; w.endArray(); w.name("viewings").beginArray()
             for (v in data.viewings) {

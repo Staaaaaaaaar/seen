@@ -29,7 +29,7 @@ private fun previewMovies(): List<MovieHistory> = listOf(
 @Composable
 private fun PreviewLibrary(dark: Boolean = false, empty: Boolean = false) {
     SeenTheme(darkTheme = dark) {
-        Scaffold(bottomBar = { SeenBottomBar(false, true, true, {}, {}, {}) }) { padding ->
+        Scaffold(bottomBar = { SeenBottomBar("library", true, {}, {}, {}) }) { padding ->
             Surface(Modifier.padding(padding).consumeWindowInsets(padding)) {
             LibraryScreen(
                 all = if (empty) emptyList() else previewMovies(), draft = null, canEdit = true,
