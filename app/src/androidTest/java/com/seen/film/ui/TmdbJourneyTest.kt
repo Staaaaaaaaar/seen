@@ -61,7 +61,7 @@ class TmdbJourneyTest {
         ui.onNodeWithText("保存").performClick()
         waitFor("观看记录 · 2 次")
         ui.onNodeWithContentDescription("返回").performClick()
-        waitFor("电影库")
+        waitFor("记录")
         ui.onNodeWithContentDescription("排序电影").performClick()
         ui.onNodeWithText("1 部电影").assertExists()
     }

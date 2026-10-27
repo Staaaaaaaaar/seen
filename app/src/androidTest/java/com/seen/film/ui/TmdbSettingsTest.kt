@@ -15,7 +15,7 @@ class TmdbSettingsTest {
     private fun waitFor(text: String) = ui.waitUntil(15_000) { ui.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
 
     @Test fun credentialValidationRetainsInputAndSaveRemovalSurviveRotation() {
-        waitFor("电影库")
+        waitFor("记录")
         ui.onNodeWithText("设置").performClick()
         ui.onNodeWithText("TMDB 凭证").performClick()
         ui.onNodeWithText("移除凭据").performScrollTo().performClick()

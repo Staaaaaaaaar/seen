@@ -67,7 +67,7 @@ class MovieJourneyTest {
         waitFor("观看记录 · 2 次")
 
         ui.onNodeWithContentDescription("返回").performClick()
-        waitFor("电影库")
+        waitFor("记录")
         ui.onNodeWithText("时间").assertDoesNotExist()
         ui.onNodeWithText("2 次观看").assertExists()
         ui.onAllNodesWithText("模拟器验收电影")[0].performClick()

@@ -17,6 +17,29 @@ import org.junit.runner.RunWith
 class RepositoryTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
+    @Test fun watchlistHasNoViewingAndOnlySuccessfulNewViewingRemovesIt() = runBlocking {
+        val db = Room.inMemoryDatabaseBuilder(context, SeenDatabase::class.java).build()
+        try {
+            val repo = SeenRepository(db)
+            val draft = ViewingDraft(title = "想看 🎬", forWatchlist = true, tmdbId = 123)
+            val id = repo.save(draft)
+            assertTrue(repo.movie(id)!!.wantToWatch)
+            assertEquals(0, db.dao().viewingCount())
+            assertEquals(id, repo.save(draft.copy(movieId = UUID.randomUUID().toString())))
+            assertEquals(1, db.dao().movieCount())
+            assertTrue(runCatching { repo.save(draft.copy(forWatchlist = false, date = "bad")) }.isFailure)
+            assertTrue(repo.movie(id)!!.wantToWatch)
+            repo.save(draft.copy(forWatchlist = false))
+            assertFalse(repo.movie(id)!!.wantToWatch)
+            assertEquals(1, db.dao().viewingCount())
+            repo.save(draft)
+            assertTrue(repo.movie(id)!!.wantToWatch)
+            repo.removeFromWatchlist(id)
+            assertFalse(repo.movie(id)!!.wantToWatch)
+            assertEquals(1, db.dao().viewingCount())
+        } finally { db.close() }
+    }
+
     @Test fun deletingMovieIsAtomicPreservesOtherMoviesAndAllowsTmdbReimport() = runBlocking {
         val db = Room.inMemoryDatabaseBuilder(context, SeenDatabase::class.java).build()
         try {
@@ -67,7 +90,7 @@ class RepositoryTest {
             old.execSQL("INSERT INTO viewings (id,movieId,viewedDate,createdAt,updatedAt) VALUES ('old-viewing','old-movie','2000-01-01','2000','2000')")
             old.version = 1
         } finally { old.close() }
-        val db = Room.databaseBuilder(context, SeenDatabase::class.java, name).build()
+        val db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
         try {
             val history = db.dao().observeLibrary().first().single()
             assertEquals("旧版记录", history.movie.title)
@@ -80,7 +103,7 @@ class RepositoryTest {
 
     @Test fun tmdbReusePreservesManualRecordsAndSurvivesReopen() = runBlocking {
         val name = "tmdb-${UUID.randomUUID()}.db"
-        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).build()
+        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
         try {
             val manual = ViewingDraft(title = "旧版手动电影", date = "2000-01-01")
             SeenRepository(db).save(manual)
@@ -92,7 +115,7 @@ class RepositoryTest {
             assertEquals(id, SeenRepository(db).save(repeat))
             SeenRepository(db).save(repeat)
             db.close()
-            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).build()
+            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
             val library = db.dao().observeLibrary().first()
             assertEquals(2, library.size)
             val movie = library.single { it.movie.tmdbId == 123L }
@@ -145,7 +168,7 @@ class RepositoryTest {
 
     @Test fun failedEditRollsBackTheNewMovieAndSurvivesDatabaseReopen() = runBlocking {
         val name = "test-${UUID.randomUUID()}.db"
-        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).build()
+        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
         val value = ViewingDraft(title = "保留记录", date = "2000-01-01", time = "", rating = null)
         try {
             SeenRepository(db).save(value)
@@ -153,7 +176,7 @@ class RepositoryTest {
             assertTrue(runCatching { SeenRepository(db).save(failed) }.isFailure)
             assertNull(db.dao().movie(failed.movieId))
             db.close()
-            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).build()
+            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
             assertEquals("保留记录", db.dao().observeLibrary().first().single().movie.title)
             assertNull(db.dao().viewing(value.key)!!.viewedTime)
         } finally { db.close(); context.deleteDatabase(name) }

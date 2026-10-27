@@ -17,6 +17,15 @@ class ViewingRulesTest {
     private val today = LocalDate.of(2026, 10, 23)
     private fun draft() = ViewingDraft(title = "电影", date = today.toString())
 
+    @Test fun watchlistRequiresMovieMetadataWithoutAViewingDateOrRating() {
+        val wanted = ViewingDraft(title = "🎬".repeat(300), forWatchlist = true, date = "", rating = 99)
+        assertTrue(ViewingRules.validate(wanted).isEmpty())
+        assertTrue(ViewingRules.validate(wanted.copy(title = "")).containsKey("title"))
+        assertTrue(ViewingRules.validate(wanted.copy(title = "🎬".repeat(301))).containsKey("title"))
+        assertTrue(ViewingRules.validate(wanted.copy(year = "bad")).containsKey("year"))
+        assertTrue(ViewingRules.validate(wanted.copy(forWatchlist = false)).containsKey("date"))
+    }
+
     @Test fun onlyTitleAndDateAreRequired() {
         assertTrue(ViewingRules.validate(draft(), today).isEmpty())
         assertNull(draft().rating)

@@ -50,7 +50,7 @@ class DeleteMovieJourneyTest {
         ui.activityRule.scenario.recreate()
         waitFor("删除这部电影？")
         ui.onNodeWithText("删除电影").performClick()
-        waitFor("电影库")
+        waitFor("记录")
         ui.onNodeWithText("待删除电影").assertDoesNotExist()
         ui.onNodeWithText("保留电影").assertExists()
         assertNull(runBlocking { app.repository.movie(id) })

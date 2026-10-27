@@ -87,7 +87,9 @@ def main():
         issues = ET.parse(lint).getroot().findall('issue')
         if any(x.get('severity') in ('Fatal', 'Error') for x in issues):
             raise ValueError('Lint errors remain; no successful build receipt is issued')
-        schema = ROOT / 'app/schemas/com.seen.film.data.SeenDatabase/1.json'
+        schemas = list((ROOT / 'app/schemas/com.seen.film.data.SeenDatabase').glob('*.json'))
+        if not schemas: raise ValueError('Generated Room schema is missing')
+        schema = max(schemas, key=lambda path: int(path.stem))
         if not schema.is_file(): raise ValueError('Generated Room schema is missing')
         result.update(testCases=cases, lintWarnings=sum(x.get('severity') == 'Warning' for x in issues),
                       roomSchemaSha256=sha256(schema))

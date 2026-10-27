@@ -45,15 +45,43 @@ class NavigationJourneyTest {
         ui.onNodeWithText("TMDB 凭证").assertExists()
         ui.onNodeWithText("导出数据").assertExists()
         ui.onNodeWithText("导入备份").assertExists()
-        ui.onNodeWithTag("bottom-add").performClick()
+        ui.onNodeWithTag("tab-片单").performClick()
+        ui.onNodeWithContentDescription("添加想看").performClick()
         waitFor("选择电影")
         ui.onNodeWithTag("bottom-add").assertDoesNotExist()
         ui.onNodeWithContentDescription("返回").performClick()
-        ui.onNodeWithText("导入备份").assertExists()
+        waitFor("还没有想看的电影")
         pressBack()
         waitFor("还没有电影")
         ui.onNodeWithText("时间").assertDoesNotExist()
         ui.onNodeWithText("Seen").assertDoesNotExist()
+    }
+
+    @Test fun simpleWatchlistPersistsAndBecomesAViewingOnlyAfterSave() {
+        ui.onNodeWithTag("tab-片单").performClick()
+        ui.onNodeWithContentDescription("添加想看").performClick()
+        ui.onNodeWithText("手动添加电影").performClick()
+        ui.onNodeWithText("电影名称 *").performTextInput("周末想看 🎬")
+        closeSoftKeyboard()
+        ui.onNodeWithText("保存").performClick()
+        waitFor("周末想看 🎬")
+        assertEquals(0, runBlocking { app.database.dao().viewingCount() })
+        screenshot("watchlist")
+        ui.activityRule.scenario.recreate()
+        waitFor("周末想看 🎬")
+        ui.onNodeWithText("记录观看").performClick()
+        waitFor("添加观看")
+        ui.onNodeWithContentDescription("返回").performClick()
+        waitFor("周末想看 🎬")
+        assertTrue(runBlocking { app.database.dao().allMovies().single().wantToWatch })
+        ui.onNodeWithText("记录观看").performClick()
+        ui.onNodeWithText("保存").performClick()
+        ui.waitUntil(15_000) { !vm.busy.value && vm.draft.value == null }
+        assertEquals(1, runBlocking { app.database.dao().viewingCount() })
+        assertFalse(runBlocking { app.database.dao().allMovies().single().wantToWatch })
+        ui.onNodeWithContentDescription("返回").performClick()
+        ui.onNodeWithTag("tab-片单").performClick()
+        waitFor("还没有想看的电影")
     }
 
     @Test fun manualStepsRetainDraftAndCancelLeavesNoEmptyMovie() {
@@ -100,7 +128,7 @@ class NavigationJourneyTest {
     }
 
     private fun screenshot(name: String) {
-        ui.waitUntil(15_000) { name == "library" || name == "settings" || ui.onAllNodesWithTag("poster-loaded").fetchSemanticsNodes().isNotEmpty() }
+        ui.waitUntil(15_000) { name == "library" || name == "settings" || name == "watchlist" || ui.onAllNodesWithTag("poster-loaded").fetchSemanticsNodes().isNotEmpty() }
         ui.onRoot().captureToImage() // Synchronize the rendered frame before the full-device screenshot.
         val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         val file = File(app.getExternalFilesDir("ui-review"), "$name.png")
@@ -136,7 +164,7 @@ class NavigationJourneyTest {
         closeSoftKeyboard()
         ui.onNodeWithText("设置").performClick()
         screenshot("settings")
-        ui.onNodeWithText("电影库").performClick()
+        ui.onNodeWithTag("tab-记录").performClick()
         ui.onNodeWithTag("library-search").assertTextContains("完美")
         ui.onNodeWithText("完美的日子").performClick()
         screenshot("movie")

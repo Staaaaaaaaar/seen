@@ -22,7 +22,7 @@ class BackupJourneyTest {
     @get:Rule val ui = createAndroidComposeRule<MainActivity>()
     private fun waitFor(text: String) = ui.waitUntil(15000) { ui.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
     @Test fun previewSurvivesRotationCancelPreservesLibraryAndExplicitRestoreReplacesIt() {
-        waitFor("电影库")
+        waitFor("记录")
         val app = ui.activity.application as SeenApplication
         val vm = ViewModelProvider(ui.activity)[SeenViewModel::class.java]
         ui.waitUntil { vm.draftReady.value }
@@ -57,7 +57,7 @@ class BackupJourneyTest {
         empty.delete()
     }
     @Test fun lostExportSessionReportsFailureAndPreservesExistingData() {
-        waitFor("电影库")
+        waitFor("记录")
         val app = ui.activity.application as SeenApplication
         val vm = ViewModelProvider(ui.activity)[SeenViewModel::class.java]
         val before = runBlocking { app.database.dao().allMovies() to app.database.dao().allViewings() }

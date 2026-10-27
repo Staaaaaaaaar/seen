@@ -66,6 +66,23 @@ class BackupTest {
     }
     private suspend fun rejected(block: suspend () -> Unit) { assertTrue("Expected rejection", runCatching { block() }.isFailure) }
 
+    @Test fun watchlistBackupRoundTripAndOlderBackupsDefaultToFalse() = runBlocking {
+        Fixture().use { f ->
+            val file = File(f.root, "watchlist.json")
+            BackupCodec().write(file, BackupData("1.0.0", now, listOf(movie.copy(posterKey = null, wantToWatch = true)), emptyList(), emptyMap()))
+            val preview = f.service().preview(Uri.fromFile(file))
+            f.service().restore(preview)
+            assertTrue(f.db.dao().movie(movieId)!!.wantToWatch)
+            assertEquals(0, f.db.dao().viewingCount())
+            val json = JSONObject(file.readText())
+            json.getJSONArray("movies").getJSONObject(0).remove("wantToWatch")
+            file.writeText(json.toString())
+            val old = f.service().preview(Uri.fromFile(file))
+            f.service().restore(old)
+            assertFalse(f.db.dao().movie(movieId)!!.wantToWatch)
+        }
+    }
+
     @Test fun allFieldsIdsZeroViewingsAndPosterBytesRoundTripAcrossReopen() = runBlocking {
         Fixture().use { f ->
             val service = f.service(); val source = f.document(); val digest = f.asset().sha256()
