@@ -118,7 +118,7 @@ class BackupTest {
                 valid.replace("\"runtimeMinutes\":0", "\"runtimeMinutes\":2147483648"),
                 valid.replace("\"tmdbId\":123", "\"tmdbId\":9223372036854775808"),
                 valid.replace("\"tmdbId\":123", "\"tmdbId\":-1"),
-                valid.replace("\"ratingHalfStars\":1", "\"ratingHalfStars\":0"),
+                valid.replace("\"ratingHalfStars\":1", "\"ratingHalfStars\":-1"),
                 valid.replace("\"movieId\":\"$movieId\"", "\"movieId\":\"$viewId\""),
                 valid.replace("\"id\":\"$assetId\"", "\"id\":\"$movieId\""),
                 valid.replace("\"originalTitle\":\"\",", ""),
