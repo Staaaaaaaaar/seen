@@ -2,7 +2,7 @@
 
 个人的电影档案，Android 原生应用。收藏电影，独立评分，记录每一次观看与随时产生的想法；本地保存，无 Seen 账号、广告或遥测，可选连接 TMDB 获取电影资料。
 
-本轮统一影库改版已进入本地验收，尚未调整版本号或发布。设计与实现范围见 [设计说明](docs/superpowers/specs/2026-11-07-library-redesign-design.md)，当前界面行为与待验收范围见 [界面细化说明](docs/ui-polish.md)，早期反馈证据见 [反馈验收记录](docs/ui-refinement-validation.md)，基础改版证据见 [验证记录](docs/library-redesign-validation.md)。历史发行信息见 [CHANGELOG](CHANGELOG.md) 与 [发布流程](docs/release.md)。
+当前版本 **v1.2.0（versionCode 9）**，统一影库、统计与电影留言体验。版本验证与限制见 [v1.2.0 日志](docs/v1.2.0-validation.md)。设计与实现范围见 [设计说明](docs/superpowers/specs/2026-11-07-library-redesign-design.md)，当前界面行为与待验收范围见 [界面细化说明](docs/ui-polish.md)，早期反馈证据见 [反馈验收记录](docs/ui-refinement-validation.md)，基础改版证据见 [验证记录](docs/library-redesign-validation.md)。历史发行信息见 [CHANGELOG](CHANGELOG.md) 与 [发布流程](docs/release.md)。
 
 ## 主要实现
 

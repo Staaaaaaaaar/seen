@@ -4,11 +4,13 @@
 
 本次 v1.1.0 用户授权提交、推送与 annotated tag，明确不创建 GitHub Release；本地正式 APK 已单独打包。
 
+本次 v1.2.0 用户授权 check 通过后更新版本、提交推送与 annotated tag；本次不创建 GitHub Release 页面。执行证据见 [v1.2.0 验证日志](v1.2.0-validation.md)。
+
 ## 版本与身份
 
-- 版本号采用 SemVer，versionCode 单调递增；v1.0.0 为 7，当前 v1.1.0 为 8。标签 `v版本号` 必须与 Gradle versionName 相同。
+- 版本号采用 SemVer，versionCode 单调递增；v1.0.0 为 7，v1.1.0 为 8，当前 v1.2.0 为 9。标签 `v版本号` 必须与 Gradle versionName 相同。
 - 正式包 `com.seen.film` 使用仓库外长期密钥；调试包 `com.seen.film.debug` 不能直接覆盖迁移到正式包，使用 JSON 导出/恢复。
-- Room schema v2 通过显式 v1 → v2 迁移保留旧数据，备份协议保持向后兼容；升级时不得 destructive migration 或通过卸载清数据绕过签名问题。
+- Room schema v3 通过显式 v1 → v2 → v3 迁移保留旧数据，备份协议保持向后兼容；升级时不得 destructive migration 或通过卸载清数据绕过签名问题。
 - 不提交本机路径、SDK、密码、凭据、密钥、数据库、真实记录和构建产物。签名、安装与升级操作见 [发布流程](release.md)。
 
 ## 交付顺序
