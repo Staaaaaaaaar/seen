@@ -7,14 +7,18 @@ import com.seen.film.domain.RecordRules
 import com.seen.film.domain.ViewingDraft
 import com.seen.film.domain.ViewingRules
 import java.time.Instant
+import kotlinx.coroutines.flow.map
 
 class SeenRepository(private val database: SeenDatabase, private val access: LibraryAccess = LibraryAccess()) {
     private val dao = database.dao()
-    val library = dao.observeLibrary()
+    val snapshots = dao.observeLibraryChanges().map {
+        database.withTransaction { LibrarySnapshot(dao.allHistories(), dao.metadataState() ?: LibraryMetadataState()) }
+    }
+    val library = snapshots.map { it.movies }
     suspend fun movie(id: String): Movie? = dao.movie(id)
     suspend fun viewing(id: String): Viewing? = dao.viewing(id)
 
-    suspend fun addMovie(draft: ViewingDraft): String = access.write {
+    suspend fun addMovie(draft: ViewingDraft): String = access.write(LibraryWriteKind.CATALOG) {
         require(ViewingRules.validate(draft.copy(forWatchlist = true)).isEmpty()) { "请检查电影资料" }
         database.withTransaction {
             val existing = draft.tmdbId?.let { dao.movieByTmdbId(it) } ?: dao.movie(draft.movieId)
@@ -73,7 +77,7 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
     }
 
     // Transitional compatibility for saved drafts and the previous editor.
-    suspend fun save(draft: ViewingDraft): String = access.write {
+    suspend fun save(draft: ViewingDraft): String = access.write(if (draft.isNewMovie) LibraryWriteKind.CATALOG else LibraryWriteKind.PERSONAL) {
         require(ViewingRules.validate(draft).isEmpty()) { "请检查输入内容" }
         database.withTransaction {
             val now = Instant.now().toString()
@@ -109,7 +113,7 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
     suspend fun removeFromWatchlist(id: String) = access.write {
         check(dao.setWanted(id, false) == 1) { "电影已不存在" }
     }
-    suspend fun deleteMovie(id: String) = access.write {
+    suspend fun deleteMovie(id: String) = access.write(LibraryWriteKind.CATALOG) {
         database.withTransaction {
             dao.deleteMovieNotes(id)
             dao.deleteMovieGenres(id)

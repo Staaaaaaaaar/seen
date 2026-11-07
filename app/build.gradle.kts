@@ -21,7 +21,7 @@ android {
         versionName = "1.1.0"
         testInstrumentationRunner = "com.seen.film.SeenTestRunner"
         // External SIGKILL harness is run separately; ordinary connected tests never skip it.
-        testInstrumentationRunnerArguments["notClass"] = "com.seen.film.data.BackupCrashTest"
+        testInstrumentationRunnerArguments["notClass"] = "com.seen.film.data.BackupCrashTest,com.seen.film.data.MetadataRefreshCrashTest"
     }
     signingConfigs {
         if (releaseSigning.values.all { !it.isNullOrBlank() }) create("release") {

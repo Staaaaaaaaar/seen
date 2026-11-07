@@ -56,6 +56,9 @@ data class MovieHistory(
 interface SeenDao {
     @Transaction @Query("SELECT * FROM movies")
     fun observeLibrary(): Flow<List<MovieHistory>>
+    @Transaction @Query("SELECT * FROM movies") suspend fun allHistories(): List<MovieHistory>
+    @Query("SELECT COUNT(*) + (SELECT COUNT(*) FROM viewings) + (SELECT COUNT(*) FROM movie_notes) + (SELECT COUNT(*) FROM movie_genres) + (SELECT COUNT(*) FROM movie_credits) + COALESCE((SELECT generation FROM library_metadata_state WHERE id=1),0) FROM movies")
+    fun observeLibraryChanges(): kotlinx.coroutines.flow.Flow<Long>
     @Query("SELECT * FROM movies WHERE id = :id") suspend fun movie(id: String): Movie?
     @Query("SELECT * FROM movies WHERE tmdbId = :id") suspend fun movieByTmdbId(id: Long): Movie?
     @Query("SELECT * FROM viewings WHERE id = :id") suspend fun viewing(id: String): Viewing?
@@ -79,6 +82,9 @@ interface SeenDao {
     @Query("SELECT * FROM movie_notes LIMIT 100001") suspend fun allNotes(): List<MovieNote>
     @Query("SELECT * FROM movie_genres LIMIT 100001") suspend fun allGenres(): List<MovieGenre>
     @Query("SELECT * FROM movie_credits LIMIT 100001") suspend fun allCredits(): List<MovieCredit>
+    @Query("SELECT posterKey FROM archived_posters") suspend fun archivedPosterKeys(): List<String>
+    @Query("UPDATE movies SET title=:title,originalTitle=:originalTitle,releaseYear=:year,releaseDate=:date,directorNames=:directors,runtimeMinutes=:runtime,productionCountries=:countries,overview=:overview,posterKey=:poster,metadataLanguage=:language,updatedAt=:updated WHERE id=:id")
+    suspend fun updateLocalizedMovie(id: String, title: String, originalTitle: String?, year: Int?, date: String?, directors: String?, runtime: Int?, countries: String?, overview: String?, poster: String?, language: String, updated: String): Int
     @Query("SELECT * FROM archived_posters LIMIT 10001") suspend fun allArchivedPosters(): List<ArchivedPoster>
     @Query("SELECT * FROM library_metadata_state WHERE id=1") fun observeMetadataState(): kotlinx.coroutines.flow.Flow<LibraryMetadataState?>
     @Query("SELECT * FROM library_metadata_state WHERE id=1") suspend fun metadataState(): LibraryMetadataState?

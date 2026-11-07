@@ -17,7 +17,7 @@ class PosterStore(private val context: Context, internal val backupCheckpoint: (
     fun file(key: String?): File? = key?.takeIf { it.matches(Regex("[a-f0-9-]{36}\\.jpg")) }
         ?.let { File(directory, it) }?.takeIf { it.isFile }
 
-    suspend fun import(uri: Uri): String = withContext(Dispatchers.IO) {
+    suspend fun import(uri: Uri, onCreated: (String) -> Unit = {}): String = withContext(Dispatchers.IO) {
         val staging = File.createTempFile("poster-", ".input", context.cacheDir)
         try {
             // Bound provider input before decoding; never retain an external URI.
@@ -51,18 +51,19 @@ class PosterStore(private val context: Context, internal val backupCheckpoint: (
             val key = "${UUID.randomUUID()}.jpg"
             val target = File(directory, key)
             try {
-                FileOutputStream(target).use { require(bitmap.compress(Bitmap.CompressFormat.JPEG, 88, it)) { "无法保存海报" } }
+                onCreated(key)
+                FileOutputStream(target).use { require(bitmap.compress(Bitmap.CompressFormat.JPEG, 88, it)) { "无法保存海报" }; it.flush(); it.fd.sync() }
             } catch (e: Exception) { target.delete(); throw e }
             finally { bitmap.recycle() }
             key
         } finally { staging.delete() }
     }
-    suspend fun importDownloaded(bytes: ByteArray): String = withContext(Dispatchers.IO) {
+    suspend fun importDownloaded(bytes: ByteArray, onCreated: (String) -> Unit = {}): String = withContext(Dispatchers.IO) {
         require(bytes.size <= 20 * 1024 * 1024)
         val staging = File.createTempFile("tmdb-", ".jpg", context.cacheDir)
         try {
             staging.writeBytes(bytes)
-            import(Uri.fromFile(staging))
+            import(Uri.fromFile(staging), onCreated)
         } finally { staging.delete() }
     }
     // Delayed reclamation: keep old and abandoned media until a coordinated collector

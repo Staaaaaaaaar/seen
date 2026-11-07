@@ -11,6 +11,7 @@ open class SeenApplication : Application() {
     val posters by lazy { PosterStore(this) }
     val credentials by lazy { TmdbCredentialStore(this) }
     open val tmdb by lazy { TmdbRepository(token = credentials::token) }
+    val metadataRefresh by lazy { MetadataRefreshCoordinator(this, database, posters, drafts, libraryAccess, tmdb) }
     val backups by lazy { BackupRepository(this, database, posters, drafts, libraryAccess) }
     val drafts by lazy { DraftStore(this, libraryAccess) }
 }

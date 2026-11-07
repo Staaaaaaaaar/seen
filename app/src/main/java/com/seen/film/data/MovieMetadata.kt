@@ -34,3 +34,6 @@ data class ArchivedPoster(val movieId: String, val posterKey: String)
 
 @Entity(tableName = "library_metadata_state")
 data class LibraryMetadataState(@PrimaryKey val id: Int = 1, val activeLanguage: String = "zh-CN", val generation: Long = 0)
+
+/** A single Room transaction supplies both displayed movies and their active language. */
+data class LibrarySnapshot(val movies: List<MovieHistory>, val metadata: LibraryMetadataState)
