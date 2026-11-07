@@ -30,7 +30,7 @@ object BackupRules {
         require(m.tmdbId == null || m.tmdbId > 0) { "TMDB ID 无效" }
         require(m.runtimeMinutes == null || m.runtimeMinutes >= 0) { "片长无效" }
         require(m.source in setOf("MANUAL", "TMDB")) { "电影来源无效" }
-        require(m.personalRatingHalfStars == null || m.personalRatingHalfStars in 1..10) { "个人评分无效" }
+        require(m.personalRatingHalfStars == null || m.personalRatingHalfStars in 0..10) { "个人评分无效" }
         text(m.overview, 50000)
         require(m.metadataLanguage == null || m.metadataLanguage in setOf("zh-CN", "en-US")) { "资料语言无效" }
         m.posterKey?.let(::uuid); instant(m.createdAt); instant(m.updatedAt)
@@ -38,7 +38,7 @@ object BackupRules {
     fun viewing(v: Viewing) {
         uuid(v.id); uuid(v.movieId); LocalDate.parse(v.viewedDate); v.viewedTime?.let { LocalTime.parse(it) }
         text(v.location, 200); text(v.notes, 50000)
-        require(v.ratingHalfStars == null || v.ratingHalfStars in 1..10) { "评分无效" }
+        require(v.ratingHalfStars == null || v.ratingHalfStars in 0..10) { "评分无效" }
         instant(v.createdAt); instant(v.updatedAt)
     }
     fun relationships(movies: List<Movie>, viewings: List<Viewing>, assets: Set<String>, archives: List<ArchivedPoster> = emptyList()) {

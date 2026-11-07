@@ -35,9 +35,10 @@ class ViewingRulesTest {
         assertTrue(ViewingRules.validate(draft().copy(date = "2026-10-24"), today).containsKey("date"))
         assertFalse(ViewingRules.validate(draft().copy(date = "1999-12-31", time = "23:59"), today).containsKey("date"))
     }
-    @Test fun ratingHasTenHalfStarStepsAndANullState() {
-        for (value in 1..10) assertTrue(ViewingRules.validate(draft().copy(rating = value), today).isEmpty())
-        for (value in listOf(0, 11)) assertTrue(ViewingRules.validate(draft().copy(rating = value), today).containsKey("rating"))
+    @Test fun ratingIncludesZeroAndAnIndependentNullState() {
+        for (value in 0..10) assertTrue(ViewingRules.validate(draft().copy(rating = value), today).isEmpty())
+        for (value in listOf(-1, 11)) assertTrue(ViewingRules.validate(draft().copy(rating = value), today).containsKey("rating"))
+        assertEquals("0.0", ViewingRules.ratingLabel(0))
         assertEquals("4.5", ViewingRules.ratingLabel(9))
         assertEquals("未评分", ViewingRules.ratingLabel(null))
     }

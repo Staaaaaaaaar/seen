@@ -37,7 +37,7 @@ class MovieJourneyTest {
             ui.waitUntil(15000){!vm.busy.value&&runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars==halfStars}}
         }
         ui.onNodeWithTag("personal-rating").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress){it(0f)}
-        ui.waitUntil(15000){!vm.busy.value&&runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars==null}}
+        ui.waitUntil(15000){!vm.busy.value&&runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars==0}}
         ui.onNodeWithTag("personal-rating").performSemanticsAction(SemanticsActions.SetProgress){it(4.5f)}
         ui.waitUntil(15000){!vm.busy.value&&runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars==9}}
         addViewing();ui.onNodeWithText("保存").performClick()

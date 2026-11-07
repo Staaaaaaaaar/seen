@@ -21,7 +21,7 @@ class BackupRulesTest {
         BackupRules.movie(movie.copy(runtimeMinutes = 0, releaseYear = 1800, releaseDate = "2000-02-29"))
         BackupRules.viewing(viewing)
         BackupRules.viewing(viewing.copy(viewedTime = "00:00", ratingHalfStars = 1, notes = ""))
-        rejected { BackupRules.viewing(viewing.copy(ratingHalfStars = 0)) }
+        rejected { BackupRules.viewing(viewing.copy(ratingHalfStars = -1)) }
         rejected { BackupRules.viewing(viewing.copy(viewedDate = "2023-02-29")) }
         rejected { BackupRules.movie(movie.copy(runtimeMinutes = -1)) }
         rejected { BackupRules.movie(movie.copy(tmdbId = 0)) }

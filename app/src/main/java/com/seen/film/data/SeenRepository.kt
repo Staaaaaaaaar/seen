@@ -46,7 +46,7 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
     }
 
     suspend fun setPersonalRating(movieId: String, halfStars: Int?) = access.write {
-        require(halfStars == null || halfStars in 1..10) { "评分为 0.5–5 星" }
+        require(halfStars == null || halfStars in 0..10) { "评分为 0–5 星" }
         check(dao.setRating(movieId, halfStars, Instant.now().toString()) == 1) { "电影已不存在" }
     }
 

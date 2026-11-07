@@ -41,7 +41,7 @@ object ViewingRules {
         if (date == null) put("date", "请选择有效日期")
         else if (date > today) put("date", "观看日期不能晚于今天")
         if (draft.time.isNotBlank() && runCatching { LocalTime.parse(draft.time) }.isFailure) put("time", "请选择有效时间")
-        if (draft.rating != null && draft.rating !in 1..10) put("rating", "评分为 0.5–5 星")
+        if (draft.rating != null && draft.rating !in 0..10) put("rating", "评分为 0–5 星")
         if (draft.location.codePointCount(0, draft.location.length) > 200) put("location", "地点最多 200 个字符")
         if (draft.notes.codePointCount(0, draft.notes.length) > 50_000) put("notes", "感受最多 50,000 个字符")
     }.filterKeys { !draft.forWatchlist || it in setOf("title", "originalTitle", "year") }

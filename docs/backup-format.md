@@ -1,5 +1,7 @@
 # 统一影库备份协议 v2
 
+个人评分与保留的观看评分现在允许 0–10 个半星单位；null 仍为未评分。旧应用可能拒绝包含零分的新备份，恢复前会按原有严格规则预检。
+
 本轮写入 `schemaVersion: 2`，兼容读取原 `schemaVersion: 1`。Room schema 为 v3，两个版本号相互独立。旧应用必须拒绝 v2，不能把含独立评分和普通留言的数据伪装为旧协议。
 
 顶层新增必填数组 `notes`、`genres`、`credits`、`archivedPosters`；每个 movie 新增可空字段 `personalRatingHalfStars`、`overview`、`metadataLanguage`。原 `viewings` 的历史评分原值保留，新评分只归属 movie。`wantToWatch` 仅为历史兼容数据，不决定新影库状态。
