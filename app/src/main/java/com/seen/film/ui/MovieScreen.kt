@@ -43,6 +43,11 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
     val busy by vm.busy.collectAsState()
     val metadataState by vm.metadataRefreshState.collectAsState()
     val metadataPreparing=metadataState is com.seen.film.data.MetadataRefreshState.Preparing
+    val metadataMovieId by vm.metadataMovieId.collectAsState()
+    val configured by vm.credentialConfigured.collectAsState()
+    val metadataReady by vm.metadataReady.collectAsState()
+    var refreshDialog by rememberSaveable(id){mutableStateOf(false)}
+    var refreshStarted by rememberSaveable(id){mutableStateOf(false)}
     var menu by remember{mutableStateOf(false)}
     var deleteMovie by rememberSaveable{mutableStateOf(false)}
     var recordChoice by rememberSaveable{mutableStateOf(false)}
@@ -139,11 +144,38 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                     IconButton(onBack,modifier=Modifier.background(Color(0x99302820),CircleShape)){Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回",tint=Color.White)}
                     Box{
                         IconButton(onClick={menu=true},enabled=!busy,modifier=Modifier.background(Color(0x99302820),CircleShape)){Icon(Icons.Outlined.MoreHoriz,"电影操作",tint=Color.White)}
-                        DropdownMenu(menu,{menu=false}){DropdownMenuItem(text={Text("删除电影",color=MaterialTheme.colorScheme.error)},enabled=!metadataPreparing,onClick={menu=false;deleteMovie=true})}
+                        DropdownMenu(menu,{menu=false}){
+                            if(movie.tmdbId!=null)DropdownMenuItem(text={Text("更新资料")},enabled=!metadataPreparing&&metadataReady,onClick={menu=false;refreshStarted=false;refreshDialog=true})
+                            DropdownMenuItem(text={Text("删除电影",color=MaterialTheme.colorScheme.error)},enabled=!metadataPreparing,onClick={menu=false;deleteMovie=true})
+                        }
                     }
                 }
             }
         }
+    }
+    if(refreshDialog&&history!=null){
+        val ownState=if(refreshStarted&&metadataMovieId==id)metadataState else null
+        val preparing=ownState is com.seen.film.data.MetadataRefreshState.Preparing
+        val completed=ownState is com.seen.film.data.MetadataRefreshState.Completed
+        AlertDialog(onDismissRequest={if(!preparing)refreshDialog=false},title={Text("更新电影资料")},
+            text={Column(verticalArrangement=Arrangement.spacedBy(12.dp)){
+                Text(when(ownState){
+                    is com.seen.film.data.MetadataRefreshState.Preparing->"正在下载《${history.movie.title}》的资料与海报…"
+                    is com.seen.film.data.MetadataRefreshState.Completed->"电影资料已更新。"
+                    is com.seen.film.data.MetadataRefreshState.Failed->ownState.message
+                    is com.seen.film.data.MetadataRefreshState.Interrupted->"上次更新已中断，可重新下载。"
+                    is com.seen.film.data.MetadataRefreshState.Idle->"更新已取消，原有资料保留。"
+                    else->"重新下载当前电影的演员、类别、简介及默认海报。个人评分、观看和留言保留。"
+                })
+                if(preparing)LinearProgressIndicator(Modifier.fillMaxWidth())
+                if(!configured)Text("请先在设置 → 访问凭据中配置 TMDB 凭据。")
+            }},
+            confirmButton={if(!preparing)TextButton(onClick={
+                if(completed)refreshDialog=false else{refreshStarted=true;vm.refreshMovieMetadata(id)}
+            },enabled=completed||(!busy&&!metadataPreparing&&configured&&metadataReady)){
+                Text(if(completed)"完成" else if(refreshStarted)"重新更新" else "开始更新")
+            }},
+            dismissButton={TextButton(onClick={if(preparing)vm.cancelMovieMetadataRefresh() else refreshDialog=false}){Text(if(preparing)"取消更新" else "关闭")}})
     }
     if(recordChoice&&history!=null)ModalBottomSheet(onDismissRequest={recordChoice=false},containerColor=MaterialTheme.colorScheme.surfaceContainerHigh){
         Column(Modifier.padding(horizontal=24.dp).padding(bottom=28.dp),verticalArrangement=Arrangement.spacedBy(5.dp)){

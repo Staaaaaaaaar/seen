@@ -16,6 +16,25 @@ import kotlinx.coroutines.flow.*
 
 class SeenViewModel(application: Application) : AndroidViewModel(application) {
     val app = application as SeenApplication
+    private var metadataJob: Job? = null
+    private val _metadataMovieId = MutableStateFlow<String?>(null)
+    val metadataMovieId = _metadataMovieId.asStateFlow()
+    fun refreshMovieMetadata(id: String) {
+        if (metadataJob?.isActive == true || metadataPreparing || _busy.value) return
+        if (!_metadataReady.value || !_draftReady.value) { _error.value = "正在恢复本机数据，请稍后重试"; return }
+        if (_restorePreview.value != null) { _error.value = "请先完成或取消备份恢复"; return }
+        if (_draft.value != null || _recordDraft.value != null) { _error.value = "请先保存或放弃未完成的编辑，再更新资料"; return }
+        if (!_credentialConfigured.value) { _error.value = "请先在设置中配置访问凭据"; return }
+        _metadataMovieId.value = id
+        metadataJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            try { app.metadataRefresh.refresh(com.seen.film.domain.MetadataLanguage.ZH_CN, id) }
+            catch (e: CancellationException) { throw e }
+            catch (e: Exception) { report(e, "无法更新电影资料，请重试") }
+        }
+    }
+    fun cancelMovieMetadataRefresh() {
+        metadataJob?.cancel()
+    }
     val metadataRefreshState = app.metadataRefresh.state
     private val _metadataReady = MutableStateFlow(false)
     val metadataReady = _metadataReady.asStateFlow()

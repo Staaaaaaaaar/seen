@@ -40,7 +40,7 @@ class MetadataRefreshCoordinator(
     val state: StateFlow<MetadataRefreshState> = mutableState.asStateFlow()
     private data class Prepared(val movieId: String, val remote: TmdbMovie, val posterKey: String?)
 
-    suspend fun refresh(target: MetadataLanguage) = withContext(Dispatchers.IO) {
+    suspend fun refresh(target: MetadataLanguage, movieId: String? = null) = withContext(Dispatchers.IO) {
         check(operation.tryLock()) { "已有进行中的资料更新" }
         running = currentCoroutineContext().job
         var token: Any? = null
@@ -51,7 +51,8 @@ class MetadataRefreshCoordinator(
             token = access.reserveMetadata()
             before = access.snapshot { database.withTransaction { database.dao().allMovies() to (database.dao().metadataState() ?: LibraryMetadataState()) } }
             require(before.first.size <= 10000) { "电影数量超过资料准备上限" }
-            val candidates = before.first.filter { it.tmdbId != null }
+            val candidates = before.first.filter { it.tmdbId != null && (movieId == null || it.id == movieId) }
+            if (movieId != null) require(candidates.size == 1) { "电影不存在或没有 TMDB 资料来源" }
             require(!directory.exists() || !journalExists()) { "上次资料准备尚未清理，请重新打开应用后重试" }
             check(directory.mkdirs() || directory.isDirectory)
             journal(target, before.second.generation + 1, created)
