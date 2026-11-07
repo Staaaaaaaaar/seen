@@ -1,3 +1,14 @@
+# 手动验证约定
+
+界面修改后先由用户确认。代理不得自行运行构建、check、测试或安装；以下命令仅供用户明确选择后手动执行，不属于编辑步骤。
+
+- 日常 UI 调整：`ANDROID_SERIAL=隔离设备 bash scripts/test-manual.sh ui`，只跑筛选/排序、添加入口与统计的关键交互；Gradle 自动构建所需 APK，不另跑 assemble。
+- 业务规则：`bash scripts/test-manual.sh unit`，仅 JVM。
+- 发布或用户要求完整验收：`ANDROID_SERIAL=隔离设备 bash scripts/test-manual.sh full`，构建/JVM/lint 一次、设备套件一次；不再叠加 UI 子集或截图套件。
+- 截图、大字号、崩溃恢复专项按需单独选择，不作为每轮 UI 修改的重复门槛。报告、收据和“未执行”须区分；不要在用户正在存放个人记录的模拟器上运行集成测试。
+
+以下保留原有脚本作为手动工具。
+
 # 开发脚本
 
 标准 Android Studio / Gradle 流程始终可用。下列辅助脚本不自动接受许可、清缓存、卸载应用、清用户数据或升级依赖。

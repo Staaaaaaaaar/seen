@@ -2,18 +2,18 @@
 
 个人的电影档案，Android 原生应用。收藏电影，独立评分，记录每一次观看与随时产生的想法；本地保存，无 Seen 账号、广告或遥测，可选连接 TMDB 获取电影资料。
 
-本轮统一影库改版已进入本地验收，尚未调整版本号或发布。设计与实现范围见 [设计说明](docs/superpowers/specs/2026-11-07-library-redesign-design.md)，最新界面调整见 [反馈验收记录](docs/ui-refinement-validation.md)，基础改版证据见 [验证记录](docs/library-redesign-validation.md)。历史发行信息见 [CHANGELOG](CHANGELOG.md) 与 [发布流程](docs/release.md)。
+本轮统一影库改版已进入本地验收，尚未调整版本号或发布。设计与实现范围见 [设计说明](docs/superpowers/specs/2026-11-07-library-redesign-design.md)，当前界面行为与待验收范围见 [界面细化说明](docs/ui-polish.md)，早期反馈证据见 [反馈验收记录](docs/ui-refinement-validation.md)，基础改版证据见 [验证记录](docs/library-redesign-validation.md)。历史发行信息见 [CHANGELOG](CHANGELOG.md) 与 [发布流程](docs/release.md)。
 
 ## 主要实现
 
 Kotlin + Jetpack Compose + Material 3，单 Activity、单 app 模块，手动依赖注入。Compose UI → ViewModel → Repository → Room。根页面为影库、统计，设置位于右上角。外观跟随系统浅深色，采用温暖纸色、棕色与墨色，标题与个人文字使用离线中文衬线字体。
 
 - 影库采用海报与文字分栏列表，支持全部、已看、未看筛选，当前筛选内的本地搜索，以及片名、年份、个人评分、最近观看排序。电影可没有观看、留言或评分。
-- 个人评分独立于观看，支持 0.5–5 星、半星和清除。只有观看记录计入已看和观看次数；普通留言不计数。两种记录都支持日期、可选具体时间和地点。详情展示主要资料、简介和演职人员。
-- 统计仅包含已看电影部数、观看次数、月频率与类型分布，固定统计全部历史数据。类型按电影去重，多类型可重叠。
-- TMDB 支持简体中文、English 资料偏好，影响搜索片名、详细资料与默认海报。设置中显式更新现有电影，准备全部完成后统一切换；失败或取消保留原版本。准备期间可继续留言、观看和评分，暂缓增删电影与恢复备份；未完成的 TMDB 建片草稿须先保存或放弃。手动电影不自动联网改写。
+- 个人评分独立于观看，支持 0–5 星、半星和清除。只有观看记录计入已看和观看次数；普通留言不计数。两种记录都支持日期、可选具体时间和地点。详情展示主要资料、简介和演职人员。
+- 统计仅包含已看电影部数、观看次数、近期月频率与类型环图；数量汇总采用全部历史数据，近期图表显示含本月的最近6个月，类型前4类单列，其余并为其他。类型按电影去重，多类型可重叠。
+- 电影搜索与新电影资料固定使用简体中文，不提供语言切换。新搜索添加资料固定简体中文，设置不再提供批量资料更新。历史电影、草稿、海报与备份继续兼容，不自动联网改写。
 
-在「设置 → 访问凭据」输入 **API Read Access Token**（非 API Key），可从 [TMDB 账户设置](https://www.themoviedb.org/settings/api) 获取。凭据仅存本机，不写入 APK、日志或备份。移除凭据不影响已存资料。搜索添加按来源 ID 去重；海报下载失败仍可保存电影，之后可在资料语言页更新。新增影片仅通过电影搜索，自动使用默认海报；历史手动影片与未保存草稿仍保留。模拟器 DNS 排障见 [开发指南](docs/development.md#模拟器-tmdb-解析异常的可选修复)。
+在「设置 → 访问凭据」输入 **API Read Access Token**（非 API Key），可从 [TMDB 账户设置](https://www.themoviedb.org/settings/api) 获取。凭据仅存本机，不写入 APK、日志或备份。移除凭据不影响已存资料。搜索添加按来源 ID 去重；海报下载失败仍可保存电影，不影响继续保存资料。新增影片仅通过电影搜索，自动使用默认海报；历史手动影片与未保存草稿仍保留。模拟器 DNS 排障见 [开发指南](docs/development.md#模拟器-tmdb-解析异常的可选修复)。
 
 「设置 → 导出数据 / 导入备份」使用明文 JSON，包含电影、独立评分、观看、留言、资料及所引用海报。恢复前预检并确认覆盖，不合并；凭据与显示偏好保留。新格式 v2 继续兼容读取旧格式 v1。未保存草稿须先保存或放弃，失败保留原库。协议限制见 [备份格式](docs/backup-format.md)。
 
@@ -70,3 +70,5 @@ Debug 包名 `com.seen.film.debug`，APK：`app/build/outputs/apk/debug/app-debu
 - [v0.4 底栏与海报电影库方案](docs/v0.4.0-navigation-design.md) · [最新四屏布局稿](docs/design/v0.4.0-layout-v3.png)（设计依据；实际验收见 [验证日志](docs/v0.4.0-validation.md)）。
 - [发布流程](docs/release.md) · [脚本索引](scripts/README.md)。
 - [v0.2.1 验证日志](docs/v0.2.1-validation.md) · [v0.2 验证日志](docs/v0.2.0-validation.md) · [v0.1 验证日志](docs/v0.1.0-validation.md) · [版本与发布](docs/versioning.md)。
+
+界面迭代先由用户确认，构建与测试仅手动触发；精简入口见 [手动验证约定](scripts/README.md)。本轮布局与中文固定调整尚未构建或测试，模拟器仍是上次安装版本。

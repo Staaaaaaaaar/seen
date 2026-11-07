@@ -1,3 +1,7 @@
+# 当前交互开发约定
+
+按用户最新要求，界面修改交付代码后由用户先确认；代理不自动构建、check、测试或安装。测试统一通过 `scripts/test-manual.sh` 手动选择 ui / unit / full；只执行所选一次，不在其前后重复 assemble、子集和全量套件。原有下文命令为工具参考，不表示每轮都必须运行。
+
 # 开发指南
 
 主流程使用 Android Studio / SDK Manager / Device Manager 和仓库 Gradle Wrapper。辅助脚本面向 Linux x86_64；它们用于减少重复输入，不能代替宿主机的 JDK、网络、许可和虚拟化配置。首次打开步骤见 [README](../README.md)。
