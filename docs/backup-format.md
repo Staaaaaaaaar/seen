@@ -1,3 +1,23 @@
+# 统一影库备份协议 v2
+
+本轮写入 `schemaVersion: 2`，兼容读取原 `schemaVersion: 1`。Room schema 为 v3，两个版本号相互独立。旧应用必须拒绝 v2，不能把含独立评分和普通留言的数据伪装为旧协议。
+
+顶层新增必填数组 `notes`、`genres`、`credits`、`archivedPosters`；每个 movie 新增可空字段 `personalRatingHalfStars`、`overview`、`metadataLanguage`。原 `viewings` 的历史评分原值保留，新评分只归属 movie。`wantToWatch` 仅为历史兼容数据，不决定新影库状态。
+
+- `notes`：id、movieId、recordedDate、recordedTime（可空）、location（可空）、body、createdAt、updatedAt。正文必填且最多50,000码点；日期/时间遵循原协议空值语义。
+- `genres`：movieId、genreId（正整数）、name、position（非负整数）；同片同类型唯一。
+- `credits`：movieId、creditKey、personId（正整数）、name、isCast（严格布尔）、department、job、character、profilePath、position。可空字段显式 null；同片 creditKey 唯一，不按 personId 合并角色。
+- `archivedPosters`：movieId、posterAssetId；图片可同时被当前海报与历史归档引用，assets 必须恰好等于两类引用的并集。恢复重新映射私有文件名。
+- 旧 v1 电影的独立评分取按观看日期、具体时间、创建时间倒序和 ID 升序排列的首条评分，包括 null。旧图片同时保留归档引用。
+- Movie最多10,000、Viewing与Note各100,000、Genre与Credit各100,000、归档图片引用与asset各10,000；超过任一边界报错，不丢弃数据。
+- 沿用整份JSON100MiB、单JPEG2MiB、JPEG合计60MiB、最长边2048px、嵌套深度16和严格JSON/UTF-8校验。文本预算包含新增个人及电影资料。人物头像是可重建缓存，只保存远程路径，不导出头像缓存；无网络显示姓名占位。
+- 准备中的资料不导出；恢复不联网、不导入凭证/全局偏好/草稿。备份保存每部电影当时的资料语言，设备目标语言偏好保留，可之后显式统一更新。
+- 覆盖恢复在同一事务替换全部电影、观看、留言、类型、演职人员和归档引用。存在任一未保存草稿时不允许开始恢复。
+
+以下历史 v1 规范继续约束旧备份读取、媒体、原实体和安全边界；其“仅接受版本1”说明仅适用于旧版应用。
+
+---
+
 # v0.3.0 备份协议与恢复方案
 
 状态：v0.3 开发协议，2026-10-24。实现与实际验收状态见 [v0.3 验证日志](v0.3.0-validation.md)；本文描述约束，不代表全部人工验收通过。取代 [设计稿](design-review.md) 中的早期备份草案。v0.3 的其他质量门槛仍见 [开发规划](roadmap.md)。

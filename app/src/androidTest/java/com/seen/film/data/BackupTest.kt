@@ -111,10 +111,10 @@ class BackupTest {
             val original = f.original(); val oldPoster = f.posters.file(original.first.single().posterKey)!!; val oldHash = oldPoster.sha256()
             val service = f.service(); val valid = f.document(false).readText()
             val bad = listOf(
-                valid.replace("\"schemaVersion\":1", "\"schemaVersion\":2"),
-                valid.replace("\"schemaVersion\":1", "\"schemaVersion\":\"1\""),
-                valid.replace("\"schemaVersion\":1", "\"schemaVersion\":1.0"),
-                valid.replace("\"schemaVersion\":1", "\"schemaVersion\":1,\"schemaVersion\":1"),
+                valid.replace("\"schemaVersion\":2", "\"schemaVersion\":999"),
+                valid.replace("\"schemaVersion\":2", "\"schemaVersion\":\"1\""),
+                valid.replace("\"schemaVersion\":2", "\"schemaVersion\":2.0"),
+                valid.replace("\"schemaVersion\":2", "\"schemaVersion\":2,\"schemaVersion\":2"),
                 valid.replace("\"runtimeMinutes\":0", "\"runtimeMinutes\":2147483648"),
                 valid.replace("\"tmdbId\":123", "\"tmdbId\":9223372036854775808"),
                 valid.replace("\"tmdbId\":123", "\"tmdbId\":-1"),

@@ -18,14 +18,15 @@ class RestorePreview internal constructor(
     internal val directory: File, internal val file: File, internal val digest: String,
     internal val token: Any, internal val data: BackupData,
     internal val mediaDigests: Map<String, String>,
-    val currentMovies: Int, val currentViewings: Int,
+    val currentMovies: Int, val currentViewings: Int, val currentNotes: Int = 0,
 ) {
     val appVersion get() = data.appVersion
     val exportedAt get() = data.exportedAt
     val movieCount get() = data.movies.size
     val viewingCount get() = data.viewings.size
+    val noteCount get() = data.notes.size
     val posterCount get() = data.assets.size
-    val hasFutureDates get() = data.viewings.any { LocalDate.parse(it.viewedDate) > LocalDate.now() }
+    val hasFutureDates get() = (data.viewings.map { it.viewedDate } + data.notes.map { it.recordedDate }).any { LocalDate.parse(it) > LocalDate.now() }
 }
 
 /** File preparation is private; SQLite is the sole commit point. Old media is never removed. */
@@ -41,16 +42,17 @@ class BackupRepository(
         val directory = operation()
         try {
             access.snapshot {
-                val (movies, viewings) = database.withTransaction {
-                    require(database.dao().movieTextBytes() + database.dao().viewingTextBytes() <= BackupRules.MAX_BYTES) { "库中文本超过备份上限" }
-                    database.dao().allMovies() to database.dao().allViewings()
+                val snapshot = database.withTransaction {
+                    val dao = database.dao()
+                    require(dao.movieTextBytes() + dao.viewingTextBytes() + dao.extraTextBytes() <= BackupRules.MAX_BYTES) { "库中文本超过备份上限" }
+                    BackupData(BuildConfig.VERSION_NAME, Instant.now().toString(), dao.allMovies(), dao.allViewings(), emptyMap(),
+                        dao.allNotes(), dao.allGenres(), dao.allCredits(), dao.allArchivedPosters())
                 }
-                require(movies.size <= 10000 && viewings.size <= 100000) { "电影或观看数量超过备份上限" }
-                val keys = movies.mapNotNull { it.posterKey }.distinct().associateWith { UUID.randomUUID().toString() }
+                val keys = (snapshot.movies.mapNotNull { it.posterKey } + snapshot.archivedPosters.map { it.posterKey }).distinct().associateWith { UUID.randomUUID().toString() }
                 val assets = keys.map { (key, id) -> id to (posters.file(key) ?: error("电影海报缺失，无法导出完整备份")) }.toMap()
-                val data = BackupData(BuildConfig.VERSION_NAME, Instant.now().toString(), movies.map { it.copy(posterKey = it.posterKey?.let(keys::getValue)) }, viewings, assets)
-                data.movies.forEach(BackupRules::movie); data.viewings.forEach(BackupRules::viewing)
-                BackupRules.relationships(data.movies, viewings, assets.keys)
+                val data = snapshot.copy(movies = snapshot.movies.map { it.copy(posterKey = it.posterKey?.let(keys::getValue)) },
+                    archivedPosters = snapshot.archivedPosters.map { it.copy(posterKey = keys.getValue(it.posterKey)) }, assets = assets)
+                BackupRules.validate(data)
                 val file = File(directory, "backup.json"); codec.write(file, data)
                 val validation = File(directory, "validation").apply { mkdirs() }
                 codec.read(file, validation); validation.deleteRecursively()
@@ -69,7 +71,7 @@ class BackupRepository(
     }
     suspend fun cancelExport(prepared: PreparedExport) = withContext(NonCancellable + Dispatchers.IO) { runCatching { prepared.directory.deleteRecursively() }; Unit }
     suspend fun preview(uri: Uri): RestorePreview = withContext(Dispatchers.IO) {
-        val token = access.reserve { check(drafts.read() == null) { "请先保存或放弃未完成的编辑，再恢复备份" } }
+        val token = access.reserve { check(drafts.read() == null && drafts.readRecord() == null) { "请先保存或放弃未完成的编辑，再恢复备份" } }
         var directory: File? = null
         try {
             val workspace = operation(); directory = workspace
@@ -78,8 +80,8 @@ class BackupRepository(
                 LimitedOutput(file.outputStream()).use { output -> input.copyTo(output) }
             } ?: error("无法读取备份文件")
             val data = codec.read(file, workspace)
-            val counts = database.withTransaction { database.dao().movieCount() to database.dao().viewingCount() }
-            RestorePreview(workspace, file, file.sha256(), token, data, data.assets.mapValues { it.value.sha256() }, counts.first, counts.second)
+            val counts = database.withTransaction { Triple(database.dao().movieCount(), database.dao().viewingCount(), database.dao().noteCount()) }
+            RestorePreview(workspace, file, file.sha256(), token, data, data.assets.mapValues { it.value.sha256() }, counts.first, counts.second, counts.third)
         } catch (e: Exception) {
             withContext(NonCancellable) { access.release(token); directory?.deleteRecursively() }; throw e
         }
@@ -92,7 +94,7 @@ class BackupRepository(
         // Once confirmation starts, finish the bounded commit and return its known outcome.
         withContext(NonCancellable) {
             access.restoring(preview.token) {
-                check(drafts.read() == null) { "存在未完成的编辑，无法覆盖恢复" }
+                check(drafts.read() == null && drafts.readRecord() == null) { "存在未完成的编辑，无法覆盖恢复" }
                 check(preview.file.sha256() == preview.digest) { "备份暂存内容已改变，请重新选择" }
                 for ((id, file) in preview.data.assets) {
                     check(file.sha256() == preview.mediaDigests.getValue(id)) { "暂存海报已改变，请重新选择" }
@@ -104,11 +106,14 @@ class BackupRepository(
                     for ((id, file) in preview.data.assets) mapping[id] = posters.importBackup(file) { created += it }
                     checkpoint("media-ready")
                     database.withTransaction {
-                        val dao = database.dao(); dao.deleteAllViewings(); dao.deleteAllMovies()
+                        val dao = database.dao(); dao.deleteAllNotes(); dao.deleteAllGenres(); dao.deleteAllCredits(); dao.deleteAllArchivedPosters(); dao.deleteAllViewings(); dao.deleteAllMovies()
                         checkpoint("sql-deleted")
                         preview.data.movies.forEach { dao.insertMovie(it.copy(posterKey = it.posterKey?.let(mapping::getValue))) }
                         checkpoint("sql-movies")
                         preview.data.viewings.forEach { dao.insertViewing(it) }
+                        preview.data.notes.forEach { dao.insertNote(it) }
+                        dao.insertGenres(preview.data.genres); dao.insertCredits(preview.data.credits)
+                        dao.insertArchivedPosters(preview.data.archivedPosters.map { it.copy(posterKey = mapping.getValue(it.posterKey)) })
                     }
                     // Test observer failures cannot turn a committed restore into an apparent failure.
                     runCatching { checkpoint("committed") }
@@ -116,7 +121,7 @@ class BackupRepository(
                     // The commit outcome may be unknown. Only current DB references authorize deletion.
                     // If the read itself fails, retain every new file and preserve the original error.
                     runCatching {
-                        val referenced = database.dao().posterKeys().toSet()
+                        val referenced = (database.dao().posterKeys() + database.dao().allArchivedPosters().map { it.posterKey }).toSet()
                         created.filterNot { it in referenced }.forEach { posters.file(it)?.delete() }
                     }
                     throw e

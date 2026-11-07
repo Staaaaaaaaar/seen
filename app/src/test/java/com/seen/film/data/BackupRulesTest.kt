@@ -57,4 +57,16 @@ class BackupRulesTest {
         rejected { BackupRules.relationships(emptyList(), emptyList(), (0..10000).map { it.toString() }.toSet()) }
     }
 
+    @Test fun newRelationshipsRejectDuplicateNotesBadGenresAndMissingArchivedImages() {
+        val note = MovieNote(viewing.id, id, "2020-01-01", body = "A note", createdAt = now, updatedAt = now)
+        val base = BackupData("1.1.0", now, listOf(movie), emptyList(), emptyMap(), notes = listOf(note))
+        BackupRules.validate(base)
+        rejected { BackupRules.validate(base.copy(notes = listOf(note,note))) }
+        rejected { BackupRules.validate(base.copy(notes = listOf(note.copy(movieId = viewing.id)))) }
+        rejected { BackupRules.validate(base.copy(genres = listOf(MovieGenre(id,0,"bad",0)))) }
+        rejected { BackupRules.validate(base.copy(archivedPosters = listOf(ArchivedPoster(id,viewing.id)))) }
+        rejected { BackupRules.validate(base.copy(movies = listOf(movie.copy(personalRatingHalfStars = 11)))) }
+        BackupRules.validate(base.copy(movies = listOf(movie.copy(personalRatingHalfStars = null))))
+    }
+
 }

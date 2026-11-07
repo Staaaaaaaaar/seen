@@ -73,11 +73,13 @@ interface SeenDao {
     @Query("DELETE FROM viewings WHERE movieId = :movieId") suspend fun deleteMovieViewings(movieId: String)
     @Query("DELETE FROM movies WHERE id = :id") suspend fun deleteMovie(id: String): Int
     @Query("UPDATE movies SET wantToWatch = :wanted WHERE id = :id") suspend fun setWanted(id: String, wanted: Boolean): Int
+    @Query("SELECT (SELECT COALESCE(SUM(length(CAST(body || COALESCE(location,'') AS BLOB))),0) FROM movie_notes) + (SELECT COALESCE(SUM(length(CAST(COALESCE(overview,'') AS BLOB))),0) FROM movies) + (SELECT COALESCE(SUM(length(CAST(name AS BLOB))),0) FROM movie_genres) + (SELECT COALESCE(SUM(length(CAST(name || COALESCE(character,'') || COALESCE(job,'') || COALESCE(department,'') AS BLOB))),0) FROM movie_credits)") suspend fun extraTextBytes(): Long
     @Query("SELECT * FROM movie_notes WHERE id = :id") suspend fun note(id: String): MovieNote?
+    @Query("SELECT COUNT(*) FROM movie_notes") suspend fun noteCount(): Int
     @Query("SELECT * FROM movie_notes LIMIT 100001") suspend fun allNotes(): List<MovieNote>
-    @Query("SELECT * FROM movie_genres") suspend fun allGenres(): List<MovieGenre>
-    @Query("SELECT * FROM movie_credits") suspend fun allCredits(): List<MovieCredit>
-    @Query("SELECT * FROM archived_posters") suspend fun allArchivedPosters(): List<ArchivedPoster>
+    @Query("SELECT * FROM movie_genres LIMIT 100001") suspend fun allGenres(): List<MovieGenre>
+    @Query("SELECT * FROM movie_credits LIMIT 100001") suspend fun allCredits(): List<MovieCredit>
+    @Query("SELECT * FROM archived_posters LIMIT 10001") suspend fun allArchivedPosters(): List<ArchivedPoster>
     @Query("SELECT * FROM library_metadata_state WHERE id=1") fun observeMetadataState(): kotlinx.coroutines.flow.Flow<LibraryMetadataState?>
     @Query("SELECT * FROM library_metadata_state WHERE id=1") suspend fun metadataState(): LibraryMetadataState?
     @Query("DELETE FROM movie_notes") suspend fun deleteAllNotes()
