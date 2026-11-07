@@ -32,7 +32,7 @@ fun LibraryScreen(
     all: List<MovieHistory>?, draft: ViewingDraft?, canEdit: Boolean,
     posterFile: (String?) -> File?, onAdd: () -> Unit, onMovie: (String) -> Unit, onResume: () -> Unit,
     onSettings: () -> Unit = {}, initialQuery: LibraryQuery = LibraryQuery(),
-    onQueryChanged: (LibraryQuery) -> Unit = {}, languageCode: String = "zh-CN", hasPendingRecord: Boolean = false,
+    onQueryChanged: (LibraryQuery) -> Unit = {}, languageCode: String = "zh-CN", hasPendingRecord: Boolean = false, canAdd: Boolean = canEdit, preparationMessage: String? = null,
 ) {
     var text by rememberSaveable { mutableStateOf("") }
     var search by rememberSaveable { mutableStateOf(false) }
@@ -57,6 +57,7 @@ fun LibraryScreen(
                 placeholder={Text("搜索片名、导演或类型")},singleLine=true,
                 trailingIcon={IconButton(onClick={text="";search=false}){Icon(Icons.Outlined.Close,"关闭搜索")}})
             LibraryControls(query,::change){sortSheet=true}
+            preparationMessage?.let{Text(it,Modifier.padding(horizontal=22.dp,vertical=8.dp),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)}
             if(draft!=null||hasPendingRecord)TextButton(onClick=onResume,enabled=canEdit,modifier=Modifier.padding(horizontal=14.dp)){
                 Icon(Icons.Outlined.Edit,null,Modifier.size(16.dp));Spacer(Modifier.width(8.dp));Text("继续未完成的编辑",style=MaterialTheme.typography.bodySmall)
             }
@@ -95,8 +96,8 @@ fun LibraryScreen(
                 }
             }
         }
-        if(all!=null)FloatingActionButton(onClick={if(canEdit)onAdd()},modifier=Modifier.align(Alignment.BottomEnd).padding(22.dp).testTag("bottom-add"),
-            containerColor=MaterialTheme.colorScheme.primary,contentColor=MaterialTheme.colorScheme.onPrimary){Icon(Icons.Outlined.Add,"添加影片")}
+        if(all!=null)FloatingActionButton(onClick={if(canAdd)onAdd()},modifier=Modifier.align(Alignment.BottomEnd).padding(22.dp).testTag("bottom-add").semantics{if(!canAdd)disabled()},
+            containerColor=if(canAdd)MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,contentColor=if(canAdd)MaterialTheme.colorScheme.onPrimary else SeenSecondary){Icon(Icons.Outlined.Add,"添加影片")}
     }
     if(sortSheet)LibrarySortSheet(query,::change){sortSheet=false}
 }

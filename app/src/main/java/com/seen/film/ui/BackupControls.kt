@@ -20,6 +20,8 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun BackupControls(vm: SeenViewModel, allowExport: Boolean = true, allowImport: Boolean = true) {
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val metadataState by vm.metadataRefreshState.collectAsStateWithLifecycle()
+    val metadataPreparing = metadataState is com.seen.film.data.MetadataRefreshState.Preparing
     val ready by vm.draftReady.collectAsStateWithLifecycle()
     val draft by vm.draft.collectAsStateWithLifecycle()
     val recordDraft by vm.recordDraft.collectAsStateWithLifecycle()
@@ -47,7 +49,8 @@ fun BackupControls(vm: SeenViewModel, allowExport: Boolean = true, allowImport: 
         if (allowExport) Button(onClick = vm::prepareExport, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("导出全部数据") }
         if (allowImport && preview == null) {
             OutlinedButton(onClick = { open.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) },
-                enabled = !busy && ready && draft == null && recordDraft == null, modifier = Modifier.fillMaxWidth()) { Text("选择备份恢复") }
+                enabled = !metadataPreparing && !busy && ready && draft == null && recordDraft == null, modifier = Modifier.fillMaxWidth()) { Text("选择备份恢复") }
+            if (metadataPreparing) Text("请先完成或取消电影资料准备，再恢复备份。")
             if (draft != null || recordDraft != null) Text("请先保存或放弃未完成的编辑，再恢复备份。")
         }
         preview?.let { value ->

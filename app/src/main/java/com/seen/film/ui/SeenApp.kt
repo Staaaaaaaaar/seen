@@ -26,6 +26,8 @@ fun SeenApp(vm:SeenViewModel=viewModel())=SeenTheme {
     val recordDraft by vm.recordDraft.collectAsStateWithLifecycle()
     val draftReady by vm.draftReady.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
+    val metadataState by vm.metadataRefreshState.collectAsStateWithLifecycle()
+    val metadataPreparing = metadataState is com.seen.film.data.MetadataRefreshState.Preparing
     val error by vm.error.collectAsStateWithLifecycle()
     val preview by vm.restorePreview.collectAsStateWithLifecycle()
     val loadFailed by vm.loadFailed.collectAsStateWithLifecycle()
@@ -47,7 +49,7 @@ fun SeenApp(vm:SeenViewModel=viewModel())=SeenTheme {
     BackHandler(stack.size>1||route=="statistics"){back()}
     LaunchedEffect(error){error?.let{snackbar.showSnackbar(it,withDismissAction=true);vm.clearError()}}
     LaunchedEffect(draftReady,route,draft?.key,recordDraft?.key,busy){if(draftReady&&route.startsWith("editor:")&&draft==null&&!busy)pop();if(draftReady&&route.startsWith("record:")&&recordDraft==null&&!busy)pop()}
-    fun add(){if(busy||!draftReady||preview!=null)return;if(draft!=null||recordDraft!=null)confirmNew=true else push("choose")}
+    fun add(){if(metadataPreparing||busy||!draftReady||preview!=null)return;if(draft!=null||recordDraft!=null)confirmNew=true else push("choose")}
     Scaffold(contentWindowInsets=if(route.startsWith("movie:"))WindowInsets(0,0,0,0) else ScaffoldDefaults.contentWindowInsets,snackbarHost={SnackbarHost(snackbar)},bottomBar={
         if(route in listOf("library","statistics"))SeenBottomBar(route,!busy&&preview==null,{stack=listOf("library")},{stack=listOf("statistics")})
     }){padding->
@@ -57,13 +59,10 @@ fun SeenApp(vm:SeenViewModel=viewModel())=SeenTheme {
                     if(loadFailed)PageMessage("无法读取影库","请重新打开应用，原有数据不会被清空。")
                     else LibraryScreen(all,draft,draftReady&&!busy&&preview==null,vm.app.posters::file,::add,{push("movie:$it")},
                         {if(recordDraft!=null)push("record:${recordDraft!!.key}") else draft?.let{push("editor:${it.key}")}},onSettings={push("settings")},initialQuery=vm.app.libraryPreferences.read(),
-                        onQueryChanged=vm::saveLibraryQuery,languageCode=snapshot?.metadata?.activeLanguage?:"zh-CN",hasPendingRecord=recordDraft!=null)
+                        onQueryChanged=vm::saveLibraryQuery,languageCode=snapshot?.metadata?.activeLanguage?:"zh-CN",hasPendingRecord=recordDraft!=null,canAdd=draftReady&&!busy&&!metadataPreparing&&preview==null,preparationMessage=if(metadataPreparing)"资料准备中，暂缓增删影片；可在设置中取消。" else null)
                 }
                 route=="statistics"->pageStates.SaveableStateProvider("statistics"){
-                    Column{
-                        TopAppBar(title={Text("Seen")},actions={IconButton(onClick={push("settings")}){Icon(Icons.Outlined.Settings,"设置")}})
-                        PageMessage("统计","数量、每月观看与类型分布")
-                    }
+                    StatisticsScreen(all,onSettings={push("settings")})
                 }
                 route=="choose"->ChooseScreen(vm,all,!busy&&draftReady,{back()},{movieId->
                     if(movieId!=null)push("movie:$movieId") else vm.openMovieEditor{push("editor:$it")}

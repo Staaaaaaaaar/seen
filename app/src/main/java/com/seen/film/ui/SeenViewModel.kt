@@ -16,6 +16,20 @@ import kotlinx.coroutines.flow.*
 
 class SeenViewModel(application: Application) : AndroidViewModel(application) {
     val app = application as SeenApplication
+    val metadataRefreshState = app.metadataRefresh.state
+    private val _metadataReady = MutableStateFlow(false)
+    val metadataReady = _metadataReady.asStateFlow()
+    private var metadataJob: Job? = null
+    val metadataPreparing get() = metadataJob?.isActive == true || metadataRefreshState.value is com.seen.film.data.MetadataRefreshState.Preparing
+    fun refreshMetadata(language: com.seen.film.domain.MetadataLanguage) {
+        if (!_metadataReady.value || metadataPreparing || _busy.value || _restorePreview.value != null) return
+        clearSearch()
+        metadataJob = viewModelScope.launch {
+            try { app.metadataRefresh.refresh(language) }
+            catch (e: Exception) { report(e, "无法准备电影资料，请重试") }
+        }
+    }
+    fun cancelMetadataRefresh() { metadataJob?.cancel(); viewModelScope.launch { app.metadataRefresh.cancel() } }
     private val _restorePreview = MutableStateFlow<com.seen.film.data.RestorePreview?>(null)
     val restorePreview = _restorePreview.asStateFlow()
     private val _preparedExport = MutableStateFlow<com.seen.film.data.PreparedExport?>(null)
@@ -53,7 +67,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun previewBackup(uri: Uri?) {
-        if (uri == null || _busy.value || _restorePreview.value != null) return
+        if (uri == null || _busy.value || _restorePreview.value != null || metadataPreparing) return
         if (!_draftReady.value || _draft.value != null || _recordDraft.value != null) { _error.value = "请先保存或放弃未完成的编辑，再恢复备份"; return }
         _busy.value = true; _backupMessage.value = "正在读取并预检备份…"
         backupJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -94,7 +108,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     private val _credentialConfigured = MutableStateFlow(app.credentials.token().isNotBlank())
     val credentialConfigured = _credentialConfigured.asStateFlow()
     fun saveCredential(value: String, onSaved: () -> Unit) {
-        if (_busy.value) return
+        if (_busy.value || metadataPreparing) return
         _busy.value = true
         viewModelScope.launch {
             try {
@@ -135,6 +149,11 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
+            try { app.metadataRefresh.recoverInterrupted() }
+            catch (e: Exception) { report(e, "无法清理上次资料准备，请重试") }
+            finally { _metadataReady.value = true }
+        }
+        viewModelScope.launch {
             app.repository.snapshots.catch { _loadFailed.value = true; _error.value = "无法读取影库，请重启后重试" }.collect { _librarySnapshot.value = it; _library.value = it.movies }
         }
         viewModelScope.launch {
@@ -174,6 +193,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { try { app.libraryPreferences.save(query) } catch (e: Exception) { report(e,"无法保存显示偏好") } }
     }
     fun openMovieEditor(navigate: (String) -> Unit) {
+        if (metadataPreparing) { _error.value = "请先完成或取消电影资料准备，再增删影片"; return }
         if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
         _draft.value?.let { navigate(it.key); return }
         _busy.value = true
@@ -379,6 +399,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun chooseTmdb(id: Long, forWatchlist: Boolean = false, navigate: (String) -> Unit) {
+        if (metadataPreparing) { _error.value = "请先完成或取消电影资料准备，再增删影片"; return }
         if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
         _draft.value?.let { navigate(it.key); return }
         val existing = _library.value.orEmpty().firstOrNull { it.movie.tmdbId == id }
@@ -418,6 +439,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     fun deleteMovie(id: String, onDeleted: () -> Unit) {
+        if (metadataPreparing) { _error.value = "请先完成或取消电影资料准备，再增删影片"; return }
         if (_busy.value || _restorePreview.value != null) return
         if (!_draftReady.value) return
         if (_draft.value?.movieId == id || _recordDraft.value?.movieId == id) {

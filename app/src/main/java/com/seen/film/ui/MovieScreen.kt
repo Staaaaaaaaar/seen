@@ -36,6 +36,8 @@ import com.seen.film.domain.*
 fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<MovieHistory>?,onBack:()->Unit,onRecord:(String,RecordKind,String?)->Unit){
     val history=all?.firstOrNull{it.movie.id==id}
     val busy by vm.busy.collectAsState()
+    val metadataState by vm.metadataRefreshState.collectAsState()
+    val metadataPreparing=metadataState is com.seen.film.data.MetadataRefreshState.Preparing
     var menu by remember{mutableStateOf(false)}
     var deleteMovie by rememberSaveable{mutableStateOf(false)}
     var recordChoice by rememberSaveable{mutableStateOf(false)}
@@ -136,7 +138,7 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                     IconButton(onBack,modifier=Modifier.background(Color(0x99101C2A),CircleShape)){Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回",tint=Color.White)}
                     Box{
                         IconButton(onClick={menu=true},enabled=!busy,modifier=Modifier.background(Color(0x99101C2A),CircleShape)){Icon(Icons.Outlined.MoreHoriz,"电影操作",tint=Color.White)}
-                        DropdownMenu(menu,{menu=false}){DropdownMenuItem(text={Text("删除电影",color=MaterialTheme.colorScheme.error)},onClick={menu=false;deleteMovie=true})}
+                        DropdownMenu(menu,{menu=false}){DropdownMenuItem(text={Text("删除电影",color=MaterialTheme.colorScheme.error)},enabled=!metadataPreparing,onClick={menu=false;deleteMovie=true})}
                     }
                 }
             }
