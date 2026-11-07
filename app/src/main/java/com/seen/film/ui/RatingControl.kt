@@ -1,6 +1,8 @@
 package com.seen.film.ui
 
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.StarHalf
@@ -10,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.font.FontFamily
@@ -27,7 +28,6 @@ fun RatingControl(value:Int?,enabled:Boolean,onChange:(Int?)->Unit){
         if(enabled)customActions=listOf(CustomAccessibilityAction("清除评分"){onChange(null);true})
         if(enabled)setProgress{score->onChange((score*2).roundToInt().coerceIn(0,10));true}
     }){
-        val stacked=maxWidth<340.dp||LocalDensity.current.fontScale>=1.4f
         @Composable fun stars(){Row{
             for(i in 1..5){
                 val filled=(value?:0)>=i*2
@@ -44,9 +44,16 @@ fun RatingControl(value:Int?,enabled:Boolean,onChange:(Int?)->Unit){
             }
         }}
         @Composable fun score(){Box(Modifier.widthIn(min=56.dp).heightIn(min=48.dp),contentAlignment=Alignment.Center){
-            Text(value?.let{com.seen.film.domain.ViewingRules.ratingLabel(it)}?:"—",fontFamily=FontFamily.Serif,fontSize=24.sp)
+            Text(value?.let{com.seen.film.domain.ViewingRules.ratingLabel(it)}?:"—",fontFamily=FontFamily.Serif,fontSize=24.sp,maxLines=1,softWrap=false)
         }}
-        if(stacked)Column(verticalArrangement=Arrangement.spacedBy(4.dp)){stars();score()}
-        else Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){stars();score()}
+        // Keep the numeric score beside the five 48dp targets. Allow scrolling only
+        // when the available width cannot fit the controls at the user's text size.
+        Row(Modifier.horizontalScroll(rememberScrollState()).widthIn(min=maxWidth),
+            verticalAlignment=Alignment.CenterVertically,
+            horizontalArrangement=Arrangement.SpaceBetween){
+            stars()
+            Spacer(Modifier.width(8.dp))
+            score()
+        }
     }
 }
