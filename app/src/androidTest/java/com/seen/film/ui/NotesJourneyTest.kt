@@ -29,6 +29,8 @@ class NotesJourneyTest {
         ui.onNodeWithText(kind).performClick()
     }
     @Test fun notesHaveDatesAndPlacesWithoutCreatingAViewing(){
+        val movieId=runBlocking{app.database.dao().allMovies().single().id}
+        runBlocking{repeat(10){app.repository.saveRecord(RecordDraft(movieId=movieId,kind=RecordKind.NOTE,date="2020-01-01",body="Earlier thought $it"))}}
         add("一段想法")
         ui.onNodeWithTag("record-body").performTextInput("A thought 🎬")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
@@ -38,12 +40,15 @@ class NotesJourneyTest {
         ui.activityRule.scenario.recreate()
         ui.onNodeWithTag("record-body").assertTextContains("A thought 🎬")
         ui.onNodeWithText("保存").performClick();waitFor("A thought 🎬")
-        val note=runBlocking{app.database.dao().allNotes().single()}
+        val note=runBlocking{app.database.dao().allNotes().first{it.body=="A thought 🎬"}}
         assertEquals("Home",note.location);assertEquals("20:15",note.recordedTime)
         assertEquals(0,runBlocking{app.database.dao().viewingCount()})
         ui.onNodeWithText("A thought 🎬").assertIsDisplayed()
         ui.onNodeWithText("Home").assertIsDisplayed()
         ui.onNodeWithText("${note.recordedDate}  20:15").assertIsDisplayed()
+        val dateBounds=ui.onNodeWithText("${note.recordedDate}  20:15").fetchSemanticsNode().boundsInRoot
+        val backBounds=ui.onNodeWithContentDescription("返回").fetchSemanticsNode().boundsInRoot
+        assertTrue("Focused record date must appear below the fixed toolbar",dateBounds.top>=backBounds.bottom)
     }
     @Test fun halfStarRatingAndAViewingRemainIndependent(){
         ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasTestTag("personal-rating"))

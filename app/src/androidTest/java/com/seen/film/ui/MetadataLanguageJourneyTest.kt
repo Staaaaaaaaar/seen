@@ -33,6 +33,20 @@ class MetadataLanguageJourneyTest {
         assertEquals(9,movie.personalRatingHalfStars)
         assertEquals("My words",runBlocking{app.database.dao().allNotes().single().body})
         assertEquals(0,runBlocking{app.database.dao().viewingCount()})
+        assertEquals("Fixture Film",movie.title)
+        runBlocking{
+            app.repository.saveRecord(RecordDraft(movieId=id,kind=RecordKind.VIEWING))
+            val before=app.repository.movie(id)!!
+            val export=app.backups.prepareExport()
+            val file=java.io.File(app.cacheDir,"journey-backup.json")
+            app.backups.finishExport(export,android.net.Uri.fromFile(file))
+            app.repository.setPersonalRating(id,null)
+            app.backups.restore(app.backups.preview(android.net.Uri.fromFile(file)))
+            assertEquals(before,app.repository.movie(id))
+            assertEquals(1,app.database.dao().noteCount())
+            assertEquals(1,app.database.dao().viewingCount())
+            assertEquals(1,libraryStatistics(app.database.dao().allHistories(),StatisticsPeriod.ALL,java.time.LocalDate.now()).movieCount)
+        }
         ui.onNodeWithText("更新电影资料").assertExists()
         ui.activityRule.scenario.recreate()
         ui.onNodeWithText("当前：English").assertExists()

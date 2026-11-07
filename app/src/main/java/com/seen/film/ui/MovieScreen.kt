@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
@@ -45,6 +47,13 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
     var expandedBody by rememberSaveable(id){mutableStateOf(focusViewingId)}
     val state=rememberLazyListState()
     val context=LocalContext.current
+    val density=LocalDensity.current
+    val topChromePx=WindowInsets.statusBars.getTop(density)+with(density){66.dp.roundToPx()}
+    val scrolled by remember{derivedStateOf{state.firstVisibleItemIndex>0}}
+    val chromeColor=MaterialTheme.colorScheme.background
+    SideEffect{
+        (context as? Activity)?.window?.let{WindowCompat.getInsetsController(it,it.decorView).isAppearanceLightStatusBars=scrolled&&chromeColor.luminance()>.5f}
+    }
     DisposableEffect(context){
         val window=(context as? Activity)?.window
         val controller=window?.let{WindowCompat.getInsetsController(it,it.decorView)}
@@ -60,7 +69,7 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
             val entries=remember(history){movieTimeline(history)}
             LaunchedEffect(focusViewingId,entries){
                 val index=entries.indexOfFirst{it.key==focusViewingId||it.id==focusViewingId}
-                if(index>=0){expandedBody=entries[index].key;state.scrollToItem(index+3)}
+                if(index>=0){expandedBody=entries[index].key;state.scrollToItem(index+3,-topChromePx)}
             }
             Box(Modifier.fillMaxSize()){
                 LazyColumn(state=state,modifier=Modifier.fillMaxSize().navigationBarsPadding().testTag("movie-detail-list"),contentPadding=PaddingValues(bottom=32.dp)){
@@ -134,6 +143,7 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                         }
                     }
                 }
+                if(scrolled)Box(Modifier.fillMaxWidth().height(with(density){topChromePx.toDp()}).background(chromeColor))
                 Row(Modifier.align(Alignment.TopCenter).fillMaxWidth().statusBarsPadding().padding(horizontal=14.dp,vertical=9.dp),horizontalArrangement=Arrangement.SpaceBetween){
                     IconButton(onBack,modifier=Modifier.background(Color(0x99101C2A),CircleShape)){Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回",tint=Color.White)}
                     Box{
@@ -171,9 +181,9 @@ private fun MovieHero(movie:Movie,vm:SeenViewModel){
         Text(listOfNotNull(movie.releaseYear?.toString(),movie.runtimeMinutes?.let{"$it 分钟"},movie.productionCountries).joinToString(" / "),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
     }}
     BoxWithConstraints{
-        val heroHeight=maxWidth*1.48f
+        val heroHeight=maxWidth*1.5f
         Column{
-            Box(Modifier.fillMaxWidth().height(heroHeight)){
+            Box(Modifier.fillMaxWidth().height(heroHeight).clipToBounds()){
                 Poster(vm.app.posters.file(movie.posterKey),Modifier.fillMaxSize(),cornerRadius=0.dp)
                 Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Color(0x66000000),.45f to Color.Transparent,.72f to background.copy(alpha=.6f),1f to background)))
                 if(!separate)Box(Modifier.align(Alignment.BottomStart)){title()}

@@ -18,7 +18,7 @@ private fun previewMovies(): List<MovieHistory> = listOf(
     val id = "preview-movie-$i"
     val stamp = "2026-10-23T00:00:00Z"
     MovieHistory(
-        movie = Movie(id = id, title = title, releaseYear = year, createdAt = stamp, updatedAt = stamp),
+        movie = Movie(id = id, title = title, releaseYear = year, personalRatingHalfStars = rating, createdAt = stamp, updatedAt = stamp),
         viewings = listOf(Viewing(
             id = "preview-viewing-$i", movieId = id, viewedDate = "2026-10-${22 - i}",
             ratingHalfStars = rating, createdAt = stamp, updatedAt = stamp,
@@ -41,7 +41,7 @@ private fun PreviewLibrary(dark: Boolean = false, empty: Boolean = false) {
     }
 }
 
-@Preview(name = "电影主页 · 海报", widthDp = 390, heightDp = 844, showBackground = true, locale = "zh")
+@Preview(name = "影库 · 列表", widthDp = 390, heightDp = 844, showBackground = true, locale = "zh")
 @Preview(name = "电影主页 · 200% 字号", widthDp = 390, heightDp = 844, fontScale = 2f, showBackground = true, locale = "zh")
 @Composable
 private fun PosterHomePreview() = PreviewLibrary()
