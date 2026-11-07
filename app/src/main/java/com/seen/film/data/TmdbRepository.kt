@@ -6,6 +6,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import com.seen.film.domain.MetadataLanguage
+import java.security.MessageDigest
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URLEncoder
@@ -25,16 +27,16 @@ class TmdbRepository(
         }
         return JSONObject(String(api.request(path, credential, 2 * 1024 * 1024), Charsets.UTF_8))
     }
-    suspend fun search(query: String, page: Int = 1): TmdbPage = withContext(Dispatchers.IO) {
+    suspend fun search(query: String, page: Int = 1, language: MetadataLanguage = MetadataLanguage.ZH_CN): TmdbPage = withContext(Dispatchers.IO) {
         require(query.isNotBlank() && query.codePointCount(0, query.length) <= 300)
         require(page in 1..500)
-        val json = request("search/movie?language=zh-CN&include_adult=false&page=$page&query=${URLEncoder.encode(query.trim(), "UTF-8")}")
+        val json = request("search/movie?language=${language.apiCode}&include_adult=false&page=$page&query=${URLEncoder.encode(query.trim(), "UTF-8")}")
         val results = json.getJSONArray("results")
-        TmdbPage((0 until results.length()).map { parse(results.getJSONObject(it)) }, page, json.optInt("total_pages", 1).coerceAtMost(500))
+        TmdbPage((0 until results.length()).map { parse(results.getJSONObject(it), language) }, page, json.optInt("total_pages", 1).coerceAtMost(500))
     }
-    suspend fun details(id: Long): TmdbMovie = withContext(Dispatchers.IO) {
+    suspend fun details(id: Long, language: MetadataLanguage = MetadataLanguage.ZH_CN): TmdbMovie = withContext(Dispatchers.IO) {
         require(id > 0)
-        parse(request("movie/$id?language=zh-CN&append_to_response=credits"))
+        parse(request("movie/$id?language=${language.apiCode}&append_to_response=credits"), language)
     }
     suspend fun poster(path: String): ByteArray = withContext(Dispatchers.IO) {
         require(path.matches(Regex("/[A-Za-z0-9._-]+")))
@@ -51,16 +53,55 @@ class TmdbRepository(
         }.also { currentCoroutineContext().ensureActive() }
     }
     companion object {
-        internal fun parse(j: JSONObject): TmdbMovie {
-            fun text(key: String) = if (j.isNull(key)) null else j.optString(key).takeIf { it.isNotBlank() }
-            val crew = j.optJSONObject("credits")?.optJSONArray("crew")
+        internal fun parse(j: JSONObject, language: MetadataLanguage = MetadataLanguage.ZH_CN): TmdbMovie {
+            fun text(value: JSONObject, key: String, limit: Int = 300): String? {
+                if (value.isNull(key)) return null
+                val result = value.getString(key).takeIf { it.isNotBlank() } ?: return null
+                require(result.codePointCount(0, result.length) <= limit) { "TMDB 资料字段过长" }
+                return result
+            }
+            val creditObject = j.optJSONObject("credits")
+            val cast = creditObject?.optJSONArray("cast")
+            val crew = creditObject?.optJSONArray("crew")
+            require((cast?.length() ?: 0) + (crew?.length() ?: 0) <= 1000) { "TMDB 演职人员过多" }
+            val credits = mutableListOf<TmdbCredit>()
+            for ((isCast, array) in listOf(true to cast, false to crew)) {
+                if (array == null) continue
+                for (index in 0 until array.length()) {
+                    val c = array.getJSONObject(index)
+                    val personId = if (c.has("id") && !c.isNull("id")) c.getLong("id") else null
+                    // Historical/fixed director-only responses may lack a person ID.
+                    if (personId == null) continue
+                    require(personId > 0) { "TMDB 人员编号无效" }
+                    val name = text(c, "name") ?: error("TMDB 人员缺少姓名")
+                    val character = text(c, "character", 3000)
+                    val job = text(c, "job", 1000)
+                    val department = text(c, "department", 1000)
+                    val profile = text(c, "profile_path")
+                    require(profile == null || profile.matches(Regex("/[A-Za-z0-9._-]+"))) { "TMDB 人员头像路径无效" }
+                    val key = text(c, "credit_id") ?: MessageDigest.getInstance("SHA-256")
+                        .digest("$isCast:$personId:$character:$job:$department:$index".toByteArray(Charsets.UTF_8))
+                        .joinToString("") { "%02x".format(it) }
+                    credits += TmdbCredit(key, personId, name, isCast, department, job, character, profile, index)
+                }
+            }
+            require(credits.map { it.creditKey }.toSet().size == credits.size) { "TMDB 演职人员编号重复" }
             val directors = crew?.let { (0 until it.length()).map { n -> it.getJSONObject(n) }
-                .filter { it.optString("job") == "Director" }.map { it.getString("name") }.distinct().joinToString(" / ") }?.ifBlank { null }
-            val countries = j.optJSONArray("production_countries")?.let { (0 until it.length()).map { n -> it.getJSONObject(n).getString("name") }.joinToString(" / ") }?.ifBlank { null }
+                .filter { it.optString("job") == "Director" }.mapNotNull { text(it, "name") }.distinct().joinToString(" / ") }?.ifBlank { null }
+            val countryArray = j.optJSONArray("production_countries")
+            require((countryArray?.length() ?: 0) <= 100) { "TMDB 国家资料过多" }
+            val countries = countryArray?.let { (0 until it.length()).mapNotNull { n -> text(it.getJSONObject(n), "name") }.joinToString(" / ") }?.ifBlank { null }
+            val genreArray = j.optJSONArray("genres")
+            require((genreArray?.length() ?: 0) <= 100) { "TMDB 类型过多" }
+            val genres = genreArray?.let { (0 until it.length()).map { n ->
+                val g = it.getJSONObject(n); val id = g.getLong("id"); require(id > 0) { "TMDB 类型编号无效" }
+                TmdbGenre(id, text(g, "name") ?: error("TMDB 类型缺少名称"))
+            } }.orEmpty()
+            require(genres.map { it.id }.toSet().size == genres.size) { "TMDB 类型编号重复" }
             val id = j.getLong("id"); require(id > 0)
-            val title = text("title") ?: text("original_title") ?: error("电影缺少片名")
-            return TmdbMovie(id, title, text("original_title"), text("release_date"), text("poster_path"), directors,
-                j.optInt("runtime").takeIf { it > 0 }, countries)
+            val title = text(j, "title") ?: text(j, "original_title") ?: error("电影缺少片名")
+            return TmdbMovie(id, title, text(j,"original_title"), text(j,"release_date"), text(j,"poster_path"), directors,
+                j.optInt("runtime").takeIf { it > 0 }, countries, text(j,"overview",50000), genres, credits, language)
         }
         private fun download(url: String, credential: String?, limit: Int): ByteArray {
             val connection = URI(url).toURL().openConnection() as HttpURLConnection
@@ -88,7 +129,3 @@ class TmdbRepository(
         }
     }
 }
-
-data class TmdbPage(val movies: List<TmdbMovie>, val page: Int, val totalPages: Int)
-data class TmdbMovie(val id: Long, val title: String, val originalTitle: String?, val releaseDate: String?,
-    val posterPath: String?, val directors: String?, val runtime: Int?, val countries: String?)
