@@ -19,6 +19,9 @@ data class Movie(
     val createdAt: String,
     val updatedAt: String,
     @ColumnInfo(defaultValue = "0") val wantToWatch: Boolean = false,
+    val personalRatingHalfStars: Int? = null,
+    val overview: String? = null,
+    val metadataLanguage: String? = null,
 )
 
 @Entity(
@@ -44,6 +47,9 @@ data class Viewing(
 data class MovieHistory(
     @Embedded val movie: Movie,
     @Relation(parentColumn = "id", entityColumn = "movieId") val viewings: List<Viewing>,
+    @Relation(parentColumn = "id", entityColumn = "movieId") val notes: List<MovieNote> = emptyList(),
+    @Relation(parentColumn = "id", entityColumn = "movieId") val genres: List<MovieGenre> = emptyList(),
+    @Relation(parentColumn = "id", entityColumn = "movieId") val credits: List<MovieCredit> = emptyList(),
 )
 
 @Dao
@@ -67,16 +73,41 @@ interface SeenDao {
     @Query("DELETE FROM viewings WHERE movieId = :movieId") suspend fun deleteMovieViewings(movieId: String)
     @Query("DELETE FROM movies WHERE id = :id") suspend fun deleteMovie(id: String): Int
     @Query("UPDATE movies SET wantToWatch = :wanted WHERE id = :id") suspend fun setWanted(id: String, wanted: Boolean): Int
+    @Query("SELECT * FROM movie_notes WHERE id = :id") suspend fun note(id: String): MovieNote?
+    @Query("SELECT * FROM movie_notes LIMIT 100001") suspend fun allNotes(): List<MovieNote>
+    @Query("SELECT * FROM movie_genres") suspend fun allGenres(): List<MovieGenre>
+    @Query("SELECT * FROM movie_credits") suspend fun allCredits(): List<MovieCredit>
+    @Query("SELECT * FROM archived_posters") suspend fun allArchivedPosters(): List<ArchivedPoster>
+    @Query("SELECT * FROM library_metadata_state WHERE id=1") fun observeMetadataState(): kotlinx.coroutines.flow.Flow<LibraryMetadataState?>
+    @Query("SELECT * FROM library_metadata_state WHERE id=1") suspend fun metadataState(): LibraryMetadataState?
+    @Query("DELETE FROM movie_notes") suspend fun deleteAllNotes()
+    @Query("DELETE FROM movie_genres") suspend fun deleteAllGenres()
+    @Query("DELETE FROM movie_credits") suspend fun deleteAllCredits()
+    @Query("DELETE FROM archived_posters") suspend fun deleteAllArchivedPosters()
+    @Query("DELETE FROM movie_notes WHERE movieId=:id") suspend fun deleteMovieNotes(id: String)
+    @Query("DELETE FROM movie_genres WHERE movieId=:id") suspend fun deleteMovieGenres(id: String)
+    @Query("DELETE FROM movie_credits WHERE movieId=:id") suspend fun deleteMovieCredits(id: String)
+    @Query("DELETE FROM archived_posters WHERE movieId=:id") suspend fun deleteMovieArchivedPosters(id: String)
+    @Query("UPDATE movies SET personalRatingHalfStars=:rating,updatedAt=:updated WHERE id=:id") suspend fun setRating(id: String,rating: Int?,updated: String): Int
+    @Insert suspend fun insertNote(note: MovieNote)
+    @Update suspend fun updateNote(note: MovieNote): Int
+    @Query("DELETE FROM movie_notes WHERE id=:id") suspend fun deleteNote(id: String): Int
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertGenres(items: List<MovieGenre>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertCredits(items: List<MovieCredit>)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun insertArchivedPosters(items: List<ArchivedPoster>)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun putMetadataState(state: LibraryMetadataState)
     @Insert suspend fun insertMovie(movie: Movie)
     @Insert(onConflict = OnConflictStrategy.ABORT) suspend fun insertViewing(viewing: Viewing)
     @Update suspend fun updateViewing(viewing: Viewing): Int
     @Query("DELETE FROM viewings WHERE id = :id") suspend fun deleteViewing(id: String): Int
 }
 
-@Database(entities = [Movie::class, Viewing::class], version = 2, exportSchema = true)
+@Database(entities = [Movie::class, Viewing::class, MovieNote::class, MovieGenre::class, MovieCredit::class, ArchivedPoster::class, LibraryMetadataState::class], version = 3, exportSchema = true)
 abstract class SeenDatabase : RoomDatabase() {
     abstract fun dao(): SeenDao
     companion object {
+        val MIGRATION_2_3 = com.seen.film.data.MIGRATION_2_3
+        val MIGRATIONS get() = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
         val MIGRATION_1_2 = object : androidx.room.migration.Migration(1, 2) {
             override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE movies ADD COLUMN wantToWatch INTEGER NOT NULL DEFAULT 0")

@@ -90,7 +90,7 @@ class RepositoryTest {
             old.execSQL("INSERT INTO viewings (id,movieId,viewedDate,createdAt,updatedAt) VALUES ('old-viewing','old-movie','2000-01-01','2000','2000')")
             old.version = 1
         } finally { old.close() }
-        val db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
+        val db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(*SeenDatabase.MIGRATIONS).build()
         try {
             val history = db.dao().observeLibrary().first().single()
             assertEquals("旧版记录", history.movie.title)
@@ -103,7 +103,7 @@ class RepositoryTest {
 
     @Test fun tmdbReusePreservesManualRecordsAndSurvivesReopen() = runBlocking {
         val name = "tmdb-${UUID.randomUUID()}.db"
-        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
+        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(*SeenDatabase.MIGRATIONS).build()
         try {
             val manual = ViewingDraft(title = "旧版手动电影", date = "2000-01-01")
             SeenRepository(db).save(manual)
@@ -115,7 +115,7 @@ class RepositoryTest {
             assertEquals(id, SeenRepository(db).save(repeat))
             SeenRepository(db).save(repeat)
             db.close()
-            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
+            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(*SeenDatabase.MIGRATIONS).build()
             val library = db.dao().observeLibrary().first()
             assertEquals(2, library.size)
             val movie = library.single { it.movie.tmdbId == 123L }
@@ -168,7 +168,7 @@ class RepositoryTest {
 
     @Test fun failedEditRollsBackTheNewMovieAndSurvivesDatabaseReopen() = runBlocking {
         val name = "test-${UUID.randomUUID()}.db"
-        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
+        var db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(*SeenDatabase.MIGRATIONS).build()
         val value = ViewingDraft(title = "保留记录", date = "2000-01-01", time = "", rating = null)
         try {
             SeenRepository(db).save(value)
@@ -176,7 +176,7 @@ class RepositoryTest {
             assertTrue(runCatching { SeenRepository(db).save(failed) }.isFailure)
             assertNull(db.dao().movie(failed.movieId))
             db.close()
-            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(SeenDatabase.MIGRATION_1_2).build()
+            db = Room.databaseBuilder(context, SeenDatabase::class.java, name).addMigrations(*SeenDatabase.MIGRATIONS).build()
             assertEquals("保留记录", db.dao().observeLibrary().first().single().movie.title)
             assertNull(db.dao().viewing(value.key)!!.viewedTime)
         } finally { db.close(); context.deleteDatabase(name) }
