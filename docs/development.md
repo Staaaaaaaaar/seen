@@ -157,7 +157,7 @@ Actions 只有一个 job，执行环境脚本回归、App/测试 APK 编译、JV
 
 ## v0.2 联网资料开发
 
-TMDB 使用平台 HTTPS 连接（10 秒连接/读取超时、禁重定向、JSON 2 MiB/图片 20 MiB 上限），不新增网络框架或依赖。请求 `search/movie` 与 `movie/{id}?append_to_response=credits`，语言 `zh-CN`；海报使用官方 `image.tmdb.org/t/p/w500`。Bearer 凭据从设置读取，不写 URL、构建配置或日志。
+TMDB 使用平台 HTTPS 连接（10 秒连接/读取超时、禁重定向、JSON 2 MiB/图片 20 MiB 上限），不新增网络框架或依赖。请求 `search/movie` 与 `movie/{id}?append_to_response=credits`，语言由当前生效资料快照选择 `zh-CN` 或 `en-US`；海报使用官方 `image.tmdb.org/t/p/w500`。Bearer 凭据从设置读取，不写 URL、构建配置或日志。
 
 API 36 测试 Application 使用隔离 Room/文件/偏好和固定 TMDB 响应，覆盖错误与交互，不访问真实服务。真实网络、账号有效性、海报 CDN 与署名视觉仍需另行验收。数据库沿用 v1 预留资料字段，历史 schema 自动化重建并检查保留记录；这不等同于真实设备 APK 覆盖升级。
 
@@ -207,3 +207,23 @@ git diff --check
 ## 正式签名与发布
 
 Release 使用仓库外的长期密钥，通过四个环境变量配置；日常 Debug 构建不要求密钥。签名构建、校验、调试版迁移与 GitHub Release 步骤见 [发布流程](release.md)。CI 保持单 job，不保存或使用私人正式密钥。
+
+## 统一影库、记录与资料更新
+
+Room v3 通过显式迁移保存原电影/观看，新增独立电影评分、普通留言、类型、演职人员、历史海报引用和生效资料状态。原 schema 1/2 保持，KSP 维护 schema 3。详情混合时间线只在 UI 聚合，两类记录持久化分离。业务规则在 domain 层，评分与留言不会创建观看。
+
+所有新界面从 Repository 的 LibrarySnapshot 获取同一事务中的电影与资料语言。MetadataRefreshCoordinator 在私有受限暂存区准备远程资料及海报，Room 事务一次发布；下载不持有个人写入锁。日记式准备记录支持重启清理，个人内容采用字段级独立写入；恢复使用同一个 LibraryAccess 协调。显式更新上限为 10,000 部电影、类型/演职人员各 100,000 行、256 MiB 准备预算。
+
+海报保持 w500 下载规格，按显示比例裁切且不拉伸。人员头像为 w185、20 MiB 私有 LRU 缓存，失败回退姓名，不纳入备份。中文衬线字体离线子集及许可见 [说明](licenses/seen-serif.md)。原创建时间、个人评分与记录均不因资料切换改变。
+
+新增设备测试包括 NotesJourneyTest、StatisticsJourneyTest、MetadataLanguageJourneyTest；VisualReviewTest 仅生成合成内容截图，不接触个人库。正常设备门槛覆盖持久化与 UI；真正进程 SIGKILL 另运行：
+
+```bash
+# 显式选择隔离 API 36 模拟器，先构建并安装匹配的 App/测试 APK
+ANDROID_SERIAL=emulator-5558 python3 scripts/verify-backup-crash.py
+ANDROID_SERIAL=emulator-5558 python3 scripts/verify-metadata-crash.py
+```
+
+Gradle connected 测试结束会移除测试包；上述外部入口要求先安装匹配的两个 APK，脚本不会安装、卸载或清数据。两项脚本保留本轮源码和 APK 摘要及每阶段日志。真实 TMDB 及正式签名升级的验收单独留证。
+
+资料更新前须处理未完成的 TMDB 建片草稿，Repository 还会在插入事务校验草稿语言。仅建片提交后若草稿清理中断，重启恢复为只读核对并提供查看电影，不重新接受会被忽略的修改。首次准备日志只留下未提交的 .new 时，启动恢复安全清理，第一次重试即可准备。详情文字按实际布局溢出展开，排序面板支持短屏滚动，横屏采用海报与片名并排。
