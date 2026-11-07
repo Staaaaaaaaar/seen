@@ -19,3 +19,5 @@ APK SHA-256：`453fa117f26501b343b282d992756895179859e13f8b31ebca239be035be3f28`
 构建时间：2026-11-07T13:59:47.095230+00:00；设备时间：2026-11-07T14:01:42.974528+00:00。收据位于 `.tools/check-result.json` 与 `.tools/device-result.json`，日志 `/tmp/seen-refinement-build-final2.log` 和 `/tmp/seen-refinement-device-final2.log`；报告在 `app/build/reports/`。验证在 c3abc71 基线的本轮工作区改动上执行，本地提交不改变构建输入。
 
 测试初次遇到排序入口与弹层同名，更新为明确选择弹层项目；设置文案更新后旧断言同步修正。最终结果仅以上述最后一轮为准。没有改动持久化协议，不重跑与本次 UI 无关的 SIGKILL 场景。真实资料网络、手机和 TalkBack 人工体验仍保持基础改版的待验收边界。
+
+已在可见模拟器安装本轮 APK 并启动成功。实际打开排序弹层、统计和搜索页检查截图：`/tmp/seen-refinement-sort.png`、`/tmp/seen-refinement-statistics.png`、`/tmp/seen-refinement-search.png`，检查后返回影库。演职人员的完整横向访问由设备回归覆盖。
