@@ -19,7 +19,8 @@ import java.time.LocalDate
 
 @Composable
 fun RecordEditorScreen(vm:SeenViewModel,draft:RecordDraft,onBack:()->Unit,onSaved:(String,String)->Unit){
-    val busy by vm.busy.collectAsState();val errors by vm.fieldErrors.collectAsState()
+    val busy by vm.busy.collectAsState()
+    val library by vm.library.collectAsState();val errors by vm.fieldErrors.collectAsState()
     val context=LocalContext.current
     val title=if(draft.kind==RecordKind.VIEWING)"这次观看" else "一段想法"
     fun pickDate(){val date=runCatching{LocalDate.parse(draft.date)}.getOrDefault(LocalDate.now())
@@ -29,7 +30,7 @@ fun RecordEditorScreen(vm:SeenViewModel,draft:RecordDraft,onBack:()->Unit,onSave
         IconButton(onBack,enabled=!busy){Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回")}
     },actions={TextButton(onClick={vm.saveRecord(onSaved)},enabled=!busy){Text(if(busy)"处理中…" else "保存")}})}){padding->
         Column(Modifier.padding(padding).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(22.dp),verticalArrangement=Arrangement.spacedBy(20.dp)){
-            vm.library.value?.firstOrNull{it.movie.id==draft.movieId}?.movie?.title?.let{Text(it,style=MaterialTheme.typography.titleLarge)}
+            library?.firstOrNull{it.movie.id==draft.movieId}?.movie?.title?.let{Text(it,style=MaterialTheme.typography.titleLarge)}
             BoxWithConstraints{
                 @Composable fun date(modifier:Modifier){Column(modifier){
                     Text("日期",style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
