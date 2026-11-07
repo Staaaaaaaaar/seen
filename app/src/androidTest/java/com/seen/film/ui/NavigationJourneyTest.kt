@@ -155,4 +155,14 @@ class NavigationJourneyTest {
         ui.onNodeWithTag("library-search").assertTextContains("完美")
         ui.onNodeWithText("完美的日子").assertIsDisplayed()
     }
+    @Test fun everySortOptionRemainsReachableInLandscape(){
+        ui.activity.requestedOrientation=android.content.pm.ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        try{
+            ui.waitUntil(15000){ui.activity.resources.configuration.orientation==android.content.res.Configuration.ORIENTATION_LANDSCAPE}
+            ui.onNodeWithContentDescription("排序电影").performClick()
+            ui.onNodeWithText("最近观看").performScrollTo().performClick()
+            ui.onNodeWithContentDescription("排序电影").assertExists()
+        }finally{ui.activity.requestedOrientation=android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED}
+    }
+
 }

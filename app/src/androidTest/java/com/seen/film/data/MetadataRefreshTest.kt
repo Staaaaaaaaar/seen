@@ -120,4 +120,17 @@ class MetadataRefreshTest {
             assertTrue(f.db.dao().allMovies().all{it.posterKey==null})
         }
     }
+    @Test fun abandonedFirstJournalWriteIsCleanedBeforeRetry()=runBlocking{
+        Fixture().use{f->
+            f.seed()
+            val pending=File(f.context.filesDir,"metadata-refresh/manifest.json.new")
+            pending.parentFile!!.mkdirs();pending.writeText("{unfinished")
+            val c=f.coordinator(f.remote(noPoster=true));c.recoverInterrupted()
+            assertFalse("An uncommitted initial AtomicFile must be removed",pending.exists())
+            f.assertOld()
+            c.refresh(MetadataLanguage.EN_US)
+            assertTrue("First retry must succeed",c.state.value is MetadataRefreshState.Completed)
+        }
+    }
+
 }

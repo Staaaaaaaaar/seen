@@ -92,4 +92,14 @@ class LibraryRepositoryTest {
         } finally { db.close(); folder.deleteRecursively() }
     }
 
+    @Test fun staleLocalizedDraftCannotEnterNewLanguageLibrary()=runBlocking{
+        val db=Room.inMemoryDatabaseBuilder(context,SeenDatabase::class.java).build()
+        try{
+            db.dao().putMetadataState(LibraryMetadataState(activeLanguage="en-US",generation=1))
+            val result=runCatching{SeenRepository(db).addMovie(ViewingDraft(title="旧中文草稿",tmdbId=4242,movieOnly=true))}
+            assertTrue("Old-language draft must keep its input rather than publish mixed metadata",result.isFailure)
+            assertEquals(0,db.dao().movieCount())
+        }finally{db.close()}
+    }
+
 }

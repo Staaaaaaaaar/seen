@@ -50,8 +50,11 @@ class VisualReviewTest {
             listOf("花样年华","海街日记","晒后假日","漫长的电影名称：一次跨越山海的旅行 🎬").forEachIndexed{i,title->app.repository.addMovie(ViewingDraft(title=title,year="${2022-i}"))}
         }
         ui.waitUntil(15000){vm.library.value?.size==5}
-        ui.onNodeWithText("完美的日子").assertExists();capture("library")
-        ui.onNodeWithText("完美的日子").performClick();capture("detail-hero")
+        ui.onNodeWithTag("library-list").performScrollToNode(hasText("完美的日子"))
+        ui.onNodeWithText("完美的日子").assertIsDisplayed();capture("library")
+        ui.onNodeWithText("完美的日子").performClick()
+        if(ui.activity.resources.configuration.orientation==android.content.res.Configuration.ORIENTATION_LANDSCAPE)ui.onNodeWithText("完美的日子").assertIsDisplayed()
+        capture("detail-hero")
         ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasText("光影落在树叶上，时间慢了下来。"));capture("detail-records")
         ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasContentDescription("新增记录或留言"))
         ui.onNodeWithContentDescription("新增记录或留言").performClick();ui.onNodeWithText("一段想法").performClick()

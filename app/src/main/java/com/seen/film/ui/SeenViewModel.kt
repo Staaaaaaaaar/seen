@@ -23,6 +23,8 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     val metadataPreparing get() = metadataJob?.isActive == true || metadataRefreshState.value is com.seen.film.data.MetadataRefreshState.Preparing
     fun refreshMetadata(language: com.seen.film.domain.MetadataLanguage) {
         if (!_metadataReady.value || metadataPreparing || _busy.value || _restorePreview.value != null) return
+        if(!_draftReady.value)return
+        if(_draft.value?.tmdbId!=null){_error.value="请先保存或放弃未完成的 TMDB 电影草稿，再切换资料语言";return}
         clearSearch()
         metadataJob = viewModelScope.launch {
             try { app.metadataRefresh.refresh(language) }
@@ -162,7 +164,9 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                 recoveredMovieDraft = recovered != null
                 // A committed create whose draft cleanup was interrupted becomes
                 // an edit of that stable ID, rather than an editable new movie.
-                _draft.value = if (recovered != null && !recovered.isEditing &&
+                _draft.value = if(recovered?.movieOnly==true&&app.repository.movie(recovered.movieId)!=null){
+                    recovered.copy(isNewMovie=false,isEditing=true,legacyRatingPending=false)
+                } else if (recovered != null && !recovered.isEditing &&
                     app.repository.viewing(recovered.key) != null) {
                     recovered.copy(isNewMovie = false, isEditing = true, legacyRatingPending = false)
                 } else recovered
@@ -299,6 +303,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     fun update(transform: (ViewingDraft) -> ViewingDraft) {
         if (_busy.value) return
         val current = _draft.value ?: return
+        if(current.movieOnly&&current.isEditing&&!current.isNewMovie)return
         _draft.value = transform(current)
         _fieldErrors.value = emptyMap()
         persistDraft()

@@ -24,6 +24,10 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
         database.withTransaction {
             val existing = draft.tmdbId?.let { dao.movieByTmdbId(it) } ?: dao.movie(draft.movieId)
             if (existing != null) return@withTransaction existing.id
+            if(draft.tmdbId!=null){
+                val active=dao.metadataState()?.activeLanguage?:"zh-CN"
+                check((draft.metadata?.language?.apiCode?:"zh-CN")==active){"草稿资料语言与当前影库不同，请保留输入并重新选择电影资料"}
+            }
             val now = Instant.now().toString()
             dao.insertMovie(Movie(id = draft.movieId, title = draft.title.trim(),
                 originalTitle = draft.originalTitle.trim().ifEmpty { null }, releaseYear = draft.year.toIntOrNull(),

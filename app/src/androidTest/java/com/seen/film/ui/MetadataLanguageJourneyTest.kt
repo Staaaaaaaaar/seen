@@ -95,4 +95,18 @@ class MetadataLanguageJourneyTest {
         assertEquals("During preparation",runBlocking{app.database.dao().allNotes().single().body})
     }
 
+    @Test fun pendingTmdbMovieDraftMustBeResolvedBeforeLanguagePreparation(){
+        ui.runOnIdle{vm.chooseTmdb(4242){}}
+        ui.waitUntil(15000){vm.draft.value!=null&&!vm.busy.value}
+        val original=vm.draft.value!!
+        ui.runOnIdle{vm.refreshMetadata(MetadataLanguage.EN_US)}
+        ui.waitForIdle()
+        ui.waitUntil(15000){!vm.metadataPreparing}
+        assertEquals("zh-CN",vm.librarySnapshot.value!!.metadata.activeLanguage)
+        assertEquals(original,vm.draft.value)
+        assertNotNull(vm.error.value)
+        ui.runOnIdle{vm.discard{}}
+        ui.waitUntil(15000){!vm.busy.value&&vm.draft.value==null}
+    }
+
 }

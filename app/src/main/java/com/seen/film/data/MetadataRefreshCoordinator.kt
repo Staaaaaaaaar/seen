@@ -140,6 +140,12 @@ class MetadataRefreshCoordinator(
         var token: Any? = null
         try {
             token = access.reserveMetadata()
+            // A first AtomicFile write can die before a readable base/backup exists.
+            // No media preparation begins until that initial journal is committed.
+            if(!manifest.baseFile.exists()&&!File(directory,"manifest.json.bak").exists()){
+                manifest.delete();directory.delete();mutableState.value=MetadataRefreshState.Interrupted
+                return@withContext
+            }
             require(manifest.baseFile.length() <= 1024 * 1024) { "准备记录过大" }
             val json = JSONObject(manifest.openRead().bufferedReader().use { it.readText() })
             val keys = json.getJSONArray("created"); require(keys.length() <= 10000)

@@ -91,4 +91,40 @@ class NotesJourneyTest {
         }finally{ui.runOnUiThread{store.clear()};runBlocking{app.drafts.clearRecord()}}
     }
 
+    @Test fun shortMultilineOverviewAndNoteCanExpand(){
+        val words="一\n二\n三\n四\n五\n六\n七"
+        runBlocking{
+            val movie=app.database.dao().allMovies().single()
+            app.database.dao().updateLocalizedMovie(movie.id,movie.title,null,null,null,null,null,null,words,null,"zh-CN",movie.updatedAt)
+            app.repository.saveRecord(RecordDraft(movieId=movie.id,kind=RecordKind.NOTE,body=words))
+        }
+        ui.onNodeWithContentDescription("返回").performClick();ui.onNodeWithText("Record film").performClick()
+        ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasContentDescription("展开简介"))
+        ui.onNodeWithContentDescription("展开简介").performClick()
+        ui.onNodeWithContentDescription("收起简介").assertExists()
+        ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasContentDescription("展开正文"))
+        ui.onNodeWithContentDescription("展开正文").performClick()
+        ui.onNodeWithContentDescription("收起正文").assertExists()
+    }
+
+    @Test fun committedMovieOnlyDraftRecoversAsConfirmationWithoutIgnoredEdits(){
+        val id=runBlocking{app.database.dao().allMovies().single().id}
+        runBlocking{app.drafts.write(ViewingDraft(movieId=id,title="Record film",movieOnly=true))}
+        val store=androidx.lifecycle.ViewModelStore()
+        val owner=object:androidx.lifecycle.ViewModelStoreOwner{override val viewModelStore=store}
+        var recovered:SeenViewModel?=null
+        try{
+            ui.runOnUiThread{recovered=ViewModelProvider(owner,ViewModelProvider.AndroidViewModelFactory.getInstance(app))[SeenViewModel::class.java]}
+            ui.waitUntil(15000){recovered?.draftReady?.value==true}
+            val draft=recovered!!.draft.value!!
+            assertTrue("Committed movie-only draft must be a completion confirmation",draft.isEditing&&!draft.isNewMovie)
+            ui.runOnIdle{recovered!!.update{it.copy(title="Must not silently ignore this")}}
+            assertEquals("Record film",recovered!!.draft.value!!.title)
+            var saved=false
+            ui.runOnIdle{recovered!!.save{_,_->saved=true}}
+            ui.waitUntil(15000){saved&&recovered!!.draft.value==null}
+            assertEquals("Record film",runBlocking{app.repository.movie(id)!!.title})
+        }finally{ui.runOnUiThread{store.clear()};runBlocking{app.drafts.clear()}}
+    }
+
 }

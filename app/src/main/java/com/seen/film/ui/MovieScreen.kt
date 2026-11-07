@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
@@ -51,8 +52,10 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
     val topChromePx=WindowInsets.statusBars.getTop(density)+with(density){66.dp.roundToPx()}
     val scrolled by remember{derivedStateOf{state.firstVisibleItemIndex>0}}
     val chromeColor=MaterialTheme.colorScheme.background
+    val configuration=LocalConfiguration.current
+    val wide=configuration.screenWidthDp>configuration.screenHeightDp
     SideEffect{
-        (context as? Activity)?.window?.let{WindowCompat.getInsetsController(it,it.decorView).isAppearanceLightStatusBars=scrolled&&chromeColor.luminance()>.5f}
+        (context as? Activity)?.window?.let{WindowCompat.getInsetsController(it,it.decorView).isAppearanceLightStatusBars=(scrolled||wide)&&chromeColor.luminance()>.5f}
     }
     DisposableEffect(context){
         val window=(context as? Activity)?.window
@@ -90,11 +93,7 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                             }}
                             movie.overview?.let{overview->
                                 var expanded by rememberSaveable(id){mutableStateOf(false)}
-                                Column{Text(overview,style=MaterialTheme.typography.bodyMedium.copy(fontFamily=SeenSerif,lineHeight=27.sp),maxLines=if(expanded)Int.MAX_VALUE else 4,overflow=TextOverflow.Ellipsis)
-                                    if(overview.length>90)IconButton(onClick={expanded=!expanded},modifier=Modifier.align(Alignment.End)){
-                                        Icon(if(expanded)Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,if(expanded)"收起简介" else "展开简介",Modifier.size(18.dp))
-                                    }
-                                }
+                                ExpandableMovieText(overview,4,expanded,{expanded=!expanded},"简介",MaterialTheme.typography.bodyMedium.copy(fontFamily=SeenSerif,lineHeight=27.sp))
                             }
                             CreditsSection(history.credits,vm.app.portraits)
                         }
@@ -124,10 +123,7 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                                 }
                             }
                             entry.body?.let{body->
-                                SelectionContainer{Text(body,style=MaterialTheme.typography.bodyLarge.copy(fontFamily=SeenSerif,fontSize=15.sp,lineHeight=30.sp),maxLines=if(expandedBody==entry.key)Int.MAX_VALUE else 5,overflow=TextOverflow.Ellipsis)}
-                                if(body.length>160)IconButton(onClick={expandedBody=if(expandedBody==entry.key)null else entry.key}){
-                                    Icon(if(expandedBody==entry.key)Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,if(expandedBody==entry.key)"收起正文" else "展开正文",Modifier.size(18.dp))
-                                }
+                                ExpandableMovieText(body,5,expandedBody==entry.key,{expandedBody=if(expandedBody==entry.key)null else entry.key},"正文",MaterialTheme.typography.bodyLarge.copy(fontFamily=SeenSerif,fontSize=15.sp,lineHeight=30.sp))
                             }
                             entry.location?.let{Row(horizontalArrangement=Arrangement.spacedBy(7.dp),verticalAlignment=Alignment.CenterVertically){
                                 Icon(Icons.Outlined.LocationOn,null,Modifier.size(13.dp),tint=SeenSecondary);Text(it,style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
@@ -180,6 +176,14 @@ private fun MovieHero(movie:Movie,vm:SeenViewModel){
         movie.originalTitle?.takeIf{it!=movie.title}?.let{Text(it,style=MaterialTheme.typography.bodyMedium,color=SeenSecondary)}
         Text(listOfNotNull(movie.releaseYear?.toString(),movie.runtimeMinutes?.let{"$it 分钟"},movie.productionCountries).joinToString(" / "),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
     }}
+    val configuration=LocalConfiguration.current
+    if(configuration.screenWidthDp>configuration.screenHeightDp){
+        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(top=66.dp,start=24.dp,end=24.dp,bottom=20.dp),verticalAlignment=Alignment.CenterVertically){
+            Poster(vm.app.posters.file(movie.posterKey),Modifier.width(130.dp))
+            Box(Modifier.weight(1f)){title()}
+        }
+        return
+    }
     BoxWithConstraints{
         val heroHeight=maxWidth*1.5f
         Column{
@@ -189,6 +193,20 @@ private fun MovieHero(movie:Movie,vm:SeenViewModel){
                 if(!separate)Box(Modifier.align(Alignment.BottomStart)){title()}
             }
             if(separate)title()
+        }
+    }
+}
+
+@Composable
+private fun ExpandableMovieText(text:String,lines:Int,expanded:Boolean,onToggle:()->Unit,label:String,style:androidx.compose.ui.text.TextStyle){
+    var overflow by remember(text){mutableStateOf(false)}
+    Column{
+        SelectionContainer{
+            Text(text,style=style,maxLines=if(expanded)Int.MAX_VALUE else lines,overflow=TextOverflow.Ellipsis,
+                onTextLayout={if(!expanded)overflow=it.hasVisualOverflow})
+        }
+        if(overflow||expanded)IconButton(onClick=onToggle,modifier=Modifier.align(Alignment.End)){
+            Icon(if(expanded)Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,if(expanded)"收起$label" else "展开$label",Modifier.size(18.dp))
         }
     }
 }
