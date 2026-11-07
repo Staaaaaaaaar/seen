@@ -23,10 +23,12 @@ class RefinementJourneyTest{
         }
         ui.onNodeWithContentDescription("排序电影").performClick()
         ui.onNodeWithText("旧到新").assertDoesNotExist();ui.onNodeWithText("新到旧").assertDoesNotExist()
-        ui.onNodeWithContentDescription("切换电影片名方向").performClick()
-        ui.waitUntil(15000){vm.app.libraryPreferences.read().direction==SortDirection.DESC}
-        ui.onNodeWithContentDescription("切换电影片名方向").performClick()
-        ui.waitUntil(15000){vm.app.libraryPreferences.read().direction==SortDirection.ASC}
+        androidx.test.espresso.Espresso.pressBack()
+        val original=vm.app.libraryPreferences.read().direction
+        ui.onNode(hasContentDescription("切换排序方向",substring=true)).performClick()
+        ui.waitUntil(15000){vm.app.libraryPreferences.read().direction!=original}
+        ui.onNode(hasContentDescription("切换排序方向",substring=true)).performClick()
+        ui.waitUntil(15000){vm.app.libraryPreferences.read().direction==original}
     }
     @Test fun addingOpensSearchWithoutManualOrSourceBrand(){
         resetTestLibrary(ui,ui.activity.application as SeenTestApplication,vm)
@@ -59,6 +61,20 @@ class RefinementJourneyTest{
         ui.onNodeWithTag("monthly-chart").assertExists()
         ui.onNodeWithTag("statistics-list").performScrollToNode(hasText("无记录"))
         ui.onNodeWithText("无记录").assertExists()
+    }
+
+    @Test fun sortingStartsAtTopAndSettingsHaveNoMetadataUpdate(){
+        val app=ui.activity.application as SeenTestApplication
+        resetTestLibrary(ui,app,vm)
+        kotlinx.coroutines.runBlocking{repeat(24){app.repository.addMovie(ViewingDraft(title="Film %02d".format(it)))}}
+        ui.waitUntil(15000){vm.library.value?.size==24}
+        ui.onNodeWithTag("library-list").performScrollToIndex(20)
+        val expected=if(app.libraryPreferences.read().direction==SortDirection.ASC)"Film 23" else "Film 00"
+        ui.onNode(hasContentDescription("切换排序方向",substring=true)).performClick()
+        ui.waitUntil(15000){ui.onAllNodesWithText(expected).fetchSemanticsNodes().any{it.boundsInRoot.top>0}}
+        ui.onNodeWithText(expected).assertIsDisplayed()
+        ui.onNodeWithContentDescription("设置").performClick()
+        ui.onNodeWithText("更新电影资料").assertDoesNotExist()
     }
 
 }
