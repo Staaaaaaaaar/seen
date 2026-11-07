@@ -61,7 +61,7 @@ class DeleteMovieJourneyTest {
         ui.onNodeWithContentDescription("添加影片").performClick()
         ui.onNodeWithText("搜索片名或原名").performTextInput("Fixture")
         closeSoftKeyboard()
-        ui.onNodeWithText("搜索 TMDB").performScrollTo().performClick()
+        ui.onNode(hasText("搜索") and hasClickAction()).performScrollTo().performClick()
         waitFor("联网验收电影")
         ui.onNodeWithText("联网验收电影").performScrollTo().performClick()
         waitFor("添加影片")

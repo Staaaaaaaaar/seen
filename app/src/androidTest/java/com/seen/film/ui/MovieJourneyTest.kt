@@ -28,7 +28,7 @@ class MovieJourneyTest {
     private fun count()=runBlocking{app.database.dao().viewingCount()}
     @Test fun manualMovieRatingRotationRepeatEditAndDelete(){
         resetTestLibrary(ui,app,vm)
-        ui.onNodeWithContentDescription("添加影片").performClick();ui.onNodeWithText("手动添加电影").performClick()
+        ui.onNodeWithContentDescription("添加影片").performClick();resumeLegacyMovieEditor(ui,vm)
         ui.onNodeWithText("电影名称 *").performTextInput("模拟器验收电影");closeSoftKeyboard();ui.onNodeWithText("保存").performClick()
         waitFor("模拟器验收电影");assertEquals(0,count())
         ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasTestTag("personal-rating"))

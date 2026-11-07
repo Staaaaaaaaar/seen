@@ -49,7 +49,7 @@ fun LibraryScreen(
     BackHandler(search) { text="";search=false }
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            TopAppBar(title={Text("Seen",fontFamily=FontFamily.Serif,fontStyle=FontStyle.Italic,fontSize=29.sp)},actions={
+            TopAppBar(title={SeenWordmark()},actions={
                 IconButton(onClick={search=!search;if(!search)text=""}){Icon(Icons.Outlined.Search,"搜索影库",Modifier.size(22.dp))}
                 IconButton(onClick=onSettings){Icon(Icons.Outlined.Settings,"设置",Modifier.size(21.dp))}
             })

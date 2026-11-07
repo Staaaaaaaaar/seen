@@ -65,7 +65,7 @@ fun SeenApp(vm:SeenViewModel=viewModel())=SeenTheme {
                     StatisticsScreen(all,onSettings={push("settings")})
                 }
                 route=="choose"->ChooseScreen(vm,all,!busy&&draftReady,{back()},{movieId->
-                    if(movieId!=null)push("movie:$movieId") else vm.openMovieEditor{push("editor:$it")}
+                    push("movie:$movieId")
                 },onChooseTmdb={key->
                     if(key.startsWith("movie:"))push(key) else push("editor:$key")
                 })

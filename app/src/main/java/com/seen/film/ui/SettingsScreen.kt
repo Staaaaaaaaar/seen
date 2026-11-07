@@ -40,7 +40,7 @@ fun SettingsScreen(vm: SeenViewModel, onOpen: (String) -> Unit, onBack: () -> Un
         TopAppBar(title = { Text("设置", style = MaterialTheme.typography.titleLarge) }, navigationIcon = { IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回") } })
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 32.dp)) {
             SettingsHeading("电影资料")
-            SettingsRow("TMDB 凭证", if (configured) "已配置，可修改或移除" else "未配置；可继续手动记录", Icons.Outlined.Key, !busy && !metadataPreparing) { onOpen("settings:credentials") }
+            SettingsRow("访问凭据", if (configured) "已配置，可修改或移除" else "未配置；可继续浏览影库", Icons.Outlined.Key, !busy && !metadataPreparing) { onOpen("settings:credentials") }
             SettingsRow("资料语言", "简体中文 / English · 同步电影资料与海报", Icons.Outlined.Language, !busy) { onOpen("settings:language") }
             Spacer(Modifier.height(24.dp))
             SettingsHeading("数据管理")
@@ -76,7 +76,7 @@ fun SettingsToolScreen(tool: String, vm: SeenViewModel, onBack: () -> Unit) {
     val busy by vm.busy.collectAsState()
     val metadataState by vm.metadataRefreshState.collectAsState()
     val metadataPreparing = metadataState is com.seen.film.data.MetadataRefreshState.Preparing
-    val title = when (tool) { "language" -> "资料语言"; "credentials" -> "TMDB 凭证"; "export" -> "导出数据"; "import" -> "导入备份"; else -> "关于 Seen" }
+    val title = when (tool) { "language" -> "资料语言"; "credentials" -> "访问凭据"; "export" -> "导出数据"; "import" -> "导入备份"; else -> "关于 Seen" }
     Scaffold(topBar = { TopAppBar(title = { Text(title) }, navigationIcon = { IconButton(onBack, enabled = !busy) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") } }) }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             when (tool) {
@@ -88,7 +88,7 @@ fun SettingsToolScreen(tool: String, vm: SeenViewModel, onBack: () -> Unit) {
                     Text("Seen", style = MaterialTheme.typography.headlineSmall)
                     Text("个人的电影档案", color = SeenSecondary)
                     Text("版本 ${BuildConfig.VERSION_NAME}")
-                    Text("电影与观看记录保存在本机，无账号、广告或遥测。可选连接 TMDB 获取电影资料。", color = SeenSecondary)
+                    Text("电影与个人记录保存在本机，无账号、广告或遥测。电影资料与海报来自 TMDB。", color = SeenSecondary)
                     HorizontalDivider()
                     TmdbAttribution()
                 }
@@ -106,14 +106,14 @@ private fun CredentialControls(vm: SeenViewModel) {
     // Credentials stay out of the Activity saved-state Bundle.
     var token by remember { mutableStateOf("") }
     val uriHandler = LocalUriHandler.current
-    Text(if (configured) "已配置访问凭据" else "未配置；可继续手动记录", color = SeenSecondary)
+    Text(if (configured) "已配置访问凭据" else "未配置；可继续浏览影库", color = SeenSecondary)
     OutlinedTextField(token, { token = it }, Modifier.fillMaxWidth(), singleLine = true,
         label = { Text("API Read Access Token") }, enabled = !busy && !metadataPreparing,
         visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation())
     Button(onClick = { vm.saveCredential(token) { token = "" } }, enabled = !busy && !metadataPreparing && token.isNotBlank(), modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("保存凭据") }
     TextButton(enabled = !busy && !metadataPreparing, onClick = { vm.saveCredential("") { token = "" } }) { Text("移除凭据") }
-    Text("凭据仅保存在本机私有存储。搜索会向 TMDB 发送关键词；已保存资料和海报可离线使用。", color = SeenSecondary)
-    TextButton(onClick = { uriHandler.openUri("https://www.themoviedb.org/settings/api") }) { Text("获取 TMDB 凭据") }
+    Text("凭据仅保存在本机私有存储。搜索会向资料提供方发送关键词；已保存资料和海报可离线使用。", color = SeenSecondary)
+    TextButton(onClick = { uriHandler.openUri("https://www.themoviedb.org/settings/api") }) { Text("获取访问凭据") }
     HorizontalDivider()
     TmdbAttribution()
 }

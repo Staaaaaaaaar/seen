@@ -38,7 +38,7 @@ class NavigationJourneyTest {
 
     @Test fun twoRootTabsAndSettingsReturnToTheirSource() {
         ui.onNodeWithContentDescription("设置").performClick()
-        ui.onNodeWithText("TMDB 凭证").assertExists()
+        ui.onNodeWithText("访问凭据").assertExists()
         ui.onNodeWithText("导出数据").assertExists()
         ui.onNodeWithText("导入备份").assertExists()
         ui.onNodeWithContentDescription("返回").performClick()
@@ -55,7 +55,7 @@ class NavigationJourneyTest {
 
     @Test fun savedMovieRemainsUnseenWithoutAForcedViewing() {
         ui.onNodeWithTag("bottom-add").performClick()
-        ui.onNodeWithText("手动添加电影").performClick()
+        resumeLegacyMovieEditor(ui,vm)
         ui.onNodeWithText("电影名称 *").performTextInput("周末的电影 🎬")
         closeSoftKeyboard();ui.onNodeWithText("保存").performClick()
         waitFor("周末的电影 🎬")
@@ -69,7 +69,7 @@ class NavigationJourneyTest {
 
     @Test fun movieDraftValidationRotationAndCancellationPreserveInput() {
         ui.onNodeWithTag("bottom-add").performClick()
-        ui.onNodeWithText("手动添加电影").performClick()
+        resumeLegacyMovieEditor(ui,vm)
         ui.onNodeWithText("保存").performClick();waitFor("请输入电影名称")
         ui.onNodeWithText("电影名称 *").performTextInput("草稿往返 🎬")
         closeSoftKeyboard();ui.activityRule.scenario.recreate()
@@ -80,8 +80,7 @@ class NavigationJourneyTest {
         ui.onNodeWithText("电影名称 *").assertTextContains("草稿往返 🎬")
         assertEquals(0,runBlocking{app.database.dao().movieCount()})
         ui.onNodeWithContentDescription("返回").performClick()
-        ui.onNodeWithText("放弃修改").performClick();waitFor("选择电影")
-        ui.onNodeWithContentDescription("返回").performClick();waitFor("还没有电影")
+        ui.onNodeWithText("放弃修改").performClick();waitFor("还没有电影")
     }
 
     @Test fun existingDraftRequiresExplicitChoiceBeforeStartingAnotherMovie() {
@@ -160,7 +159,7 @@ class NavigationJourneyTest {
         try{
             ui.waitUntil(15000){ui.activity.resources.configuration.orientation==android.content.res.Configuration.ORIENTATION_LANDSCAPE}
             ui.onNodeWithContentDescription("排序电影").performClick()
-            ui.onNodeWithText("最近观看").performScrollTo().performClick()
+            ui.onAllNodesWithText("最近观看").onLast().performScrollTo().performClick()
             ui.onNodeWithContentDescription("排序电影").assertExists()
         }finally{ui.activity.requestedOrientation=android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED}
     }

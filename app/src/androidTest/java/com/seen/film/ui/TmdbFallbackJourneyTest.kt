@@ -20,7 +20,7 @@ class TmdbFallbackJourneyTest {
     private fun search(value: String) {
         ui.onNodeWithText("搜索片名或原名").performScrollTo().performTextReplacement(value)
         closeSoftKeyboard()
-        ui.onNodeWithText("搜索 TMDB").performScrollTo().performClick()
+        ui.onNode(hasText("搜索") and hasClickAction()).performScrollTo().performClick()
     }
 
     @Test fun emptyUnauthorizedPagingAndPosterFailureKeepRecordingAvailable() {
@@ -30,15 +30,15 @@ class TmdbFallbackJourneyTest {
         waitFor("还没有电影")
         ui.onNodeWithContentDescription("添加影片").performClick()
         search("empty")
-        waitFor("没有找到电影，可修改关键词或手动添加。")
-        ui.onNodeWithText("手动添加电影").assertIsEnabled()
+        waitFor("没有找到电影，试试其他关键词。")
+        ui.onNodeWithText("手动添加电影").assertDoesNotExist()
         search("authfailure")
-        waitFor("TMDB 凭据无效或无权限，请在设置中检查；仍可手动添加")
-        ui.onNodeWithText("手动添加电影").assertIsEnabled()
+        waitFor("访问凭据无效或无权限，请在设置中检查")
+        ui.onNodeWithText("手动添加电影").assertDoesNotExist()
         search("Fixture")
         waitFor("联网验收电影")
         ui.onNodeWithText("下一页").performScrollTo().performClick()
-        waitFor("TMDB · 第 2 页 · 资料来源 The Movie Database")
+        waitFor("第 2 页")
         ui.onNodeWithText("第二页电影").assertExists()
         ui.onNodeWithText("上一页").performScrollTo().performClick()
         waitFor("联网验收电影")

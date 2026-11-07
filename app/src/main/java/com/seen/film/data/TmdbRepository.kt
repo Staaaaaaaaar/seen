@@ -21,7 +21,7 @@ class TmdbRepository(
 
     private suspend fun request(path: String): JSONObject {
         val credential = token().trim()
-        check(credential.isNotEmpty()) { "尚未配置 TMDB Read Access Token，仍可手动添加电影" }
+        check(credential.isNotEmpty()) { "请先在设置中配置电影资料访问凭据" }
         require(com.seen.film.domain.TmdbCredentials.valid(credential)) {
             "令牌格式无效，请在设置中检查 API Read Access Token"
         }
@@ -117,9 +117,9 @@ class TmdbRepository(
                 connection.setRequestProperty("Accept", if (credential == null) "image/*" else "application/json")
                 when (connection.responseCode) {
                     200 -> Unit
-                    401, 403 -> error("TMDB 凭据无效或无权限，请在设置中检查；仍可手动添加")
-                    429 -> error("TMDB 请求过于频繁，请稍后重试")
-                    else -> error("TMDB 暂不可用，请稍后重试或手动添加")
+                    401, 403 -> error("访问凭据无效或无权限，请在设置中检查")
+                    429 -> error("请求过于频繁，请稍后重试")
+                    else -> error("电影资料暂不可用，请稍后重试")
                 }
                 return connection.inputStream.use { input ->
                     val output = java.io.ByteArrayOutputStream(); val buffer = ByteArray(8192)

@@ -29,25 +29,15 @@ import kotlinx.coroutines.withContext
 
 @Composable
 fun StatisticsScreen(all:List<MovieHistory>?,onSettings:()->Unit){
-    var period by rememberSaveable{mutableStateOf(StatisticsPeriod.THIS_YEAR)}
+    val period=StatisticsPeriod.ALL
     var expanded by rememberSaveable{mutableStateOf(false)}
     val today=LocalDate.now()
     val statistics by produceState<LibraryStatistics?>(null,all,period,today){
         value=all?.let{withContext(Dispatchers.Default){libraryStatistics(it,period,today)}}
     }
     Column(Modifier.fillMaxSize()){
-        TopAppBar(title={Text("Seen",fontFamily=SeenSerif)},actions={IconButton(onClick=onSettings){Icon(Icons.Outlined.Settings,"设置")}})
+        TopAppBar(title={SeenWordmark()},actions={IconButton(onClick=onSettings){Icon(Icons.Outlined.Settings,"设置")}})
         LazyColumn(Modifier.fillMaxSize().testTag("statistics-list"),contentPadding=PaddingValues(start=24.dp,end=24.dp,bottom=32.dp),verticalArrangement=Arrangement.spacedBy(28.dp)){
-            item{
-                Row(horizontalArrangement=Arrangement.spacedBy(24.dp)){
-                    StatisticsPeriod.entries.forEach{p->
-                        Column(Modifier.selectable(period==p,role=Role.Tab,onClick={period=p}).heightIn(min=48.dp),verticalArrangement=Arrangement.Center){
-                            Text(if(p==StatisticsPeriod.THIS_YEAR)"今年" else "全部",color=if(period==p)MaterialTheme.colorScheme.onSurface else SeenSecondary)
-                            Spacer(Modifier.height(8.dp));Box(Modifier.width(20.dp).height(2.dp).background(if(period==p)MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent))
-                        }
-                    }
-                }
-            }
             val s=statistics
             if(s==null)item{CircularProgressIndicator(Modifier.size(24.dp))} else {
                 item{

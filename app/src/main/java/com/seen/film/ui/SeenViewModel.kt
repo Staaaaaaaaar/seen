@@ -24,7 +24,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     fun refreshMetadata(language: com.seen.film.domain.MetadataLanguage) {
         if (!_metadataReady.value || metadataPreparing || _busy.value || _restorePreview.value != null) return
         if(!_draftReady.value)return
-        if(_draft.value?.tmdbId!=null){_error.value="请先保存或放弃未完成的 TMDB 电影草稿，再切换资料语言";return}
+        if(_draft.value?.tmdbId!=null){_error.value="请先保存或放弃未完成的电影草稿，再切换资料语言";return}
         clearSearch()
         metadataJob = viewModelScope.launch {
             try { app.metadataRefresh.refresh(language) }
@@ -395,10 +395,10 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                 if (e is CancellationException) throw e
                 _searchMessage.value = when (e) {
                     is IllegalStateException, is IllegalArgumentException -> e.message
-                    is java.net.UnknownHostException -> "无法解析电影资料服务器，请检查网络或 DNS；仍可手动添加电影"
-                    is javax.net.ssl.SSLException -> "无法建立安全连接，请检查系统日期与网络；仍可手动添加电影"
-                    is java.net.SocketTimeoutException -> "电影资料服务器连接超时，请稍后重试；仍可手动添加电影"
-                    else -> "网络连接失败，请检查网络后重试；仍可手动添加电影"
+                    is java.net.UnknownHostException -> "无法解析电影资料服务器，请检查网络或 DNS"
+                    is javax.net.ssl.SSLException -> "无法建立安全连接，请检查系统日期与网络"
+                    is java.net.SocketTimeoutException -> "电影资料服务器连接超时，请稍后重试"
+                    else -> "网络连接失败，请检查网络后重试"
                 }
             } finally { if (generation == searchGeneration) _searching.value = false }
         }
@@ -439,7 +439,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                 app.drafts.write(value)
                 recoveredMovieDraft = false; baseline = value; _draft.value = value; _fieldErrors.value = emptyMap()
                 navigate(value.key)
-            } catch (e: Exception) { report(e, "无法获取电影资料，请重试或手动添加") }
+            } catch (e: Exception) { report(e, "无法获取电影资料，请稍后重试") }
             finally { _busy.value = false }
         }
     }

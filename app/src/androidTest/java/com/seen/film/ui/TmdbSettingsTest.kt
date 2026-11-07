@@ -17,9 +17,9 @@ class TmdbSettingsTest {
     @Test fun credentialValidationRetainsInputAndSaveRemovalSurviveRotation() {
         waitFor("Seen")
         ui.onNodeWithContentDescription("设置").performClick()
-        ui.onNodeWithText("TMDB 凭证").performClick()
+        ui.onNodeWithText("访问凭据").performClick()
         ui.onNodeWithText("移除凭据").performScrollTo().performClick()
-        waitFor("未配置；可继续手动记录")
+        waitFor("未配置；可继续浏览影库")
         ui.onNodeWithText("API Read Access Token").performScrollTo().performTextInput("bad token")
         closeSoftKeyboard()
         ui.onNodeWithText("保存凭据").performScrollTo().performClick()
@@ -32,7 +32,7 @@ class TmdbSettingsTest {
         ui.activityRule.scenario.recreate()
         waitFor("已配置访问凭据")
         ui.onNodeWithText("移除凭据").performScrollTo().performClick()
-        waitFor("未配置；可继续手动记录")
+        waitFor("未配置；可继续浏览影库")
         ui.onNodeWithText("This product uses the TMDB API but is not endorsed or certified by TMDB.").performScrollTo().assertIsDisplayed()
         ui.onNodeWithContentDescription("The Movie Database (TMDB)").assertExists()
     }

@@ -35,12 +35,12 @@ class LibraryJourneyTest {
         ui.onNodeWithText("未看").performClick();ui.onNodeWithText("Alpha").assertExists();ui.onNodeWithText("Beta").assertDoesNotExist()
         ui.onNodeWithText("全部").performClick()
         ui.onNodeWithContentDescription("排序电影").performClick()
-        ui.onNodeWithText("个人评分").performClick()
+        ui.onAllNodesWithText("个人评分").onLast().performClick()
         ui.onNodeWithContentDescription("搜索影库").performClick()
         ui.onNodeWithTag("library-search").performTextInput("Alpha")
         ui.onNodeWithText("Beta").assertDoesNotExist()
         ui.onNodeWithContentDescription("设置").performClick()
-        waitFor("TMDB 凭证")
+        waitFor("访问凭据")
         ui.onNodeWithContentDescription("返回").performClick()
         ui.onNodeWithTag("library-search").assertTextContains("Alpha")
         ui.activityRule.scenario.recreate()
@@ -51,7 +51,7 @@ class LibraryJourneyTest {
     }
     @Test fun addingAMovieDoesNotForceAViewingOrRating(){
         ui.onNodeWithTag("bottom-add").performClick()
-        ui.onNodeWithText("手动添加电影").performClick()
+        resumeLegacyMovieEditor(ui,vm)
         ui.onNodeWithText("电影名称 *").performTextInput("Only a movie")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         ui.onNodeWithText("保存").performClick()

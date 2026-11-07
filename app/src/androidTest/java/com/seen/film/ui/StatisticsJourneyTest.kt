@@ -31,10 +31,11 @@ class StatisticsJourneyTest {
         ui.onNodeWithTag("tab-统计").performClick()
         ui.waitUntil(15000){ui.onAllNodesWithTag("statistics-movie-count").fetchSemanticsNodes().isNotEmpty()}
         ui.onNodeWithTag("statistics-movie-count").assertTextEquals("1")
-        ui.onNodeWithTag("statistics-viewing-count").assertTextEquals("1")
+        ui.onNodeWithTag("statistics-viewing-count").assertTextEquals("2")
         ui.onNodeWithContentDescription("搜索影库").assertDoesNotExist()
         ui.onNodeWithTag("bottom-add").assertDoesNotExist()
-        ui.onNodeWithText("全部").performClick()
+        ui.onNodeWithText("全部").assertDoesNotExist()
+        ui.onNodeWithText("今年").assertDoesNotExist()
         ui.onNodeWithTag("statistics-viewing-count").assertTextEquals("2")
         ui.onNodeWithTag("statistics-list").performScrollToNode(hasText("展开全部类型"))
         ui.onNodeWithText("展开全部类型").performClick()

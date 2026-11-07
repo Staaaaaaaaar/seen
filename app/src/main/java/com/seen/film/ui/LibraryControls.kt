@@ -7,6 +7,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.ArrowUpward
+import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -23,24 +25,19 @@ fun LibraryControls(query: LibraryQuery, onChange: (LibraryQuery) -> Unit, onSor
     Row(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         LibraryFilter.entries.forEach { filter ->
             val active = query.filter == filter
-            Column(Modifier.selectable(active, role = Role.Tab, onClick = { onChange(query.copy(filter = filter)) })
-                .heightIn(min = 48.dp).padding(end = if (compact) 8.dp else 22.dp), verticalArrangement = Arrangement.Center) {
+            Box(Modifier.selectable(active, role = Role.Tab, onClick = { onChange(query.copy(filter = filter)) })
+                .widthIn(min = 48.dp).heightIn(min = 48.dp).padding(horizontal = if (compact) 4.dp else 8.dp), contentAlignment = Alignment.Center) {
                 Text(filter.label, color = if (active) MaterialTheme.colorScheme.onSurface else SeenSecondary, style = MaterialTheme.typography.labelLarge)
-                Spacer(Modifier.height(8.dp))
-                if (active) HorizontalDivider(Modifier.width(20.dp), color = MaterialTheme.colorScheme.primary)
-                else Spacer(Modifier.height(1.dp))
+                if (active) HorizontalDivider(Modifier.align(Alignment.BottomCenter).padding(bottom=4.dp).width(20.dp), color = MaterialTheme.colorScheme.primary)
             }
         }
         Spacer(Modifier.weight(1f))
-        val label = when (query.sort) {
-            LibrarySort.ADDED -> if (query.direction == SortDirection.DESC) "最近添加" else "最早添加"
-            LibrarySort.VIEWED, LibrarySort.RECENT -> if (query.direction == SortDirection.DESC) "最近观看" else "最早观看"
-            else -> query.sort.label
-        }
-        if (compact) IconButton(onClick = onSort) { Icon(Icons.AutoMirrored.Outlined.Sort,"排序电影",Modifier.size(20.dp),tint=SeenSecondary) }
-        else TextButton(onClick = onSort, contentPadding = PaddingValues(horizontal = 0.dp)) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = SeenSecondary)
-            Spacer(Modifier.width(6.dp)); Icon(Icons.AutoMirrored.Outlined.Sort,"排序电影",Modifier.size(18.dp),tint=SeenSecondary)
+        Box(Modifier.height(48.dp),contentAlignment=Alignment.Center){
+            if(compact)IconButton(onClick=onSort){Icon(Icons.AutoMirrored.Outlined.Sort,"排序电影",Modifier.size(20.dp),tint=SeenSecondary)}
+            else TextButton(onClick=onSort,contentPadding=PaddingValues(horizontal=8.dp)){
+                Text(query.sort.label,style=MaterialTheme.typography.labelLarge,color=SeenSecondary)
+                Spacer(Modifier.width(6.dp));Icon(Icons.AutoMirrored.Outlined.Sort,"排序电影",Modifier.size(18.dp),tint=SeenSecondary)
+            }
         }
     }
 }
@@ -51,23 +48,15 @@ fun LibrarySortSheet(query: LibraryQuery, onChange: (LibraryQuery) -> Unit, onDi
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             Text("排序", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                SortDirection.entries.forEach { direction ->
-                    val text = when (query.sort) {
-                        LibrarySort.TITLE -> if (direction == SortDirection.ASC) "名称升序" else "名称降序"
-                        LibrarySort.RATING -> if (direction == SortDirection.ASC) "低到高" else "高到低"
-                        else -> if (direction == SortDirection.ASC) "旧到新" else "新到旧"
-                    }
-                    FilterChip(selected = query.direction == direction, onClick = { onChange(query.copy(direction = direction)) },label = { Text(text) })
-                }
-            }
-            Spacer(Modifier.height(10.dp))
             listOf(LibrarySort.ADDED,LibrarySort.TITLE,LibrarySort.YEAR,LibrarySort.RATING,LibrarySort.VIEWED).forEach { sort ->
                 Row(Modifier.fillMaxWidth().selectable(query.sort == sort,role=Role.RadioButton,onClick={
                     onChange(query.copy(sort=sort,direction=if(sort==LibrarySort.TITLE)SortDirection.ASC else SortDirection.DESC));onDismiss()
-                }).padding(vertical=16.dp),verticalAlignment=Alignment.CenterVertically) {
+                }).heightIn(min=56.dp),verticalAlignment=Alignment.CenterVertically) {
                     Text(sort.label,Modifier.weight(1f),style=MaterialTheme.typography.bodyLarge)
-                    if(query.sort==sort)Icon(Icons.Outlined.Check,null,Modifier.size(18.dp))
+                    val direction=if(query.sort==sort)query.direction else if(sort==LibrarySort.TITLE)SortDirection.ASC else SortDirection.DESC
+                    IconButton(onClick={onChange(query.copy(sort=sort,direction=if(direction==SortDirection.ASC)SortDirection.DESC else SortDirection.ASC))}){
+                        Icon(if(direction==SortDirection.ASC)Icons.Outlined.ArrowUpward else Icons.Outlined.ArrowDownward,"切换${sort.label}方向",Modifier.size(20.dp),tint=if(query.sort==sort)MaterialTheme.colorScheme.primary else SeenSecondary)
+                    }
                 }
             }
             Text("未评分或暂无观看记录的电影，在对应排序中排在最后。",style=MaterialTheme.typography.bodySmall,color=SeenSecondary)

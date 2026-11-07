@@ -25,7 +25,7 @@ class SeenTestApplication : SeenApplication() {
                     if(failMetadata)error("测试资料准备失败，原有资料未改变")
                 }
                 if (url.contains("timeout")) throw java.net.SocketTimeoutException("fixture timeout")
-                if (url.contains("query=authfailure")) error("TMDB 凭据无效或无权限，请在设置中检查；仍可手动添加")
+                if (url.contains("query=authfailure")) error("访问凭据无效或无权限，请在设置中检查")
                 when {
                     url.contains("image.tmdb.org") -> throw java.net.SocketTimeoutException("fixture poster timeout")
                     url.contains("query=empty") -> """{"total_pages":0,"results":[]}""".toByteArray()

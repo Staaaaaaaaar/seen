@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
 import com.seen.film.data.MovieCredit
@@ -21,22 +22,18 @@ import com.seen.film.data.PortraitStore
 import java.io.File
 
 @Composable
-fun CreditsSection(credits:List<MovieCredit>,portraits:PortraitStore?=null){
-    if(credits.isEmpty())return
-    var expanded by rememberSaveable{mutableStateOf(false)}
+fun CreditsSection(credits:List<MovieCredit>,portraits:PortraitStore?=null,directorNames:String?=null){
+    if(credits.isEmpty()&&directorNames.isNullOrBlank())return
     var selected by remember{mutableStateOf<MovieCredit?>(null)}
     val directors=credits.filter{!it.isCast&&it.job=="Director"}.sortedBy{it.position}
     val cast=credits.filter{it.isCast}.sortedBy{it.position}
     val crew=credits.filter{!it.isCast&&it.job in setOf("Writer","Screenplay","Producer","Original Music Composer","Director of Photography")}.sortedBy{it.position}
-    val initial=directors+cast.take(6)
-    val all=directors+cast+crew
+    val fallback=if(directors.isEmpty())directorNames?.split(" / ")?.mapIndexed{i,name->MovieCredit("","director-fallback-$i",0,name,false,job="Director",position=i)}.orEmpty() else emptyList()
+    val all=directors+fallback+cast+crew
     Column(verticalArrangement=Arrangement.spacedBy(12.dp)){
-        Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
-            Text("演职人员",Modifier.weight(1f),style=MaterialTheme.typography.titleSmall)
-            if(all.size>initial.size)IconButton(onClick={expanded=!expanded}){Icon(if(expanded)Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,if(expanded)"收起演职人员" else "展开演职人员",Modifier.size(20.dp))}
-        }
-        LazyRow(horizontalArrangement=Arrangement.spacedBy(16.dp)){
-            items(if(expanded)all else initial,key={it.creditKey}){credit->
+        Text("演职人员",style=MaterialTheme.typography.titleSmall)
+        LazyRow(modifier=Modifier.testTag("credits-list"),horizontalArrangement=Arrangement.spacedBy(16.dp)){
+            items(all,key={it.creditKey}){credit->
                 val file by produceState<File?>(null,credit.profilePath){value=credit.profilePath?.let{portraits?.file(it)}}
                 Column(Modifier.width(92.dp).clickable{selected=credit},verticalArrangement=Arrangement.spacedBy(7.dp)){
                     if(file!=null)Poster(file,Modifier.width(72.dp),cornerRadius=4.dp)

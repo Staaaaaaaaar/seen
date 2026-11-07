@@ -79,23 +79,13 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                     item{MovieHero(movie,vm)}
                     item{
                         Column(Modifier.padding(horizontal=24.dp).padding(top=8.dp),verticalArrangement=Arrangement.spacedBy(18.dp)){
-                            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
-                                Text(history.genres.sortedBy{it.position}.joinToString(" / "){it.name},Modifier.weight(1f),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
-                                Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically,
-                                    modifier=Modifier.semantics(mergeDescendants=true){contentDescription="观看 ${history.viewings.size} 次"}){
-                                    Icon(SeenIcons.Film,null,Modifier.size(14.dp),tint=SeenSecondary);Text(history.viewings.size.toString(),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
-                                }
-                            }
+                            Text(history.genres.sortedBy{it.position}.joinToString(" / "){it.name},style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
                             RatingControl(movie.personalRatingHalfStars,!busy){vm.setMovieRating(id,it)}
-                            movie.directorNames?.let{Row(horizontalArrangement=Arrangement.spacedBy(15.dp)){
-                                Text("导演",style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
-                                Text(it,style=MaterialTheme.typography.bodyMedium)
-                            }}
                             movie.overview?.let{overview->
                                 var expanded by rememberSaveable(id){mutableStateOf(false)}
                                 ExpandableMovieText(overview,4,expanded,{expanded=!expanded},"简介",MaterialTheme.typography.bodyMedium.copy(fontFamily=SeenSerif,lineHeight=27.sp))
                             }
-                            CreditsSection(history.credits,vm.app.portraits)
+                            CreditsSection(history.credits,vm.app.portraits,movie.directorNames)
                         }
                     }
                     item{
@@ -132,12 +122,7 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                         }
                     }
                     if(entries.isEmpty())item{Text("还没有记录",Modifier.padding(horizontal=24.dp,vertical=18.dp),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)}
-                    if(movie.tmdbId!=null)item{
-                        val uri=LocalUriHandler.current
-                        TextButton(onClick={uri.openUri("https://www.themoviedb.org/movie/${movie.tmdbId}")},modifier=Modifier.fillMaxWidth().padding(top=18.dp)){
-                            Text("资料与海报来自 TMDB",style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
-                        }
-                    }
+
                 }
                 if(scrolled)Box(Modifier.fillMaxWidth().height(with(density){topChromePx.toDp()}).background(chromeColor))
                 Row(Modifier.align(Alignment.TopCenter).fillMaxWidth().statusBarsPadding().padding(horizontal=14.dp,vertical=9.dp),horizontalArrangement=Arrangement.SpaceBetween){

@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.seen.film.data.MovieHistory
 
 @Composable
-fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, onBack: () -> Unit, onChoose: (String?) -> Unit, onChooseTmdb: (String) -> Unit, forWatchlist: Boolean = false) {
+fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, onBack: () -> Unit, onChoose: (String) -> Unit, onChooseTmdb: (String) -> Unit, forWatchlist: Boolean = false) {
     var query by rememberSaveable { mutableStateOf("") }
     DisposableEffect(vm) { onDispose { vm.clearSearch() } }
     val busy by vm.busy.collectAsState()
@@ -31,7 +31,7 @@ fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, 
         if (query.isBlank()) items.sortedByDescending { it.movie.updatedAt }.take(5) else items
     }
     val canSearch = enabled && !searching && query.isNotBlank() && query.codePointCount(0, query.length) <= 300
-    Scaffold(topBar = { TopAppBar(title = { Text("选择电影") }, navigationIcon = {
+    Scaffold(topBar = { TopAppBar(title = { Text("搜索") }, navigationIcon = {
         IconButton(onBack, enabled = !busy) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") }
     }) }) { padding ->
         LazyColumn(Modifier.padding(padding).imePadding(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -54,14 +54,13 @@ fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, 
                     }
                 }
             }
-            item { Button(onClick = { vm.searchTmdb(query) }, enabled = canSearch, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("搜索 TMDB") } }
-            item { TextButton(onClick = { onChoose(null) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("手动添加电影") } }
+            item { Button(onClick = { vm.searchTmdb(query) }, enabled = canSearch, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("搜索") } }
             if (searching) item { Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) { CircularProgressIndicator(Modifier.size(20.dp)); Text("正在搜索电影…", color = SeenSecondary) } }
             if (busy) item { Text("正在获取电影资料…", color = SeenSecondary) }
             message?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
             remote?.let { page ->
-                item { Text("TMDB · 第 ${page.page} 页 · 资料来源 The Movie Database", style = MaterialTheme.typography.bodySmall, color = SeenSecondary) }
-                if (page.movies.isEmpty()) item { Text("没有找到电影，可修改关键词或手动添加。") }
+                item { Text("第 ${page.page} 页", style = MaterialTheme.typography.bodySmall, color = SeenSecondary) }
+                if (page.movies.isEmpty()) item { Text("没有找到电影，试试其他关键词。") }
                 items(page.movies, key = { "tmdb:${it.id}" }) { movie ->
                     Surface(onClick = { vm.chooseTmdb(movie.id, forWatchlist) { onChooseTmdb(it) } }, enabled = enabled, shape = MaterialTheme.shapes.medium) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
