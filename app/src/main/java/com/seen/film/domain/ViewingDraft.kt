@@ -26,6 +26,8 @@ data class ViewingDraft(
     val notes: String = "",
     val forWatchlist: Boolean = false,
     val legacyRatingPending: Boolean = false,
+    val movieOnly: Boolean = false,
+    val metadata: com.seen.film.data.TmdbMovie? = null,
 )
 
 object ViewingRules {

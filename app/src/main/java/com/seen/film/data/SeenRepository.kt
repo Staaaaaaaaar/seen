@@ -29,7 +29,13 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
                 releaseDate = draft.releaseDate, tmdbId = draft.tmdbId, posterKey = draft.posterKey,
                 source = if (draft.tmdbId == null) "MANUAL" else "TMDB", directorNames = draft.directorNames,
                 runtimeMinutes = draft.runtimeMinutes, productionCountries = draft.productionCountries,
-                createdAt = now, updatedAt = now, metadataLanguage = if (draft.tmdbId != null) "zh-CN" else null))
+                createdAt = now, updatedAt = now, metadataLanguage = draft.metadata?.language?.apiCode ?: if (draft.tmdbId != null) "zh-CN" else null,
+                overview = draft.metadata?.overview))
+            draft.metadata?.let { metadata ->
+                require(metadata.id == draft.tmdbId) { "电影资料编号不匹配" }
+                dao.insertGenres(metadata.genres.mapIndexed { index,g -> MovieGenre(draft.movieId,g.id,g.name,index) })
+                dao.insertCredits(metadata.credits.map { c -> MovieCredit(draft.movieId,c.creditKey,c.personId,c.name,c.isCast,c.department,c.job,c.character,c.profilePath,c.position) })
+            }
             draft.movieId
         }
     }

@@ -38,92 +38,69 @@ class NavigationJourneyTest {
         ui.waitUntil(15_000) { !vm.busy.value && vm.draft.value == null }
         runBlocking { withContext(Dispatchers.IO) { app.database.clearAllTables() } }
         waitFor("还没有电影")
+        ui.onNodeWithText("全部").performClick()
+        ui.onNodeWithContentDescription("排序电影").performClick()
+        ui.onNodeWithText("添加时间").performClick()
     }
 
-    @Test fun bottomActionReturnsToSourceAndSettingsBackReturnsToLibrary() {
-        ui.onNodeWithText("设置").performClick()
+    @Test fun twoRootTabsAndSettingsReturnToTheirSource() {
+        ui.onNodeWithContentDescription("设置").performClick()
         ui.onNodeWithText("TMDB 凭证").assertExists()
         ui.onNodeWithText("导出数据").assertExists()
         ui.onNodeWithText("导入备份").assertExists()
-        ui.onNodeWithTag("tab-片单").performClick()
-        ui.onNodeWithContentDescription("添加想看").performClick()
-        waitFor("选择电影")
-        ui.onNodeWithTag("bottom-add").assertDoesNotExist()
         ui.onNodeWithContentDescription("返回").performClick()
-        waitFor("还没有想看的电影")
-        pressBack()
         waitFor("还没有电影")
-        ui.onNodeWithText("时间").assertDoesNotExist()
-        ui.onNodeWithText("Seen").assertDoesNotExist()
+        ui.onNodeWithTag("tab-统计").performClick()
+        ui.onNodeWithTag("bottom-add").assertDoesNotExist()
+        ui.onNodeWithContentDescription("设置").performClick()
+        ui.onNodeWithContentDescription("返回").performClick()
+        ui.onNodeWithTag("tab-统计").assertIsSelected()
+        pressBack();waitFor("还没有电影")
+        ui.onNodeWithTag("tab-影库").assertIsSelected()
+        ui.onNodeWithTag("tab-片单").assertDoesNotExist()
     }
 
-    @Test fun simpleWatchlistPersistsAndBecomesAViewingOnlyAfterSave() {
-        ui.onNodeWithTag("tab-片单").performClick()
-        ui.onNodeWithContentDescription("添加想看").performClick()
-        ui.onNodeWithText("手动添加电影").performClick()
-        ui.onNodeWithText("电影名称 *").performTextInput("周末想看 🎬")
-        closeSoftKeyboard()
-        ui.onNodeWithText("保存").performClick()
-        waitFor("周末想看 🎬")
-        assertEquals(0, runBlocking { app.database.dao().viewingCount() })
-        screenshot("watchlist")
-        ui.activityRule.scenario.recreate()
-        waitFor("周末想看 🎬")
-        ui.onNodeWithText("记录观看").performClick()
-        waitFor("添加观看")
-        ui.onNodeWithContentDescription("返回").performClick()
-        waitFor("周末想看 🎬")
-        assertTrue(runBlocking { app.database.dao().allMovies().single().wantToWatch })
-        ui.onNodeWithText("记录观看").performClick()
-        ui.onNodeWithText("保存").performClick()
-        ui.waitUntil(15_000) { !vm.busy.value && vm.draft.value == null }
-        assertEquals(1, runBlocking { app.database.dao().viewingCount() })
-        assertFalse(runBlocking { app.database.dao().allMovies().single().wantToWatch })
-        ui.onNodeWithContentDescription("返回").performClick()
-        ui.onNodeWithTag("tab-片单").performClick()
-        waitFor("还没有想看的电影")
-    }
-
-    @Test fun manualStepsRetainDraftAndCancelLeavesNoEmptyMovie() {
+    @Test fun savedMovieRemainsUnseenWithoutAForcedViewing() {
         ui.onNodeWithTag("bottom-add").performClick()
         ui.onNodeWithText("手动添加电影").performClick()
-        ui.onNodeWithText("下一步").performClick()
-        waitFor("请输入电影名称")
-        ui.onNodeWithText("电影名称 *").performTextInput("草稿往返 🎬")
-        closeSoftKeyboard()
-        ui.onNodeWithText("下一步").performClick()
-        waitFor("添加观看")
-        ui.activityRule.scenario.recreate()
-        waitFor("添加观看")
+        ui.onNodeWithText("电影名称 *").performTextInput("周末的电影 🎬")
+        closeSoftKeyboard();ui.onNodeWithText("保存").performClick()
+        waitFor("周末的电影 🎬")
+        assertEquals(0,runBlocking{app.database.dao().viewingCount()})
+        assertNull(runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars})
+        ui.activityRule.scenario.recreate();waitFor("周末的电影 🎬")
         ui.onNodeWithContentDescription("返回").performClick()
+        ui.onNodeWithText("未看").performClick();waitFor("周末的电影 🎬")
+        ui.onNodeWithText("已看").performClick();waitFor("没有匹配的电影")
+    }
+
+    @Test fun movieDraftValidationRotationAndCancellationPreserveInput() {
+        ui.onNodeWithTag("bottom-add").performClick()
+        ui.onNodeWithText("手动添加电影").performClick()
+        ui.onNodeWithText("保存").performClick();waitFor("请输入电影名称")
+        ui.onNodeWithText("电影名称 *").performTextInput("草稿往返 🎬")
+        closeSoftKeyboard();ui.activityRule.scenario.recreate()
         ui.onNodeWithText("电影名称 *").assertTextContains("草稿往返 🎬")
         ui.onNodeWithContentDescription("返回").performClick()
         waitFor("放弃未保存的修改？")
         ui.onNodeWithText("继续编辑").performClick()
         ui.onNodeWithText("电影名称 *").assertTextContains("草稿往返 🎬")
-        assertEquals(0, runBlocking { app.database.dao().movieCount() })
+        assertEquals(0,runBlocking{app.database.dao().movieCount()})
         ui.onNodeWithContentDescription("返回").performClick()
-        ui.onNodeWithText("放弃修改").performClick()
-        waitFor("选择电影")
-        ui.onNodeWithContentDescription("返回").performClick()
-        waitFor("还没有电影")
-        assertEquals(0, runBlocking { app.database.dao().viewingCount() })
+        ui.onNodeWithText("放弃修改").performClick();waitFor("选择电影")
+        ui.onNodeWithContentDescription("返回").performClick();waitFor("还没有电影")
     }
 
-    @Test fun existingDraftRequiresExplicitChoiceBeforeStartingAnotherRecord() {
-        ui.runOnIdle { vm.openEditor { } }
-        ui.waitUntil(15_000) { vm.draft.value != null && !vm.busy.value }
-        val original = vm.draft.value!!.key
-        ui.runOnIdle { vm.update { it.copy(title = "保留原草稿") } }
-        ui.onNodeWithTag("bottom-add").performClick()
-        waitFor("有未完成的编辑")
-        ui.onNodeWithText("取消").performClick()
-        assertEquals(original, vm.draft.value!!.key)
-        ui.onNodeWithTag("bottom-add").performClick()
-        ui.onNodeWithText("继续编辑").performClick()
+    @Test fun existingDraftRequiresExplicitChoiceBeforeStartingAnotherMovie() {
+        ui.runOnIdle{vm.openMovieEditor{}}
+        ui.waitUntil(15000){vm.draft.value!=null&&!vm.busy.value}
+        val original=vm.draft.value!!.key
+        ui.runOnIdle{vm.update{it.copy(title="保留原草稿")}}
+        ui.onNodeWithTag("bottom-add").performClick();waitFor("有未完成的编辑")
+        ui.onNodeWithText("取消").performClick();assertEquals(original,vm.draft.value!!.key)
+        ui.onNodeWithTag("bottom-add").performClick();ui.onNodeWithText("继续编辑").performClick()
         ui.onNodeWithText("电影名称 *").assertTextContains("保留原草稿")
-        ui.onNodeWithContentDescription("返回").performClick()
-        ui.onNodeWithText("放弃修改").performClick()
+        ui.onNodeWithContentDescription("返回").performClick();ui.onNodeWithText("放弃修改").performClick()
         waitFor("还没有电影")
     }
 
@@ -157,14 +134,15 @@ class NavigationJourneyTest {
             }
         }
         ui.waitUntil(15_000) { vm.library.value?.size == 6 }
+        ui.onNodeWithTag("library-list").performScrollToNode(hasText(titles.last()))
         waitFor(titles.last())
         screenshot("library")
-        ui.onNodeWithContentDescription("搜索我的电影").performClick()
+        ui.onNodeWithContentDescription("搜索影库").performClick()
         ui.onNodeWithTag("library-search").performTextInput("完美")
         closeSoftKeyboard()
-        ui.onNodeWithText("设置").performClick()
+        ui.onNodeWithContentDescription("设置").performClick()
         screenshot("settings")
-        ui.onNodeWithTag("tab-记录").performClick()
+        ui.onNodeWithContentDescription("返回").performClick()
         ui.onNodeWithTag("library-search").assertTextContains("完美")
         ui.onNodeWithText("完美的日子").performClick()
         screenshot("movie")

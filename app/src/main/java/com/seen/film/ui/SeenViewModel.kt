@@ -103,6 +103,8 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
             finally { _busy.value = false }
         }
     }
+    private val _librarySnapshot = MutableStateFlow<com.seen.film.data.LibrarySnapshot?>(null)
+    val librarySnapshot = _librarySnapshot.asStateFlow()
     private val _library = MutableStateFlow<List<MovieHistory>?>(null)
     val library = _library.asStateFlow()
     private val _loadFailed = MutableStateFlow(false)
@@ -123,7 +125,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         viewModelScope.launch {
-            app.repository.library.catch { _loadFailed.value = true; _error.value = "无法读取电影库，请重启后重试" }.collect { _library.value = it }
+            app.repository.snapshots.catch { _loadFailed.value = true; _error.value = "无法读取影库，请重启后重试" }.collect { _librarySnapshot.value = it; _library.value = it.movies }
         }
         viewModelScope.launch {
             try {
@@ -150,6 +152,21 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun clearError() { _error.value = null }
 
+    fun saveLibraryQuery(query: com.seen.film.domain.LibraryQuery) {
+        viewModelScope.launch { try { app.libraryPreferences.save(query) } catch (e: Exception) { report(e,"无法保存显示偏好") } }
+    }
+    fun openMovieEditor(navigate: (String) -> Unit) {
+        if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
+        _draft.value?.let { navigate(it.key); return }
+        _busy.value = true
+        viewModelScope.launch {
+            try {
+                val value = ViewingDraft(movieOnly = true)
+                app.drafts.write(value); baseline = value; _draft.value = value; _fieldErrors.value = emptyMap(); navigate(value.key)
+            } catch (e: Exception) { report(e,"无法开始编辑") }
+            finally { _busy.value = false }
+        }
+    }
     fun openEditor(movieId: String? = null, viewingId: String? = null, forWatchlist: Boolean = false, navigate: (String) -> Unit) {
         if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
         _draft.value?.let {
@@ -199,14 +216,14 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     fun save(onSaved: (String, String) -> Unit) {
         val value = _draft.value ?: return
         if (_busy.value) return
-        _fieldErrors.value = ViewingRules.validate(value)
+        _fieldErrors.value = ViewingRules.validate(if (value.movieOnly) value.copy(forWatchlist = true) else value)
         if (_fieldErrors.value.isNotEmpty()) return
         _busy.value = true
         viewModelScope.launch {
             try {
                 pendingWrite?.cancelAndJoin()
                 app.drafts.write(value)
-                val movieId = app.repository.save(value)
+                val movieId = if (value.movieOnly) app.repository.addMovie(value) else app.repository.save(value)
                 // The record is committed even if draft cleanup fails. Its stable ID
                 // also makes a recovered post-commit draft safe to save again.
                 try { app.drafts.clear() }
@@ -267,7 +284,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         _search.value = null; _searchMessage.value = null
         _searching.value = true
         searchJob = viewModelScope.launch {
-            try { _search.value = app.tmdb.search(query, page) }
+            try { _search.value = app.tmdb.search(query, page, com.seen.film.domain.MetadataLanguage.fromCode(_librarySnapshot.value?.metadata?.activeLanguage)) }
             catch (e: Exception) {
                 if (e is CancellationException) throw e
                 _searchMessage.value = when (e) {
@@ -284,11 +301,11 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
         _draft.value?.let { navigate(it.key); return }
         val existing = _library.value.orEmpty().firstOrNull { it.movie.tmdbId == id }
-        if (existing != null) { openEditor(existing.movie.id, forWatchlist = forWatchlist, navigate = navigate); return }
+        if (existing != null) { navigate("movie:${existing.movie.id}"); return }
         _busy.value = true
         viewModelScope.launch {
             try {
-                val movie = app.tmdb.details(id)
+                val movie = app.tmdb.details(id, com.seen.film.domain.MetadataLanguage.fromCode(_librarySnapshot.value?.metadata?.activeLanguage))
                 var poster: String? = null
                 var posterDownloaded = false
                 try { movie.posterPath?.let {
@@ -306,9 +323,9 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                         e is java.io.IOException -> "无法连接海报服务器"
                         else -> "海报服务器未能提供图片"
                     }
-                    _error.value = "$reason，电影资料已保留；可在编辑中选择本地海报"
+                    _error.value = "$reason，电影资料已保留；可稍后更新电影资料重试"
                 }
-                val value = ViewingDraft(forWatchlist = forWatchlist, title = movie.title, originalTitle = movie.originalTitle.orEmpty(),
+                val value = ViewingDraft(movieOnly = true, metadata = movie, title = movie.title, originalTitle = movie.originalTitle.orEmpty(),
                     year = movie.releaseDate?.take(4).orEmpty(), tmdbId = movie.id,
                     releaseDate = movie.releaseDate, directorNames = movie.directors,
                     runtimeMinutes = movie.runtime, productionCountries = movie.countries, posterKey = poster)

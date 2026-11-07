@@ -7,6 +7,7 @@ import com.seen.film.data.*
 open class SeenApplication : Application() {
     open val database by lazy { Room.databaseBuilder(this, SeenDatabase::class.java, "seen.db").addMigrations(*SeenDatabase.MIGRATIONS).build() }
     val libraryAccess = LibraryAccess()
+    val libraryPreferences by lazy { LibraryPreferences(this) }
     val repository by lazy { SeenRepository(database, libraryAccess) }
     val posters by lazy { PosterStore(this) }
     val credentials by lazy { TmdbCredentialStore(this) }

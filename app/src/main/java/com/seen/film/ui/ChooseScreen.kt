@@ -48,7 +48,7 @@ fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, 
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(history.movie.title, style = MaterialTheme.typography.titleMedium)
                             history.movie.releaseYear?.let { Text(it.toString(), color = SeenSecondary) }
-                            Text("${history.viewings.size} 次观看，可再次记录", style = MaterialTheme.typography.bodySmall, color = SeenSecondary)
+                            Text("已在影库", style = MaterialTheme.typography.bodySmall, color = SeenSecondary)
                         }
                         Icon(Icons.AutoMirrored.Outlined.NavigateNext, null)
                     }
@@ -68,7 +68,7 @@ fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, 
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(movie.title, style = MaterialTheme.typography.titleMedium)
                                 Text(listOfNotNull(movie.originalTitle, movie.releaseDate?.take(4)).joinToString(" / "), color = SeenSecondary)
-                                if (all.orEmpty().any { it.movie.tmdbId == movie.id }) Text("已收录，可再次记录", style = MaterialTheme.typography.bodySmall, color = SeenSecondary)
+                                if (all.orEmpty().any { it.movie.tmdbId == movie.id }) Text("已在影库", style = MaterialTheme.typography.bodySmall, color = SeenSecondary)
                             }
                             Icon(Icons.AutoMirrored.Outlined.NavigateNext, null)
                         }

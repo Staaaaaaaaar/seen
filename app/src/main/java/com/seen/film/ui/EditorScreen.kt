@@ -36,6 +36,7 @@ import java.time.LocalTime
 
 @Composable
 fun EditorScreen(vm: SeenViewModel, draft: ViewingDraft, onBack: () -> Unit, onSaved: (String, String) -> Unit) {
+    if (draft.movieOnly) { MovieEditorScreen(vm,draft,onBack,onSaved); return }
     val busy by vm.busy.collectAsState()
     val errors by vm.fieldErrors.collectAsState()
     var more by rememberSaveable(draft.key) { mutableStateOf(draft.time.isNotBlank() || draft.location.isNotBlank()) }

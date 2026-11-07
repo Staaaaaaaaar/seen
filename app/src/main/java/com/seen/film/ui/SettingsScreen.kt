@@ -31,38 +31,11 @@ import androidx.compose.ui.unit.dp
 import com.seen.film.BuildConfig
 
 @Composable
-fun SeenBottomBar(route: String, enabled: Boolean, onLibrary: () -> Unit, onWatchlist: () -> Unit, onSettings: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.surface) {
-        Column {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Row(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp)) {
-                BottomDestination("记录", Icons.Outlined.GridView, route == "library", enabled, onLibrary)
-                BottomDestination("片单", Icons.Outlined.BookmarkBorder, route == "watchlist", enabled, onWatchlist)
-                BottomDestination("设置", Icons.Outlined.Tune, route == "settings", enabled, onSettings)
-            }
-        }
-    }
-}
-
-@Composable
-private fun RowScope.BottomDestination(label: String, icon: ImageVector, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
-    Column(
-        Modifier.weight(1f).testTag("tab-$label").clip(MaterialTheme.shapes.medium)
-            .selectable(selected = selected, enabled = enabled, role = Role.Tab, onClick = onClick)
-            .padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Icon(icon, null, Modifier.size(23.dp), tint = if (selected) MaterialTheme.colorScheme.onSurface else SeenSecondary)
-        Spacer(Modifier.height(7.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal, color = if (selected) MaterialTheme.colorScheme.onSurface else SeenSecondary)
-    }
-}
-
-@Composable
-fun SettingsScreen(vm: SeenViewModel, onOpen: (String) -> Unit) {
+fun SettingsScreen(vm: SeenViewModel, onOpen: (String) -> Unit, onBack: () -> Unit = {}) {
     val configured by vm.credentialConfigured.collectAsState()
     val busy by vm.busy.collectAsState()
     Column(Modifier.fillMaxSize()) {
-        TopAppBar(title = { Text("设置", style = MaterialTheme.typography.titleLarge) })
+        TopAppBar(title = { Text("设置", style = MaterialTheme.typography.titleLarge) }, navigationIcon = { IconButton(onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回") } })
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 32.dp)) {
             SettingsHeading("电影资料")
             SettingsRow("TMDB 凭证", if (configured) "已配置，可修改或移除" else "未配置；可继续手动记录", Icons.Outlined.Key, !busy) { onOpen("settings:credentials") }

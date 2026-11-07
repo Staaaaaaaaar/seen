@@ -25,6 +25,8 @@ class DraftStore(context: Context, private val access: LibraryAccess = LibraryAc
         require(j.getInt("schemaVersion") in 1..2) { "暂不支持此草稿版本" }
         ViewingDraft(
             forWatchlist = j.optBoolean("forWatchlist", false),
+            movieOnly = j.optBoolean("movieOnly", false),
+            metadata = if (j.isNull("tmdbDetails")) null else readTmdbDraft(j.getJSONObject("tmdbDetails")),
             legacyRatingPending = j.optBoolean("legacyRatingPending", j.getInt("schemaVersion") == 1 && !j.optBoolean("forWatchlist", false)),
             key = j.getString("key"), movieId = j.getString("movieId"),
             isNewMovie = j.getBoolean("isNewMovie"), isEditing = j.getBoolean("isEditing"),
@@ -46,6 +48,7 @@ class DraftStore(context: Context, private val access: LibraryAccess = LibraryAc
             .put("title", draft.title).put("originalTitle", draft.originalTitle).put("year", draft.year)
             .put("posterKey", draft.posterKey ?: JSONObject.NULL).put("date", draft.date).put("time", draft.time)
             .put("location", draft.location).put("rating", draft.rating ?: JSONObject.NULL).put("notes", draft.notes)
+        j.put("movieOnly", draft.movieOnly).put("tmdbDetails", draft.metadata?.draftJson() ?: JSONObject.NULL)
         j.put("tmdbId", draft.tmdbId ?: JSONObject.NULL)
             .put("releaseDate", draft.releaseDate ?: JSONObject.NULL)
             .put("directorNames", draft.directorNames ?: JSONObject.NULL)
