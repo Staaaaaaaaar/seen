@@ -60,7 +60,7 @@ fun ChooseScreen(vm: SeenViewModel, all: List<MovieHistory>?, enabled: Boolean, 
             message?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
             remote?.let { page ->
                 item { Text("第 ${page.page} 页", style = MaterialTheme.typography.bodySmall, color = SeenSecondary) }
-                if (page.movies.isEmpty()) item { Text("没有找到电影，试试其他关键词。") }
+                if (page.movies.isEmpty()) item { EmptyNotice("没有找到电影，试试其他关键词。","",Modifier.fillMaxWidth().padding(vertical=32.dp)) }
                 items(page.movies, key = { "tmdb:${it.id}" }) { movie ->
                     Surface(onClick = { vm.chooseTmdb(movie.id, forWatchlist) { onChooseTmdb(it) } }, enabled = enabled, shape = MaterialTheme.shapes.medium) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {

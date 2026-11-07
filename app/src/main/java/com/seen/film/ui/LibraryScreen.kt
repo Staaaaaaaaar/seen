@@ -37,7 +37,7 @@ fun LibraryScreen(
     var text by rememberSaveable { mutableStateOf("") }
     var search by rememberSaveable { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf(initialQuery.filter.name) }
-    var sort by rememberSaveable { mutableStateOf(initialQuery.sort.name) }
+    var sort by rememberSaveable { mutableStateOf((if(initialQuery.sort==LibrarySort.ADDED)LibrarySort.TITLE else initialQuery.sort).name) }
     var direction by rememberSaveable { mutableStateOf(initialQuery.direction.name) }
     var sortSheet by remember { mutableStateOf(false) }
     val query = LibraryQuery(text,LibraryFilter.valueOf(filter),LibrarySort.valueOf(sort),SortDirection.valueOf(direction))
@@ -56,7 +56,9 @@ fun LibraryScreen(
             if(search) OutlinedTextField(text,{text=it},Modifier.fillMaxWidth().padding(horizontal=22.dp).padding(bottom=8.dp).testTag("library-search"),
                 placeholder={Text("搜索片名、导演或类型")},singleLine=true,
                 trailingIcon={IconButton(onClick={text="";search=false}){Icon(Icons.Outlined.Close,"关闭搜索")}})
+            Spacer(Modifier.height(16.dp))
             LibraryControls(query,::change){sortSheet=true}
+            Spacer(Modifier.height(16.dp))
             preparationMessage?.let{Text(it,Modifier.padding(horizontal=22.dp,vertical=8.dp),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)}
             if(draft!=null||hasPendingRecord)TextButton(onClick=onResume,enabled=canEdit,modifier=Modifier.padding(horizontal=14.dp)){
                 Icon(Icons.Outlined.Edit,null,Modifier.size(16.dp));Spacer(Modifier.width(8.dp));Text("继续未完成的编辑",style=MaterialTheme.typography.bodySmall)
@@ -69,25 +71,21 @@ fun LibraryScreen(
                     contentPadding=PaddingValues(start=22.dp,end=22.dp,top=10.dp,bottom=110.dp)){
                     items(movies!!,key={it.movie.id}){history->
                         Row(Modifier.fillMaxWidth().testTag("library-row").clickable(onClickLabel="查看电影详情"){onMovie(history.movie.id)}
-                            .semantics(mergeDescendants=true){}.padding(vertical=14.dp),
-                            horizontalArrangement=Arrangement.spacedBy(17.dp),verticalAlignment=Alignment.CenterVertically){
-                            Poster(posterFile(history.movie.posterKey),Modifier.width(56.dp))
+                            .semantics(mergeDescendants=true){}.padding(vertical=20.dp),
+                            horizontalArrangement=Arrangement.spacedBy(20.dp),verticalAlignment=Alignment.CenterVertically){
+                            Poster(posterFile(history.movie.posterKey),Modifier.width(76.dp))
                             Column(Modifier.weight(1f),verticalArrangement=Arrangement.spacedBy(8.dp)){
                                 Text(history.movie.title,style=MaterialTheme.typography.titleMedium,maxLines=2,overflow=TextOverflow.Ellipsis)
                                 Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)){
                                     history.movie.releaseYear?.let{Text(it.toString(),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)}
-                                    if(history.viewings.isNotEmpty())Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(5.dp),
-                                        modifier=Modifier.semantics(mergeDescendants=true){contentDescription="观看 ${history.viewings.size} 次"}){
-                                        Icon(SeenIcons.Film,null,Modifier.size(12.dp),tint=SeenSecondary)
-                                        Text(history.viewings.size.toString(),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
-                                    }
+
                                 }
+                                if(history.genres.isNotEmpty())Text(history.genres.sortedBy{it.position}.joinToString(" / "){it.name},style=MaterialTheme.typography.bodySmall,color=SeenSecondary,maxLines=2,overflow=TextOverflow.Ellipsis)
                             }
                             val rating=history.movie.personalRatingHalfStars
                             if(rating==null)Text("—",style=MaterialTheme.typography.bodyMedium,color=SeenSecondary,modifier=Modifier.semantics{contentDescription="未评分"})
                             else Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(5.dp),
                                 modifier=Modifier.semantics(mergeDescendants=true){contentDescription="个人评分 ${ViewingRules.ratingLabel(rating)}，满分 5 星"}){
-                                Icon(Icons.Outlined.Star,null,Modifier.size(10.dp),tint=SeenSecondary)
                                 Text(ViewingRules.ratingLabel(rating),fontFamily=FontFamily.Serif,fontSize=22.sp)
                             }
                         }

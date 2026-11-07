@@ -47,11 +47,18 @@ fun Poster(file: File?, modifier: Modifier = Modifier, cornerRadius: androidx.co
 
 @Composable
 fun PageMessage(title: String, description: String, action: String? = null, onAction: () -> Unit = {}) {
-    Column(Modifier.fillMaxSize().padding(32.dp), verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(title, style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.height(12.dp))
-        Text(description, color = SeenSecondary)
-        if (action != null) { Spacer(Modifier.height(24.dp)); Button(onAction) { Text(action) } }
+    Box(Modifier.fillMaxSize().padding(horizontal=32.dp),contentAlignment=Alignment.Center){
+        Column(horizontalAlignment=Alignment.CenterHorizontally){
+            EmptyNotice(title,description)
+            if(action!=null)TextButton(onClick=onAction,modifier=Modifier.padding(top=16.dp)){Text(action)}
+        }
+    }
+}
+
+@Composable
+fun EmptyNotice(title:String,description:String,modifier:Modifier=Modifier){
+    Column(modifier.widthIn(max=320.dp),horizontalAlignment=Alignment.CenterHorizontally,verticalArrangement=Arrangement.spacedBy(12.dp)){
+        Text(title,style=MaterialTheme.typography.titleMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+        if(description.isNotBlank())Text(description,style=MaterialTheme.typography.bodyMedium,color=SeenSecondary,textAlign=androidx.compose.ui.text.style.TextAlign.Center)
     }
 }

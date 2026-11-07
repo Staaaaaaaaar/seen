@@ -33,10 +33,10 @@ fun LibraryControls(query: LibraryQuery, onChange: (LibraryQuery) -> Unit, onSor
         }
         Spacer(Modifier.weight(1f))
         Box(Modifier.height(48.dp),contentAlignment=Alignment.Center){
-            if(compact)IconButton(onClick=onSort){Icon(Icons.AutoMirrored.Outlined.Sort,"排序电影",Modifier.size(20.dp),tint=SeenSecondary)}
+            if(compact)IconButton(onClick=onSort){Icon(if(query.direction==SortDirection.ASC)Icons.Outlined.ArrowUpward else Icons.Outlined.ArrowDownward,"排序电影",Modifier.size(20.dp),tint=SeenSecondary)}
             else TextButton(onClick=onSort,contentPadding=PaddingValues(horizontal=8.dp)){
                 Text(query.sort.label,style=MaterialTheme.typography.labelLarge,color=SeenSecondary)
-                Spacer(Modifier.width(6.dp));Icon(Icons.AutoMirrored.Outlined.Sort,"排序电影",Modifier.size(18.dp),tint=SeenSecondary)
+                Spacer(Modifier.width(6.dp));Icon(if(query.direction==SortDirection.ASC)Icons.Outlined.ArrowUpward else Icons.Outlined.ArrowDownward,"排序电影",Modifier.size(18.dp),tint=SeenSecondary)
             }
         }
     }
@@ -48,7 +48,7 @@ fun LibrarySortSheet(query: LibraryQuery, onChange: (LibraryQuery) -> Unit, onDi
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             Text("排序", style = MaterialTheme.typography.titleLarge)
             Spacer(Modifier.height(16.dp))
-            listOf(LibrarySort.ADDED,LibrarySort.TITLE,LibrarySort.YEAR,LibrarySort.RATING,LibrarySort.VIEWED).forEach { sort ->
+            listOf(LibrarySort.TITLE,LibrarySort.YEAR,LibrarySort.RATING,LibrarySort.VIEWED).forEach { sort ->
                 Row(Modifier.fillMaxWidth().selectable(query.sort == sort,role=Role.RadioButton,onClick={
                     onChange(query.copy(sort=sort,direction=if(sort==LibrarySort.TITLE)SortDirection.ASC else SortDirection.DESC));onDismiss()
                 }).heightIn(min=56.dp),verticalAlignment=Alignment.CenterVertically) {
@@ -59,7 +59,7 @@ fun LibrarySortSheet(query: LibraryQuery, onChange: (LibraryQuery) -> Unit, onDi
                     }
                 }
             }
-            Text("未评分或暂无观看记录的电影，在对应排序中排在最后。",style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
+
         }
     }
 }

@@ -17,7 +17,7 @@ internal fun resetTestLibrary(ui:ComposeTestRule,app:SeenApplication,vm:SeenView
     runBlocking{withContext(Dispatchers.IO){app.database.clearAllTables()}}
     ui.onNodeWithText("全部").performClick()
     ui.onNodeWithContentDescription("排序电影").performClick()
-    ui.onAllNodesWithText("添加时间").onLast().performClick()
+    ui.onAllNodesWithText("电影片名").onLast().performClick()
     ui.waitUntil(15000){ui.onAllNodesWithText("还没有电影").fetchSemanticsNodes().isNotEmpty()}
 }
 

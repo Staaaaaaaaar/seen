@@ -61,7 +61,7 @@ class NotesJourneyTest {
         assertEquals(1,runBlocking{app.database.dao().viewingCount()})
         assertEquals(9,runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars})
         ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasTestTag("personal-rating"))
-        ui.onNodeWithContentDescription("清除评分").performClick()
+        ui.onNodeWithTag("personal-rating").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress){it(0f)}
         ui.waitUntil(15000){runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars==null}}
         assertEquals(1,runBlocking{app.database.dao().viewingCount()})
     }

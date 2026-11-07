@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.seen.film.data.MovieHistory
 import com.seen.film.domain.*
 import java.time.LocalDate
+import java.time.YearMonth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -37,7 +38,7 @@ fun StatisticsScreen(all:List<MovieHistory>?,onSettings:()->Unit){
     }
     Column(Modifier.fillMaxSize()){
         TopAppBar(title={SeenWordmark()},actions={IconButton(onClick=onSettings){Icon(Icons.Outlined.Settings,"设置")}})
-        LazyColumn(Modifier.fillMaxSize().testTag("statistics-list"),contentPadding=PaddingValues(start=24.dp,end=24.dp,bottom=32.dp),verticalArrangement=Arrangement.spacedBy(28.dp)){
+        LazyColumn(Modifier.fillMaxSize().testTag("statistics-list"),contentPadding=PaddingValues(start=24.dp,end=24.dp,top=32.dp,bottom=40.dp),verticalArrangement=Arrangement.spacedBy(40.dp)){
             val s=statistics
             if(s==null)item{CircularProgressIndicator(Modifier.size(24.dp))} else {
                 item{
@@ -49,14 +50,14 @@ fun StatisticsScreen(all:List<MovieHistory>?,onSettings:()->Unit){
                 item{
                     Column(verticalArrangement=Arrangement.spacedBy(18.dp)){
                         StatisticHeading("每月观看")
-                        if(s.viewingCount==0)Text("这段时间还没有观看记录",style=MaterialTheme.typography.bodyMedium,color=SeenSecondary)
-                        if(s.months.isNotEmpty())MonthChart(s.months,period)
+                        val months=if(s.months.isEmpty())(1..12).map{MonthCount(YearMonth.of(today.year,it),0,false)} else s.months
+                        MonthChart(months,period)
                     }
                 }
                 item{
                     Column(verticalArrangement=Arrangement.spacedBy(18.dp)){
                         StatisticHeading("电影类型")
-                        if(s.genres.isEmpty())Text("暂无类型数据",color=SeenSecondary,style=MaterialTheme.typography.bodyMedium)
+                        if(s.genres.isEmpty())EmptyNotice("无记录","",Modifier.fillMaxWidth().padding(vertical=24.dp))
                         val max=s.genres.firstOrNull()?.count?:1
                         (if(expanded)s.genres else s.genres.take(5)).forEach{genre->
                             Column(Modifier.semantics(mergeDescendants=true){contentDescription="${genre.name}，${genre.count} 部电影"},verticalArrangement=Arrangement.spacedBy(10.dp)){
@@ -72,8 +73,6 @@ fun StatisticsScreen(all:List<MovieHistory>?,onSettings:()->Unit){
                         if(s.genres.size>5)TextButton(onClick={expanded=!expanded},contentPadding=PaddingValues(0.dp)){
                             Text(if(expanded)"收起类型" else "展开全部类型")
                         }
-                        if(s.unknownGenreMovieCount>0)Text("${s.unknownGenreMovieCount} 部电影暂无类型资料",color=SeenSecondary,style=MaterialTheme.typography.bodySmall)
-                        if(s.genres.isNotEmpty())Text("同一部电影可计入多个类型",color=SeenSecondary,style=MaterialTheme.typography.bodySmall)
                     }
                 }
             }

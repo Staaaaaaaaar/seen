@@ -23,6 +23,7 @@ fun RatingControl(value:Int?,enabled:Boolean,onChange:(Int?)->Unit){
     BoxWithConstraints(Modifier.fillMaxWidth().testTag("personal-rating").semantics{
         contentDescription="个人评分"
         progressBarRangeInfo=ProgressBarRangeInfo((value?:0)/2f,0f..5f,9)
+        if(enabled)customActions=listOf(CustomAccessibilityAction("清除评分"){onChange(null);true})
         if(enabled)setProgress{score->onChange(if(score<=0f)null else (score*2).roundToInt().coerceIn(1,10));true}
     }){
         val stacked=maxWidth<340.dp||LocalDensity.current.fontScale>=1.4f
@@ -30,7 +31,7 @@ fun RatingControl(value:Int?,enabled:Boolean,onChange:(Int?)->Unit){
             for(i in 1..5){
                 val filled=(value?:0)>=i*2
                 val half=(value?:0)==i*2-1
-                Box(Modifier.size(48.dp).pointerInput(enabled,i){if(enabled)detectTapGestures{offset->onChange(if(offset.x<size.width/2f)i*2-1 else i*2)}}
+                Box(Modifier.size(48.dp).pointerInput(enabled,i,value){if(enabled)detectTapGestures{offset->val next=if(offset.x<size.width/2f)i*2-1 else i*2;onChange(if(value==next)null else next)}}
                     .semantics{
                         role=Role.Button;contentDescription="评为 $i 星"
                         if(enabled){onClick{onChange(i*2);true};customActions=listOf(CustomAccessibilityAction("评为 ${i-.5} 星"){onChange(i*2-1);true})}
@@ -43,7 +44,6 @@ fun RatingControl(value:Int?,enabled:Boolean,onChange:(Int?)->Unit){
         }}
         @Composable fun score(){Row(verticalAlignment=Alignment.CenterVertically){
             Text(value?.let{com.seen.film.domain.ViewingRules.ratingLabel(it)}?:"—",fontFamily=FontFamily.Serif,fontSize=24.sp)
-            if(value!=null)IconButton(onClick={onChange(null)},enabled=enabled){Icon(Icons.Outlined.Close,"清除评分",Modifier.size(16.dp),tint=SeenSecondary)}
         }}
         if(stacked)Column(verticalArrangement=Arrangement.spacedBy(4.dp)){stars();score()}
         else Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.SpaceBetween){stars();score()}

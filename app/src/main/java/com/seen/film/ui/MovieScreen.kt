@@ -121,14 +121,14 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                             HorizontalDivider(Modifier.padding(top=10.dp),color=MaterialTheme.colorScheme.outlineVariant.copy(alpha=.35f))
                         }
                     }
-                    if(entries.isEmpty())item{Text("还没有记录",Modifier.padding(horizontal=24.dp,vertical=18.dp),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)}
+                    if(entries.isEmpty())item{EmptyNotice("还没有记录","",Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=32.dp))}
 
                 }
                 if(scrolled)Box(Modifier.fillMaxWidth().height(with(density){topChromePx.toDp()}).background(chromeColor))
                 Row(Modifier.align(Alignment.TopCenter).fillMaxWidth().statusBarsPadding().padding(horizontal=14.dp,vertical=9.dp),horizontalArrangement=Arrangement.SpaceBetween){
-                    IconButton(onBack,modifier=Modifier.background(Color(0x99101C2A),CircleShape)){Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回",tint=Color.White)}
+                    IconButton(onBack,modifier=Modifier.background(Color(0x99302820),CircleShape)){Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回",tint=Color.White)}
                     Box{
-                        IconButton(onClick={menu=true},enabled=!busy,modifier=Modifier.background(Color(0x99101C2A),CircleShape)){Icon(Icons.Outlined.MoreHoriz,"电影操作",tint=Color.White)}
+                        IconButton(onClick={menu=true},enabled=!busy,modifier=Modifier.background(Color(0x99302820),CircleShape)){Icon(Icons.Outlined.MoreHoriz,"电影操作",tint=Color.White)}
                         DropdownMenu(menu,{menu=false}){DropdownMenuItem(text={Text("删除电影",color=MaterialTheme.colorScheme.error)},enabled=!metadataPreparing,onClick={menu=false;deleteMovie=true})}
                     }
                 }

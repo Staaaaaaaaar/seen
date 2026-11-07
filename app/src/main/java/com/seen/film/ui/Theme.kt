@@ -33,20 +33,20 @@ private val SeenTypography=Typography(
 @Composable
 fun SeenTheme(darkTheme:Boolean=isSystemInDarkTheme(),content: @Composable () -> Unit){
     val colors=if(darkTheme)darkColorScheme(
-        primary=Color(0xFFBFD1E7),onPrimary=Color(0xFF17293F),
-        background=Color(0xFF111C2B),onBackground=Color(0xFFE3EAF3),
-        surface=Color(0xFF111C2B),onSurface=Color(0xFFE3EAF3),
-        surfaceVariant=Color(0xFF213248),onSurfaceVariant=Color(0xFFA1B4CC),
-        surfaceContainer=Color(0xFF152235),surfaceContainerHigh=Color(0xFF202F43),
-        outline=Color(0xFF5B718B),outlineVariant=Color(0xFF34475F),
+        primary=Color(0xFFD4B28C),onPrimary=Color(0xFF30251C),
+        background=Color(0xFF231F1B),onBackground=Color(0xFFF2E8DB),
+        surface=Color(0xFF231F1B),onSurface=Color(0xFFF2E8DB),
+        surfaceVariant=Color(0xFF3B3128),onSurfaceVariant=Color(0xFFC6B5A2),
+        surfaceContainer=Color(0xFF2C2621),surfaceContainerHigh=Color(0xFF382F27),
+        outline=Color(0xFF9D8873),outlineVariant=Color(0xFF55483B),
         error=Color(0xFFFFB4AB),onError=Color(0xFF690005),
     )else lightColorScheme(
-        primary=Color(0xFF365877),onPrimary=Color.White,
-        background=Color(0xFFF7F9FC),onBackground=Color(0xFF203247),
-        surface=Color(0xFFF7F9FC),onSurface=Color(0xFF203247),
-        surfaceVariant=Color(0xFFE9EFF6),onSurfaceVariant=Color(0xFF5C7087),
-        surfaceContainer=Color(0xFFECF1F7),surfaceContainerHigh=Color(0xFFE3EAF3),
-        outline=Color(0xFF6C8097),outlineVariant=Color(0xFFD6DFE9),
+        primary=Color(0xFF785638),onPrimary=Color.White,
+        background=Color(0xFFF6F0E7),onBackground=Color(0xFF302A24),
+        surface=Color(0xFFF6F0E7),onSurface=Color(0xFF302A24),
+        surfaceVariant=Color(0xFFEBE1D3),onSurfaceVariant=Color(0xFF716353),
+        surfaceContainer=Color(0xFFF0E7DB),surfaceContainerHigh=Color(0xFFF2E8DB),
+        outline=Color(0xFF95816B),outlineVariant=Color(0xFFD9CDBD),
         error=Color(0xFFA63732),onError=Color.White,
     )
     MaterialTheme(colorScheme=colors,typography=SeenTypography,

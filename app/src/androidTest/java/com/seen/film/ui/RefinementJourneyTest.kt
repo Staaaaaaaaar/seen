@@ -23,10 +23,10 @@ class RefinementJourneyTest{
         }
         ui.onNodeWithContentDescription("排序电影").performClick()
         ui.onNodeWithText("旧到新").assertDoesNotExist();ui.onNodeWithText("新到旧").assertDoesNotExist()
-        ui.onNodeWithContentDescription("切换添加时间方向").performClick()
-        ui.waitUntil(15000){vm.app.libraryPreferences.read().direction==SortDirection.ASC}
-        ui.onNodeWithContentDescription("切换添加时间方向").performClick()
+        ui.onNodeWithContentDescription("切换电影片名方向").performClick()
         ui.waitUntil(15000){vm.app.libraryPreferences.read().direction==SortDirection.DESC}
+        ui.onNodeWithContentDescription("切换电影片名方向").performClick()
+        ui.waitUntil(15000){vm.app.libraryPreferences.read().direction==SortDirection.ASC}
     }
     @Test fun addingOpensSearchWithoutManualOrSourceBrand(){
         resetTestLibrary(ui,ui.activity.application as SeenTestApplication,vm)
@@ -49,6 +49,16 @@ class RefinementJourneyTest{
         ui.onNodeWithContentDescription("展开演职人员").assertDoesNotExist()
         ui.onNodeWithTag("credits-list").performScrollToNode(hasText("演员 8"))
         ui.onNodeWithText("演员 8").assertIsDisplayed()
+    }
+
+    @Test fun emptyStatisticsStillHaveAZeroChart(){
+        resetTestLibrary(ui,ui.activity.application as SeenTestApplication,vm)
+        ui.onNodeWithTag("tab-统计").performClick()
+        ui.waitUntil(15000){ui.onAllNodesWithTag("monthly-chart").fetchSemanticsNodes().isNotEmpty()}
+        ui.onNodeWithTag("statistics-movie-count").assertTextEquals("0")
+        ui.onNodeWithTag("monthly-chart").assertExists()
+        ui.onNodeWithTag("statistics-list").performScrollToNode(hasText("无记录"))
+        ui.onNodeWithText("无记录").assertExists()
     }
 
 }
