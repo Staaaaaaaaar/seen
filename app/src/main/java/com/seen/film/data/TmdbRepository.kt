@@ -52,6 +52,11 @@ class TmdbRepository(
             fetch(url, null, 20 * 1024 * 1024)
         }.also { currentCoroutineContext().ensureActive() }
     }
+    suspend fun portrait(path: String): ByteArray = withContext(Dispatchers.IO) {
+        require(path.matches(Regex("/[A-Za-z0-9._-]+")))
+        currentCoroutineContext().ensureActive()
+        fetch("https://image.tmdb.org/t/p/w185$path", null, 20 * 1024 * 1024).also { currentCoroutineContext().ensureActive() }
+    }
     companion object {
         internal fun parse(j: JSONObject, language: MetadataLanguage = MetadataLanguage.ZH_CN): TmdbMovie {
             fun text(value: JSONObject, key: String, limit: Int = 300): String? {

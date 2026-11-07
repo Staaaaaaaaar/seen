@@ -20,11 +20,12 @@ class TmdbJourneyTest {
 
     @Test fun missingCredentialTimeoutSelectionRotationAndReuse() {
         val app = ui.activity.application as SeenTestApplication
+        resetTestLibrary(ui,app,androidx.lifecycle.ViewModelProvider(ui.activity)[SeenViewModel::class.java])
         // This Application owns only an in-memory instrumentation database.
         runBlocking { withContext(Dispatchers.IO) { app.database.clearAllTables() } }
         app.getSharedPreferences("tmdb", 0).edit().clear().commit()
         waitFor("还没有电影")
-        ui.onNodeWithContentDescription("添加记录").performClick()
+        ui.onNodeWithContentDescription("添加影片").performClick()
         ui.onNodeWithText("搜索片名或原名").performTextInput("Fixture")
         closeSoftKeyboard()
         ui.onNodeWithText("搜索 TMDB").performClick()
@@ -43,26 +44,25 @@ class TmdbJourneyTest {
         ui.onNodeWithText("搜索 TMDB").performClick()
         waitFor("联网验收电影")
         ui.onNodeWithText("联网验收电影").performScrollTo().performClick()
-        waitFor("添加观看")
+        waitFor("添加影片")
         ui.activityRule.scenario.recreate()
-        waitFor("添加观看")
+        waitFor("添加影片")
         ui.onNodeWithText("保存").performClick()
-        waitFor("观看记录 · 1 次")
+        waitFor("联网验收电影")
+        org.junit.Assert.assertEquals(0,runBlocking{app.database.dao().viewingCount()})
         ui.onNodeWithTag("movie-detail-list").performScrollToIndex(0)
-        ui.onNodeWithText("导演 · 测试导演").assertExists()
+        ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasText("测试导演"))
+        ui.onNodeWithText("测试导演").assertExists()
         ui.onNodeWithContentDescription("返回").performClick()
-        ui.onNodeWithContentDescription("添加记录").performClick()
+        ui.onNodeWithContentDescription("添加影片").performClick()
         ui.onNodeWithText("搜索片名或原名").performTextInput("Fixture")
         closeSoftKeyboard()
         ui.onNodeWithText("搜索 TMDB").performClick()
         waitFor("TMDB · 第 1 页 · 资料来源 The Movie Database")
         ui.onAllNodesWithText("联网验收电影").onFirst().performScrollTo().performClick()
-        waitFor("添加感受（可选）")
-        ui.onNodeWithText("保存").performClick()
-        waitFor("观看记录 · 2 次")
-        ui.onNodeWithContentDescription("返回").performClick()
-        waitFor("记录")
-        ui.onNodeWithContentDescription("排序电影").performClick()
-        ui.onNodeWithText("1 部电影").assertExists()
+        waitFor("联网验收电影")
+        org.junit.Assert.assertEquals(1,runBlocking{app.database.dao().movieCount()})
+        org.junit.Assert.assertEquals(0,runBlocking{app.database.dao().viewingCount()})
+
     }
 }

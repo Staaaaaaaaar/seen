@@ -17,6 +17,7 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
     val library = snapshots.map { it.movies }
     suspend fun movie(id: String): Movie? = dao.movie(id)
     suspend fun viewing(id: String): Viewing? = dao.viewing(id)
+    suspend fun note(id: String): MovieNote? = dao.note(id)
 
     suspend fun addMovie(draft: ViewingDraft): String = access.write(LibraryWriteKind.CATALOG) {
         require(ViewingRules.validate(draft.copy(forWatchlist = true)).isEmpty()) { "请检查电影资料" }
@@ -97,6 +98,7 @@ class SeenRepository(private val database: SeenDatabase, private val access: Lib
                     releaseYear = draft.year.toIntOrNull(), posterKey = draft.posterKey, createdAt = now, updatedAt = now,
                 ))
             }
+            draft.posterKey?.let { dao.insertArchivedPosters(listOf(ArchivedPoster(movieId,it))) }
             check(dao.movie(movieId) != null) { "电影已不存在，请重新选择" }
             if (draft.forWatchlist) {
                 check(dao.setWanted(movieId, true) == 1)

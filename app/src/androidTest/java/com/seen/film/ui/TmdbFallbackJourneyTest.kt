@@ -25,9 +25,10 @@ class TmdbFallbackJourneyTest {
 
     @Test fun emptyUnauthorizedPagingAndPosterFailureKeepRecordingAvailable() {
         val app = ui.activity.application as SeenTestApplication
+        resetTestLibrary(ui,app,androidx.lifecycle.ViewModelProvider(ui.activity)[SeenViewModel::class.java])
         runBlocking { withContext(Dispatchers.IO) { app.database.clearAllTables() }; app.credentials.save("fixture.token") }
         waitFor("还没有电影")
-        ui.onNodeWithContentDescription("添加记录").performClick()
+        ui.onNodeWithContentDescription("添加影片").performClick()
         search("empty")
         waitFor("没有找到电影，可修改关键词或手动添加。")
         ui.onNodeWithText("手动添加电影").assertIsEnabled()
@@ -44,10 +45,11 @@ class TmdbFallbackJourneyTest {
         search("posterfailure")
         waitFor("海报失败验收电影")
         ui.onNodeWithText("海报失败验收电影").performScrollTo().performClick()
-        waitFor("添加观看")
-        ui.onNodeWithText("选择海报（可选）").performScrollTo().assertExists()
+        waitFor("添加影片")
+        ui.onNodeWithText("选择海报（可选）").assertDoesNotExist()
         ui.onNodeWithText("保存").performClick()
-        waitFor("观看记录 · 1 次")
+        waitFor("海报失败验收电影")
+        org.junit.Assert.assertEquals(0,runBlocking{app.database.dao().viewingCount()})
         ui.onNodeWithTag("movie-detail-list").performScrollToIndex(0)
         ui.onNodeWithText("海报失败验收电影").assertExists()
     }

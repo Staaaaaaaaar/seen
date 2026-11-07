@@ -33,14 +33,7 @@ class NavigationJourneyTest {
     private fun waitFor(text: String) = ui.waitUntil(15_000) { ui.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
 
     @Before fun isolatedLibrary() {
-        ui.waitUntil(15_000) { vm.draftReady.value && !vm.busy.value }
-        ui.runOnIdle { vm.discard {} }
-        ui.waitUntil(15_000) { !vm.busy.value && vm.draft.value == null }
-        runBlocking { withContext(Dispatchers.IO) { app.database.clearAllTables() } }
-        waitFor("还没有电影")
-        ui.onNodeWithText("全部").performClick()
-        ui.onNodeWithContentDescription("排序电影").performClick()
-        ui.onNodeWithText("添加时间").performClick()
+        resetTestLibrary(ui, app, vm)
     }
 
     @Test fun twoRootTabsAndSettingsReturnToTheirSource() {
@@ -105,7 +98,7 @@ class NavigationJourneyTest {
     }
 
     private fun screenshot(name: String) {
-        ui.waitUntil(15_000) { name == "library" || name == "settings" || name == "watchlist" || ui.onAllNodesWithTag("poster-loaded").fetchSemanticsNodes().isNotEmpty() }
+        ui.waitUntil(15_000) { name == "library" || name == "settings" || name == "editor" || ui.onAllNodesWithTag("poster-loaded").fetchSemanticsNodes().isNotEmpty() }
         ui.onRoot().captureToImage() // Synchronize the rendered frame before the full-device screenshot.
         val bitmap = InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()
         val file = File(app.getExternalFilesDir("ui-review"), "$name.png")
@@ -146,15 +139,16 @@ class NavigationJourneyTest {
         ui.onNodeWithTag("library-search").assertTextContains("完美")
         ui.onNodeWithText("完美的日子").performClick()
         screenshot("movie")
-        ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasText("再看一次"))
-        ui.onNodeWithText("再看一次").performClick()
+        ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasContentDescription("新增记录或留言"))
+        ui.onNodeWithContentDescription("新增记录或留言").performClick()
+        ui.onNodeWithText("这次观看").performClick()
         screenshot("editor")
         // An older date must focus this new record rather than the first chronological entry.
-        ui.runOnIdle { vm.update { it.copy(date = "1999-01-01", notes = "本次补记需要自动定位", rating = null) } }
+        ui.runOnIdle { vm.updateRecord { it.copy(date = "1999-01-01", body = "本次补记需要自动定位") } }
         ui.onNodeWithText("保存").performClick()
         waitFor("本次补记需要自动定位")
         ui.onNodeWithText("本次补记需要自动定位").assertIsDisplayed()
-        ui.onNodeWithText("收起感受").assertIsDisplayed()
+
         assertEquals(6, runBlocking { app.database.dao().movieCount() })
         assertEquals(2, vm.library.value!!.first { it.movie.id == firstMovie }.viewings.size)
         ui.onNodeWithContentDescription("返回").performClick()

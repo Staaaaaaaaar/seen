@@ -32,7 +32,7 @@ fun LibraryScreen(
     all: List<MovieHistory>?, draft: ViewingDraft?, canEdit: Boolean,
     posterFile: (String?) -> File?, onAdd: () -> Unit, onMovie: (String) -> Unit, onResume: () -> Unit,
     onSettings: () -> Unit = {}, initialQuery: LibraryQuery = LibraryQuery(),
-    onQueryChanged: (LibraryQuery) -> Unit = {}, languageCode: String = "zh-CN",
+    onQueryChanged: (LibraryQuery) -> Unit = {}, languageCode: String = "zh-CN", hasPendingRecord: Boolean = false,
 ) {
     var text by rememberSaveable { mutableStateOf("") }
     var search by rememberSaveable { mutableStateOf(false) }
@@ -57,7 +57,7 @@ fun LibraryScreen(
                 placeholder={Text("搜索片名、导演或类型")},singleLine=true,
                 trailingIcon={IconButton(onClick={text="";search=false}){Icon(Icons.Outlined.Close,"关闭搜索")}})
             LibraryControls(query,::change){sortSheet=true}
-            if(draft!=null)TextButton(onClick=onResume,enabled=canEdit,modifier=Modifier.padding(horizontal=14.dp)){
+            if(draft!=null||hasPendingRecord)TextButton(onClick=onResume,enabled=canEdit,modifier=Modifier.padding(horizontal=14.dp)){
                 Icon(Icons.Outlined.Edit,null,Modifier.size(16.dp));Spacer(Modifier.width(8.dp));Text("继续未完成的编辑",style=MaterialTheme.typography.bodySmall)
             }
             when {

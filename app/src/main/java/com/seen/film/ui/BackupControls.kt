@@ -22,6 +22,7 @@ fun BackupControls(vm: SeenViewModel, allowExport: Boolean = true, allowImport: 
     val busy by vm.busy.collectAsStateWithLifecycle()
     val ready by vm.draftReady.collectAsStateWithLifecycle()
     val draft by vm.draft.collectAsStateWithLifecycle()
+    val recordDraft by vm.recordDraft.collectAsStateWithLifecycle()
     val preview by vm.restorePreview.collectAsStateWithLifecycle()
     val prepared by vm.preparedExport.collectAsStateWithLifecycle()
     val message by vm.backupMessage.collectAsStateWithLifecycle()
@@ -46,8 +47,8 @@ fun BackupControls(vm: SeenViewModel, allowExport: Boolean = true, allowImport: 
         if (allowExport) Button(onClick = vm::prepareExport, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text("导出全部数据") }
         if (allowImport && preview == null) {
             OutlinedButton(onClick = { open.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) },
-                enabled = !busy && ready && draft == null, modifier = Modifier.fillMaxWidth()) { Text("选择备份恢复") }
-            if (draft != null) Text("请先保存或放弃未完成的编辑，再恢复备份。")
+                enabled = !busy && ready && draft == null && recordDraft == null, modifier = Modifier.fillMaxWidth()) { Text("选择备份恢复") }
+            if (draft != null || recordDraft != null) Text("请先保存或放弃未完成的编辑，再恢复备份。")
         }
         preview?.let { value ->
             HorizontalDivider()

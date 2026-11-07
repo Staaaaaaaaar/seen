@@ -6,6 +6,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.seen.film.SeenApplication
 import com.seen.film.data.MovieHistory
+import com.seen.film.domain.RecordDraft
+import com.seen.film.domain.RecordKind
+import com.seen.film.domain.RecordRules
 import com.seen.film.domain.ViewingDraft
 import com.seen.film.domain.ViewingRules
 import kotlinx.coroutines.*
@@ -51,7 +54,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun previewBackup(uri: Uri?) {
         if (uri == null || _busy.value || _restorePreview.value != null) return
-        if (!_draftReady.value || _draft.value != null) { _error.value = "请先保存或放弃未完成的编辑，再恢复备份"; return }
+        if (!_draftReady.value || _draft.value != null || _recordDraft.value != null) { _error.value = "请先保存或放弃未完成的编辑，再恢复备份"; return }
         _busy.value = true; _backupMessage.value = "正在读取并预检备份…"
         backupJob = viewModelScope.launch(start = CoroutineStart.UNDISPATCHED) {
             try { withContext(NonCancellable) { _restorePreview.value = app.backups.preview(uri); _backupMessage.value = null } }
@@ -120,8 +123,15 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     private val _fieldErrors = MutableStateFlow<Map<String, String>>(emptyMap())
     val fieldErrors = _fieldErrors.asStateFlow()
     private var baseline: ViewingDraft? = null
+    private var recoveredMovieDraft = false
+    private var recoveredRecordDraft = false
     private var pendingWrite: Job? = null
-    val isDirty get() = _draft.value != baseline
+    private var pendingRecordWrite: Job? = null
+    private val _recordDraft = MutableStateFlow<RecordDraft?>(null)
+    val recordDraft = _recordDraft.asStateFlow()
+    private var recordBaseline: RecordDraft? = null
+    val isRecordDirty get() = _recordDraft.value != null && (recoveredRecordDraft || _recordDraft.value != recordBaseline)
+    val isDirty get() = _draft.value != null && (recoveredMovieDraft || _draft.value != baseline)
 
     init {
         viewModelScope.launch {
@@ -130,12 +140,20 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val recovered = app.drafts.read()
+                recoveredMovieDraft = recovered != null
                 // A committed create whose draft cleanup was interrupted becomes
                 // an edit of that stable ID, rather than an editable new movie.
                 _draft.value = if (recovered != null && !recovered.isEditing &&
                     app.repository.viewing(recovered.key) != null) {
-                    recovered.copy(isNewMovie = false, isEditing = true)
+                    recovered.copy(isNewMovie = false, isEditing = true, legacyRatingPending = false)
                 } else recovered
+                val record = app.drafts.readRecord()
+                recoveredRecordDraft = record != null
+                _recordDraft.value = record?.let { value ->
+                    val exists = if (value.kind == RecordKind.VIEWING) app.repository.viewing(value.key) != null else app.repository.note(value.key) != null
+                    if (exists && !value.isEditing) value.copy(isEditing = true) else value
+                }
+                recordBaseline = _recordDraft.value
                 _draftReady.value = true
             } catch (e: Exception) {
                 // Keep editing disabled rather than overwrite an unreadable draft.
@@ -162,10 +180,72 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             try {
                 val value = ViewingDraft(movieOnly = true)
-                app.drafts.write(value); baseline = value; _draft.value = value; _fieldErrors.value = emptyMap(); navigate(value.key)
+                app.drafts.write(value); recoveredMovieDraft = false; baseline = value; _draft.value = value; _fieldErrors.value = emptyMap(); navigate(value.key)
             } catch (e: Exception) { report(e,"无法开始编辑") }
             finally { _busy.value = false }
         }
+    }
+    fun openRecord(movieId: String, kind: RecordKind, id: String? = null, navigate: (String) -> Unit) {
+        if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
+        if (_draft.value != null) { _error.value = "请先保存或放弃未完成的电影编辑"; return }
+        _recordDraft.value?.let { navigate(it.key); return }
+        _busy.value = true
+        viewModelScope.launch {
+            try {
+                check(app.repository.movie(movieId) != null) { "电影已不存在" }
+                val viewing = if (kind == RecordKind.VIEWING) id?.let { app.repository.viewing(it) } else null
+                val note = if (kind == RecordKind.NOTE) id?.let { app.repository.note(it) } else null
+                check(id == null || viewing != null || note != null) { "这条记录已不存在" }
+                val value = if (viewing != null) RecordDraft(viewing.id,movieId,kind,true,viewing.viewedDate,viewing.viewedTime.orEmpty(),viewing.location.orEmpty(),viewing.notes.orEmpty())
+                    else if (note != null) RecordDraft(note.id,movieId,kind,true,note.recordedDate,note.recordedTime.orEmpty(),note.location.orEmpty(),note.body)
+                    else RecordDraft(movieId=movieId,kind=kind,time=java.time.LocalTime.now().withSecond(0).withNano(0).toString())
+                app.drafts.writeRecord(value);recoveredRecordDraft=false;recordBaseline=value;_recordDraft.value=value;_fieldErrors.value=emptyMap();navigate(value.key)
+            } catch(e:Exception){report(e,"无法开始记录")}
+            finally{_busy.value=false}
+        }
+    }
+    fun updateRecord(transform: (RecordDraft) -> RecordDraft) {
+        if (_busy.value) return
+        val current = _recordDraft.value ?: return
+        _recordDraft.value=transform(current);_fieldErrors.value=emptyMap();persistRecord()
+    }
+    private fun persistRecord() {
+        if (_busy.value) return
+        val current=_recordDraft.value ?: return
+        pendingRecordWrite?.cancel()
+        pendingRecordWrite=viewModelScope.launch{delay(200);try{app.drafts.writeRecord(current)}catch(e:Exception){report(e,"草稿暂存失败，请先尝试保存")}}
+    }
+    fun saveRecord(onSaved: (String,String) -> Unit) {
+        val value=_recordDraft.value ?: return
+        if (_busy.value) return
+        _fieldErrors.value=RecordRules.validate(value)
+        if (_fieldErrors.value.isNotEmpty()) return
+        _busy.value=true
+        viewModelScope.launch{
+            try{
+                pendingRecordWrite?.cancelAndJoin();app.drafts.writeRecord(value);app.repository.saveRecord(value)
+                try{app.drafts.clearRecord()}catch(e:Exception){report(e,"记录已保存，但临时草稿清理失败")}
+                _recordDraft.value=null;recordBaseline=null;recoveredRecordDraft=false;_fieldErrors.value=emptyMap();onSaved(value.movieId,"${value.kind.name}:${value.key}")
+            }catch(e:Exception){report(e,"保存失败，输入仍保留，请重试")}
+            finally{_busy.value=false}
+        }
+    }
+    fun discardRecord(onDone: () -> Unit) {
+        if (_busy.value) return
+        if (_recordDraft.value == null) { onDone(); return }
+        _busy.value=true
+        viewModelScope.launch{try{pendingRecordWrite?.cancelAndJoin();app.drafts.clearRecord();_recordDraft.value=null;recordBaseline=null;recoveredRecordDraft=false;onDone()}
+            catch(e:Exception){report(e,"无法放弃编辑，请重试")}finally{_busy.value=false}}
+    }
+    fun setMovieRating(movieId: String, value: Int?) {
+        if (_busy.value || _restorePreview.value != null) return
+        _busy.value=true
+        viewModelScope.launch{try{app.repository.setPersonalRating(movieId,value)}catch(e:Exception){report(e,"评分保存失败，请重试")}finally{_busy.value=false}}
+    }
+    fun deletePersonalRecord(kind: RecordKind, id: String) {
+        if (_busy.value || _restorePreview.value != null) return
+        _busy.value=true
+        viewModelScope.launch{try{app.repository.deleteRecord(kind,id)}catch(e:Exception){report(e,"删除失败，请重试")}finally{_busy.value=false}}
     }
     fun openEditor(movieId: String? = null, viewingId: String? = null, forWatchlist: Boolean = false, navigate: (String) -> Unit) {
         if (_busy.value || !_draftReady.value || _restorePreview.value != null) return
@@ -190,7 +270,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                     rating = viewing?.ratingHalfStars, notes = viewing?.notes.orEmpty(),
                 )
                 app.drafts.write(value)
-                baseline = value; _draft.value = value; _fieldErrors.value = emptyMap()
+                recoveredMovieDraft = false; baseline = value; _draft.value = value; _fieldErrors.value = emptyMap()
                 navigate(value.key)
             } catch (e: Exception) { report(e, "无法开始编辑") }
             finally { _busy.value = false }
@@ -205,6 +285,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     }
     fun persistDraft() {
         if (_busy.value) return
+        persistRecord()
         val value = _draft.value ?: return
         pendingWrite?.cancel()
         pendingWrite = viewModelScope.launch {
@@ -228,7 +309,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                 // also makes a recovered post-commit draft safe to save again.
                 try { app.drafts.clear() }
                 catch (e: Exception) { report(e, "观看已保存，但临时草稿清理失败") }
-                _draft.value = null; baseline = null; _fieldErrors.value = emptyMap()
+                _draft.value = null; baseline = null; recoveredMovieDraft = false; _fieldErrors.value = emptyMap()
                 onSaved(movieId, value.key)
             } catch (e: Exception) { report(e, "保存失败，输入内容仍保留，请重试") }
             finally { _busy.value = false }
@@ -242,7 +323,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 pendingWrite?.cancelAndJoin()
                 app.drafts.clear()
-                _draft.value = null; baseline = null
+                _draft.value = null; baseline = null; recoveredMovieDraft = false
                 onDone()
                 // File cleanup must not strand the editor after the draft is gone.
                 if (value.isNewMovie) {
@@ -330,7 +411,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
                     releaseDate = movie.releaseDate, directorNames = movie.directors,
                     runtimeMinutes = movie.runtime, productionCountries = movie.countries, posterKey = poster)
                 app.drafts.write(value)
-                baseline = value; _draft.value = value; _fieldErrors.value = emptyMap()
+                recoveredMovieDraft = false; baseline = value; _draft.value = value; _fieldErrors.value = emptyMap()
                 navigate(value.key)
             } catch (e: Exception) { report(e, "无法获取电影资料，请重试或手动添加") }
             finally { _busy.value = false }
@@ -339,7 +420,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteMovie(id: String, onDeleted: () -> Unit) {
         if (_busy.value || _restorePreview.value != null) return
         if (!_draftReady.value) return
-        if (_draft.value?.movieId == id) {
+        if (_draft.value?.movieId == id || _recordDraft.value?.movieId == id) {
             _error.value = "请先保存或放弃这部电影未完成的编辑"
             return
         }

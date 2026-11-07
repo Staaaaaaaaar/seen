@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 @Composable
-fun Poster(file: File?, modifier: Modifier = Modifier) {
+fun Poster(file: File?, modifier: Modifier = Modifier, cornerRadius: androidx.compose.ui.unit.Dp = 4.dp) {
     val bitmap by produceState<ImageBitmap?>(null, file?.path) {
         value = withContext(Dispatchers.IO) {
             file?.let {
@@ -38,7 +38,7 @@ fun Poster(file: File?, modifier: Modifier = Modifier) {
             }
         }
     }
-    Box(modifier.testTag(if (bitmap != null) "poster-loaded" else "poster-placeholder").aspectRatio(2f / 3f).clip(RoundedCornerShape(8.dp))
+    Box(modifier.testTag(if (bitmap != null) "poster-loaded" else "poster-placeholder").aspectRatio(2f / 3f).clip(RoundedCornerShape(cornerRadius))
         .background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
         if (bitmap != null) Image(bitmap!!, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         else Icon(Icons.Outlined.Movie, null, Modifier.size(30.dp), tint = SeenSecondary)
