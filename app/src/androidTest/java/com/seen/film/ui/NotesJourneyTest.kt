@@ -35,7 +35,7 @@ class NotesJourneyTest {
         ui.onNodeWithTag("record-body").performTextInput("A thought 🎬")
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         ui.onNodeWithTag("record-location").performScrollTo().performTextInput("Home")
-        ui.onNodeWithTag("record-time").performScrollTo().performTextReplacement("20:15")
+        ui.runOnIdle{vm.updateRecord{it.copy(time="20:15")}}
         androidx.test.espresso.Espresso.closeSoftKeyboard()
         ui.activityRule.scenario.recreate()
         ui.onNodeWithTag("record-body").assertTextContains("A thought 🎬")
@@ -62,7 +62,7 @@ class NotesJourneyTest {
         assertEquals(9,runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars})
         ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasTestTag("personal-rating"))
         ui.onNodeWithTag("personal-rating").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress){it(0f)}
-        ui.waitUntil(15000){runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars==null}}
+        ui.waitUntil(15000){runBlocking{app.database.dao().allMovies().single().personalRatingHalfStars==0}}
         assertEquals(1,runBlocking{app.database.dao().viewingCount()})
     }
     @Test fun emptyNoteCannotSaveAndBackKeepsDraftUntilExplicitDiscard(){
@@ -99,12 +99,12 @@ class NotesJourneyTest {
             app.repository.saveRecord(RecordDraft(movieId=movie.id,kind=RecordKind.NOTE,body=words))
         }
         ui.onNodeWithContentDescription("返回").performClick();ui.onNodeWithText("Record film").performClick()
-        ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasContentDescription("展开简介"))
-        ui.onNodeWithContentDescription("展开简介").performClick()
-        ui.onNodeWithContentDescription("收起简介").assertExists()
-        ui.onNodeWithTag("movie-detail-list").performScrollToNode(hasContentDescription("展开正文"))
-        ui.onNodeWithContentDescription("展开正文").performClick()
-        ui.onNodeWithContentDescription("收起正文").assertExists()
+        ui.onNodeWithTag("movie-detail-list").performScrollToNode(SemanticsMatcher("展开简介文本"){it.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick)?.label=="展开简介"})
+        ui.onNode(SemanticsMatcher("展开简介文本"){it.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick)?.label=="展开简介"}).performClick()
+        ui.onNode(SemanticsMatcher("收起简介文本"){it.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick)?.label=="收起简介"}).assertExists()
+        ui.onNodeWithTag("movie-detail-list").performScrollToNode(SemanticsMatcher("展开正文文本"){it.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick)?.label=="展开正文"})
+        ui.onNode(SemanticsMatcher("展开正文文本"){it.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick)?.label=="展开正文"}).performClick()
+        ui.onNode(SemanticsMatcher("收起正文文本"){it.config.getOrNull(androidx.compose.ui.semantics.SemanticsActions.OnClick)?.label=="收起正文"}).assertExists()
     }
 
     @Test fun committedMovieOnlyDraftRecoversAsConfirmationWithoutIgnoredEdits(){

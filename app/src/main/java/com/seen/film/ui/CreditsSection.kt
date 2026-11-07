@@ -35,13 +35,13 @@ fun CreditsSection(credits:List<MovieCredit>,portraits:PortraitStore?=null,direc
         LazyRow(modifier=Modifier.testTag("credits-list"),horizontalArrangement=Arrangement.spacedBy(16.dp)){
             items(all,key={it.creditKey}){credit->
                 val file by produceState<File?>(null,credit.profilePath){value=credit.profilePath?.let{portraits?.file(it)}}
-                Column(Modifier.width(92.dp).clickable{selected=credit},verticalArrangement=Arrangement.spacedBy(7.dp)){
-                    if(file!=null)Poster(file,Modifier.width(72.dp),cornerRadius=4.dp)
+                Column(Modifier.width(72.dp).clickable{selected=credit},verticalArrangement=Arrangement.spacedBy(6.dp)){
+                    if(file!=null)Poster(file,Modifier.fillMaxWidth(),cornerRadius=4.dp)
                     else Surface(color=MaterialTheme.colorScheme.surfaceVariant,shape=MaterialTheme.shapes.small){
-                        Box(Modifier.width(72.dp).height(108.dp),contentAlignment=Alignment.Center){Text(credit.name.take(1),style=MaterialTheme.typography.titleLarge,color=SeenSecondary)}
+                        Box(Modifier.fillMaxWidth().height(108.dp),contentAlignment=Alignment.Center){Text(credit.name.take(1),style=MaterialTheme.typography.titleLarge,color=SeenSecondary)}
                     }
-                    Text(credit.name,style=MaterialTheme.typography.bodySmall,maxLines=2,overflow=TextOverflow.Ellipsis)
-                    Text(credit.character?.takeIf{it.isNotBlank()}?:credit.job?.let(::creditJobLabel)?:"演员",style=MaterialTheme.typography.labelMedium,color=SeenSecondary,maxLines=2,overflow=TextOverflow.Ellipsis)
+                    Text(credit.name,Modifier.fillMaxWidth(),style=MaterialTheme.typography.bodySmall,maxLines=2,overflow=TextOverflow.Ellipsis)
+                    Text(credit.character?.takeIf{it.isNotBlank()}?:credit.job?.let(::creditJobLabel)?:"演员",Modifier.fillMaxWidth(),style=MaterialTheme.typography.labelMedium,color=SeenSecondary,maxLines=2,overflow=TextOverflow.Ellipsis)
                 }
             }
         }

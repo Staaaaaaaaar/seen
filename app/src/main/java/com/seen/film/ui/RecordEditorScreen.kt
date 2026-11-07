@@ -2,6 +2,8 @@
 package com.seen.film.ui
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.content.DialogInterface
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,6 +18,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.seen.film.domain.*
 import java.time.LocalDate
+import java.time.LocalTime
+import java.util.Locale
 
 @Composable
 fun RecordEditorScreen(vm:SeenViewModel,draft:RecordDraft,onBack:()->Unit,onSaved:(String,String)->Unit){
@@ -26,6 +30,15 @@ fun RecordEditorScreen(vm:SeenViewModel,draft:RecordDraft,onBack:()->Unit,onSave
     fun pickDate(){val date=runCatching{LocalDate.parse(draft.date)}.getOrDefault(LocalDate.now())
         DatePickerDialog(context,{_,y,m,d->vm.updateRecord{it.copy(date=LocalDate.of(y,m+1,d).toString())}},date.year,date.monthValue-1,date.dayOfMonth)
             .apply{datePicker.maxDate=System.currentTimeMillis();show()}}
+    fun pickTime(){
+        val time=runCatching{LocalTime.parse(draft.time)}.getOrDefault(LocalTime.now())
+        TimePickerDialog(context,{_,hour,minute->
+            vm.updateRecord{it.copy(time=String.format(Locale.ROOT,"%02d:%02d",hour,minute))}
+        },time.hour,time.minute,true).apply{
+            setButton(DialogInterface.BUTTON_NEUTRAL,"不记录时间"){_,_->vm.updateRecord{it.copy(time="")}}
+            show()
+        }
+    }
     Scaffold(topBar={TopAppBar(title={Text(if(draft.isEditing)"编辑$title" else title,style=MaterialTheme.typography.titleMedium)},navigationIcon={
         IconButton(onBack,enabled=!busy){Icon(Icons.AutoMirrored.Outlined.ArrowBack,"返回")}
     },actions={TextButton(onClick={vm.saveRecord(onSaved)},enabled=!busy){Text(if(busy)"处理中…" else "保存")}})}){padding->
@@ -37,8 +50,13 @@ fun RecordEditorScreen(vm:SeenViewModel,draft:RecordDraft,onBack:()->Unit,onSave
                     TextButton(onClick=::pickDate,enabled=!busy,modifier=Modifier.heightIn(min=56.dp).testTag("record-date")){Text(draft.date,style=MaterialTheme.typography.bodyLarge)}
                     errors["date"]?.let{Text(it,color=MaterialTheme.colorScheme.error)}
                 }}
-                @Composable fun time(modifier:Modifier){OutlinedTextField(draft.time,{v->vm.updateRecord{it.copy(time=v)}},modifier.testTag("record-time"),label={Text("时间（可选）")},
-                    singleLine=true,enabled=!busy,isError=errors.containsKey("time"),supportingText={errors["time"]?.let{Text(it)}})}
+                @Composable fun time(modifier:Modifier){Column(modifier){
+                    Text("时间（可选）",style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
+                    TextButton(onClick=::pickTime,enabled=!busy,modifier=Modifier.heightIn(min=56.dp).testTag("record-time")){
+                        Text(draft.time.ifBlank{"未设置"},style=MaterialTheme.typography.bodyLarge)
+                    }
+                    errors["time"]?.let{Text(it,color=MaterialTheme.colorScheme.error)}
+                }}
                 if(maxWidth<320.dp||LocalDensity.current.fontScale>=1.4f)Column(verticalArrangement=Arrangement.spacedBy(12.dp)){date(Modifier.fillMaxWidth());time(Modifier.fillMaxWidth())}
                 else Row(horizontalArrangement=Arrangement.spacedBy(14.dp)){date(Modifier.weight(1f));time(Modifier.weight(1f))}
             }

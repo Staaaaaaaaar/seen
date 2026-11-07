@@ -4,6 +4,8 @@ package com.seen.film.ui
 import android.app.Activity
 import androidx.core.view.WindowCompat
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -91,21 +93,27 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                     item{
                         Column(Modifier.padding(horizontal=24.dp).padding(top=26.dp)){
                             HorizontalDivider(color=MaterialTheme.colorScheme.outlineVariant.copy(alpha=.6f))
-                            Row(Modifier.fillMaxWidth().padding(top=9.dp,bottom=4.dp),verticalAlignment=Alignment.CenterVertically){
+                            Row(Modifier.fillMaxWidth().padding(top=4.dp),verticalAlignment=Alignment.CenterVertically){
                                 Icon(SeenIcons.Journal,"个人记录",Modifier.size(24.dp),tint=MaterialTheme.colorScheme.primary)
                                 Spacer(Modifier.weight(1f))
                                 IconButton(onClick={recordChoice=true},enabled=!busy,modifier=Modifier.testTag("record-add")){Icon(Icons.Outlined.Edit,"新增记录或留言",Modifier.size(21.dp))}
                             }
                         }
                     }
-                    itemsIndexed(entries,key={_,entry->entry.key}){_,entry->
+                    itemsIndexed(entries,key={_,entry->entry.key}){index,entry->
                         var entryMenu by remember{mutableStateOf(false)}
-                        Column(Modifier.padding(horizontal=24.dp).padding(top=14.dp,bottom=4.dp),verticalArrangement=Arrangement.spacedBy(9.dp)){
-                            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
-                                Text(entry.date+(entry.time?.let{"  $it"}?:""),Modifier.weight(1f),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
-                                if(entry.kind==RecordKind.VIEWING)Icon(SeenIcons.Film,"观看记录",Modifier.size(15.dp),tint=MaterialTheme.colorScheme.primary)
+                        Column(Modifier.padding(horizontal=24.dp)){
+                            // Align the visible controls with the metadata near the bottom of
+                            // this row, keeping the full menu target above the body text.
+                            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.Bottom){
+                                Text(entry.date+(entry.time?.let{"  $it"}?:""),Modifier.weight(1f).padding(bottom=8.dp),style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
+                                if(entry.kind==RecordKind.VIEWING)Icon(SeenIcons.Watched,"观看记录",Modifier.padding(bottom=10.dp,end=4.dp).size(15.dp),tint=MaterialTheme.colorScheme.primary)
                                 Box{
-                                    IconButton(onClick={entryMenu=true},enabled=!busy){Icon(Icons.Outlined.MoreHoriz,"${entry.date} ${if(entry.kind==RecordKind.VIEWING)"观看记录" else "留言"}操作",Modifier.size(19.dp))}
+                                    IconButton(onClick={entryMenu=true},enabled=!busy,modifier=Modifier.size(48.dp)){
+                                        Box(Modifier.fillMaxSize().padding(bottom=8.dp),contentAlignment=Alignment.BottomCenter){
+                                            Icon(Icons.Outlined.MoreHoriz,"${entry.date} ${if(entry.kind==RecordKind.VIEWING)"观看记录" else "留言"}操作",Modifier.size(19.dp),tint=SeenSecondary)
+                                        }
+                                    }
                                     DropdownMenu(entryMenu,{entryMenu=false}){
                                         DropdownMenuItem(text={Text("编辑")},onClick={entryMenu=false;onRecord(id,entry.kind,entry.id)})
                                         DropdownMenuItem(text={Text("删除",color=MaterialTheme.colorScheme.error)},onClick={entryMenu=false;deleting=entry})
@@ -113,12 +121,14 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
                                 }
                             }
                             entry.body?.let{body->
-                                ExpandableMovieText(body,5,expandedBody==entry.key,{expandedBody=if(expandedBody==entry.key)null else entry.key},"正文",MaterialTheme.typography.bodyLarge.copy(fontFamily=SeenSerif,fontSize=15.sp,lineHeight=30.sp))
+                                ExpandableMovieText(body,5,expandedBody==entry.key,{expandedBody=if(expandedBody==entry.key)null else entry.key},"正文",MaterialTheme.typography.bodyLarge.copy(fontFamily=SeenSerif,fontSize=15.sp,lineHeight=26.sp))
                             }
-                            entry.location?.let{Row(horizontalArrangement=Arrangement.spacedBy(7.dp),verticalAlignment=Alignment.CenterVertically){
+                            entry.location?.let{Row(Modifier.padding(top=if(entry.body.isNullOrBlank())0.dp else 10.dp),horizontalArrangement=Arrangement.spacedBy(7.dp),verticalAlignment=Alignment.CenterVertically){
                                 Icon(Icons.Outlined.LocationOn,null,Modifier.size(13.dp),tint=SeenSecondary);Text(it,style=MaterialTheme.typography.bodySmall,color=SeenSecondary)
                             }}
-                            HorizontalDivider(Modifier.padding(top=10.dp),color=MaterialTheme.colorScheme.outlineVariant.copy(alpha=.35f))
+                            if(index<entries.lastIndex){
+                                HorizontalDivider(Modifier.padding(top=20.dp),color=MaterialTheme.colorScheme.outlineVariant.copy(alpha=.35f))
+                            }
                         }
                     }
                     if(entries.isEmpty())item{EmptyNotice("还没有记录","",Modifier.fillMaxWidth().padding(horizontal=24.dp,vertical=32.dp))}
@@ -139,7 +149,7 @@ fun MovieScreen(id:String,focusViewingId:String?,vm:SeenViewModel,all:List<Movie
         Column(Modifier.padding(horizontal=24.dp).padding(bottom=28.dp),verticalArrangement=Arrangement.spacedBy(5.dp)){
             listOf(RecordKind.VIEWING to "这次观看",RecordKind.NOTE to "一段想法").forEach{(kind,label)->
                 TextButton(onClick={recordChoice=false;onRecord(id,kind,null)},modifier=Modifier.fillMaxWidth().heightIn(min=64.dp),contentPadding=PaddingValues(8.dp)){
-                    Icon(if(kind==RecordKind.VIEWING)SeenIcons.Film else Icons.Outlined.Edit,null,Modifier.size(22.dp));Spacer(Modifier.width(18.dp))
+                    Icon(if(kind==RecordKind.VIEWING)SeenIcons.Watched else Icons.Outlined.Edit,null,Modifier.size(22.dp));Spacer(Modifier.width(18.dp))
                     Column(Modifier.weight(1f)){Text(label,style=MaterialTheme.typography.titleMedium);Text(if(kind==RecordKind.VIEWING)"计入观看次数，可留下时间、地点与感受" else "留下想法，不增加观看次数",style=MaterialTheme.typography.bodySmall,color=SeenSecondary)}
                 }
             }
@@ -185,13 +195,14 @@ private fun MovieHero(movie:Movie,vm:SeenViewModel){
 @Composable
 private fun ExpandableMovieText(text:String,lines:Int,expanded:Boolean,onToggle:()->Unit,label:String,style:androidx.compose.ui.text.TextStyle){
     var overflow by remember(text){mutableStateOf(false)}
-    Column{
-        SelectionContainer{
-            Text(text,style=style,maxLines=if(expanded)Int.MAX_VALUE else lines,overflow=TextOverflow.Ellipsis,
-                onTextLayout={if(!expanded)overflow=it.hasVisualOverflow})
-        }
-        if(overflow||expanded)IconButton(onClick=onToggle,modifier=Modifier.align(Alignment.End)){
-            Icon(if(expanded)Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,if(expanded)"收起$label" else "展开$label",Modifier.size(18.dp))
-        }
+    val canToggle=overflow||expanded
+    val actionLabel=if(expanded)"收起$label" else "展开$label"
+    val interactionSource=remember{MutableInteractionSource()}
+    val textModifier=if(canToggle)Modifier.clickable(
+        interactionSource=interactionSource,indication=null,onClickLabel=actionLabel,onClick=onToggle
+    ).semantics{stateDescription=if(expanded)"已展开" else "已折叠"} else Modifier
+    SelectionContainer{
+        Text(text,modifier=textModifier,style=style,maxLines=if(expanded)Int.MAX_VALUE else lines,overflow=TextOverflow.Ellipsis,
+            onTextLayout={if(!expanded)overflow=it.hasVisualOverflow})
     }
 }
