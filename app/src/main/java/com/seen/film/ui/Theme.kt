@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -52,3 +53,6 @@ fun SeenTheme(darkTheme:Boolean=isSystemInDarkTheme(),content: @Composable () ->
     MaterialTheme(colorScheme=colors,typography=SeenTypography,
         shapes=Shapes(small=RoundedCornerShape(5.dp),medium=RoundedCornerShape(12.dp),large=RoundedCornerShape(18.dp)),content=content)
 }
+
+val SeenGenreColors:List<Color> @Composable get()=if(MaterialTheme.colorScheme.background.luminance()<.5f)listOf(Color(0xFFD4B28C),Color(0xFFAD9483),Color(0xFF99A18D),Color(0xFFC5947A),Color(0xFF80786F))
+        else listOf(Color(0xFF785638),Color(0xFFAA8267),Color(0xFF8A9178),Color(0xFFC29B7B),Color(0xFFC2B8AA))

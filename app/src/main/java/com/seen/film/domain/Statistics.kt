@@ -24,3 +24,24 @@ fun libraryStatistics(all:List<MovieHistory>,period:StatisticsPeriod,today:Local
     }.sortedWith(compareByDescending<GenreCount>{it.count}.thenBy{it.name}.thenBy{it.id})
     return LibraryStatistics(selected.size,selected.sumOf{it.second.size},months,genres,selected.count{it.first.genres.isEmpty()})
 }
+
+/** Recent calendar months include zero-frequency months, but never future placeholders. */
+fun recentViewingMonths(months:List<MonthCount>,today:LocalDate,limit:Int=6):List<MonthCount>{
+    require(limit in 1..12)
+    val current=YearMonth.from(today)
+    val counts=months.associate{it.month to it.count}
+    return (limit-1 downTo 0).map{offset->
+        val month=current.minusMonths(offset.toLong())
+        MonthCount(month,counts[month]?:0,false)
+    }
+}
+data class GenreSlice(val id:Long?,val name:String,val count:Int)
+/** Segment sizes use genre assignments; multi-genre movies can contribute more than once. */
+fun genreSlices(genres:List<GenreCount>,limit:Int=4):List<GenreSlice>{
+    require(limit in 1..8)
+    val ranked=genres.filter{it.count>0}.sortedWith(compareByDescending<GenreCount>{it.count}.thenBy{it.name}.thenBy{it.id})
+    val named=ranked.filter{it.name!="其他"}.take(limit)
+    val ids=named.map{it.id}.toSet()
+    val other=ranked.filter{it.id !in ids}.sumOf{it.count}
+    return named.map{GenreSlice(it.id,it.name,it.count)}+if(other>0)listOf(GenreSlice(null,"其他",other)) else emptyList()
+}

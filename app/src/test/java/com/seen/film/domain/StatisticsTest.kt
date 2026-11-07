@@ -31,4 +31,26 @@ class StatisticsTest {
         val future=libraryStatistics(listOf(film("future",listOf("2027-02-01"))),StatisticsPeriod.ALL,today)
         assertEquals(YearMonth.of(2027,2),future.months.last().month);assertTrue(future.months.last().isFuture)
     }
+    @Test fun recentMonthsAreSixCalendarMonthsEndingNow(){
+        val today=LocalDate.of(2026,3,15)
+        val months=listOf(MonthCount(YearMonth.of(2025,9),8,false),MonthCount(YearMonth.of(2025,10),2,false),MonthCount(YearMonth.of(2026,1),3,false),MonthCount(YearMonth.of(2026,4),99,true))
+        val recent=recentViewingMonths(months,today)
+        assertEquals(6,recent.size)
+        assertEquals(YearMonth.of(2025,10),recent.first().month)
+        assertEquals(YearMonth.of(2026,3),recent.last().month)
+        assertEquals(listOf(2,0,0,3,0,0),recent.map{it.count})
+        assertTrue(recent.none{it.isFuture})
+        assertEquals(6,recentViewingMonths(emptyList(),today).size)
+    }
+    @Test fun genreRingCapsNamedSlicesAndPreservesEveryCount(){
+        val genres=(1L..6L).map{GenreCount(it,"类型 $it",7-it.toInt())}
+        val slices=genreSlices(genres)
+        assertEquals(5,slices.size)
+        assertEquals(listOf(1L,2L,3L,4L),slices.take(4).map{it.id})
+        assertEquals("其他",slices.last().name)
+        assertEquals(3,slices.last().count)
+        assertEquals(genres.sumOf{it.count},slices.sumOf{it.count})
+        assertTrue(genreSlices(emptyList()).isEmpty())
+    }
+
 }
