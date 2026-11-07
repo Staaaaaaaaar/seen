@@ -25,6 +25,7 @@ data class ViewingDraft(
     val rating: Int? = null,
     val notes: String = "",
     val forWatchlist: Boolean = false,
+    val legacyRatingPending: Boolean = false,
 )
 
 object ViewingRules {
