@@ -19,6 +19,7 @@ class MovieDraftMetadataTest {
         val context=object:ContextWrapper(parent){override fun getFilesDir()=folder}
         val db=Room.inMemoryDatabaseBuilder(context,SeenDatabase::class.java).build()
         try{
+            db.dao().putMetadataState(LibraryMetadataState(activeLanguage="en-US"))
             val metadata=TmdbRepository.parse(JSONObject("""{"id":42,"title":"Film","overview":"A story","genres":[{"id":878,"name":"Science Fiction"}],"credits":{"cast":[{"id":2,"credit_id":"a","name":"Actor","character":"Role"}],"crew":[{"id":1,"credit_id":"d","name":"Director","job":"Director"}]}}"""),MetadataLanguage.EN_US)
             val draft=ViewingDraft(title="Film",tmdbId=42,movieOnly=true,metadata=metadata,directorNames=metadata.directors)
             DraftStore(context).write(draft)
