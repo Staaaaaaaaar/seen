@@ -41,7 +41,6 @@ fun SettingsScreen(vm: SeenViewModel, onOpen: (String) -> Unit, onBack: () -> Un
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(top = 16.dp, bottom = 32.dp)) {
             SettingsHeading("电影资料")
             SettingsRow("访问凭据", if (configured) "已配置，可修改或移除" else "未配置；可继续浏览影库", Icons.Outlined.Key, !busy && !metadataPreparing) { onOpen("settings:credentials") }
-            SettingsRow("资料语言", "简体中文 / English · 同步电影资料与海报", Icons.Outlined.Language, !busy) { onOpen("settings:language") }
             Spacer(Modifier.height(24.dp))
             SettingsHeading("数据管理")
             SettingsRow("导出数据", "全部电影、观看记录与海报", Icons.Outlined.FileUpload, !busy) { onOpen("settings:export") }
@@ -76,11 +75,10 @@ fun SettingsToolScreen(tool: String, vm: SeenViewModel, onBack: () -> Unit) {
     val busy by vm.busy.collectAsState()
     val metadataState by vm.metadataRefreshState.collectAsState()
     val metadataPreparing = metadataState is com.seen.film.data.MetadataRefreshState.Preparing
-    val title = when (tool) { "language" -> "资料语言"; "credentials" -> "访问凭据"; "export" -> "导出数据"; "import" -> "导入备份"; else -> "关于 Seen" }
+    val title = when (tool) { "credentials" -> "访问凭据"; "export" -> "导出数据"; "import" -> "导入备份"; else -> "关于 Seen" }
     Scaffold(topBar = { TopAppBar(title = { Text(title) }, navigationIcon = { IconButton(onBack, enabled = !busy) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "返回") } }) }) { padding ->
         Column(Modifier.padding(padding).fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             when (tool) {
-                "language" -> MetadataLanguageControls(vm)
                 "credentials" -> CredentialControls(vm)
                 "export" -> BackupControls(vm, allowImport = false)
                 "import" -> BackupControls(vm, allowExport = false)

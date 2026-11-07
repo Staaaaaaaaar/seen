@@ -66,6 +66,6 @@ class VisualReviewTest {
         val statusTop=androidx.core.view.ViewCompat.getRootWindowInsets(ui.activity.window.decorView)!!.getInsets(androidx.core.view.WindowInsetsCompat.Type.statusBars()).top
         org.junit.Assert.assertTrue("Root screen must restore top system inset after details",ui.onNodeWithText("Seen").fetchSemanticsNode().boundsInRoot.top>=statusTop)
         capture("statistics")
-        ui.onNodeWithContentDescription("设置").performClick();ui.onNodeWithText("资料语言").performClick();capture("language")
+        ui.onNodeWithContentDescription("设置").performClick();capture("settings")
     }
 }

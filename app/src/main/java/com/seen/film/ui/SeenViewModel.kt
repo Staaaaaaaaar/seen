@@ -19,19 +19,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
     val metadataRefreshState = app.metadataRefresh.state
     private val _metadataReady = MutableStateFlow(false)
     val metadataReady = _metadataReady.asStateFlow()
-    private var metadataJob: Job? = null
-    val metadataPreparing get() = metadataJob?.isActive == true || metadataRefreshState.value is com.seen.film.data.MetadataRefreshState.Preparing
-    fun refreshMetadata(language: com.seen.film.domain.MetadataLanguage) {
-        if (!_metadataReady.value || metadataPreparing || _busy.value || _restorePreview.value != null) return
-        if(!_draftReady.value)return
-        if(_draft.value?.tmdbId!=null){_error.value="请先保存或放弃未完成的电影草稿，再切换资料语言";return}
-        clearSearch()
-        metadataJob = viewModelScope.launch {
-            try { app.metadataRefresh.refresh(language) }
-            catch (e: Exception) { report(e, "无法准备电影资料，请重试") }
-        }
-    }
-    fun cancelMetadataRefresh() { metadataJob?.cancel(); viewModelScope.launch { app.metadataRefresh.cancel() } }
+    val metadataPreparing get() = metadataRefreshState.value is com.seen.film.data.MetadataRefreshState.Preparing
     private val _restorePreview = MutableStateFlow<com.seen.film.data.RestorePreview?>(null)
     val restorePreview = _restorePreview.asStateFlow()
     private val _preparedExport = MutableStateFlow<com.seen.film.data.PreparedExport?>(null)
@@ -390,7 +378,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         _search.value = null; _searchMessage.value = null
         _searching.value = true
         searchJob = viewModelScope.launch {
-            try { _search.value = app.tmdb.search(query, page, com.seen.film.domain.MetadataLanguage.fromCode(_librarySnapshot.value?.metadata?.activeLanguage)) }
+            try { _search.value = app.tmdb.search(query, page, com.seen.film.domain.MetadataLanguage.ZH_CN) }
             catch (e: Exception) {
                 if (e is CancellationException) throw e
                 _searchMessage.value = when (e) {
@@ -412,7 +400,7 @@ class SeenViewModel(application: Application) : AndroidViewModel(application) {
         _busy.value = true
         viewModelScope.launch {
             try {
-                val movie = app.tmdb.details(id, com.seen.film.domain.MetadataLanguage.fromCode(_librarySnapshot.value?.metadata?.activeLanguage))
+                val movie = app.tmdb.details(id, com.seen.film.domain.MetadataLanguage.ZH_CN)
                 var poster: String? = null
                 var posterDownloaded = false
                 try { movie.posterPath?.let {

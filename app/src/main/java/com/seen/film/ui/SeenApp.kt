@@ -49,6 +49,7 @@ fun SeenApp(vm:SeenViewModel=viewModel())=SeenTheme {
     BackHandler(stack.size>1||route=="statistics"){back()}
     LaunchedEffect(error){error?.let{snackbar.showSnackbar(it,withDismissAction=true);vm.clearError()}}
     LaunchedEffect(draftReady,route,draft?.key,recordDraft?.key,busy){if(draftReady&&route.startsWith("editor:")&&draft==null&&!busy)pop();if(draftReady&&route.startsWith("record:")&&recordDraft==null&&!busy)pop()}
+    LaunchedEffect(route){if(route in listOf("settings:metadata","settings:language"))stack=stack.dropLast(1).let{if(it.isEmpty())listOf("settings") else it}}
     fun add(){if(metadataPreparing||busy||!draftReady||preview!=null)return;if(draft!=null||recordDraft!=null)confirmNew=true else push("choose")}
     Scaffold(contentWindowInsets=if(route.startsWith("movie:"))WindowInsets(0,0,0,0) else ScaffoldDefaults.contentWindowInsets,snackbarHost={SnackbarHost(snackbar)},bottomBar={
         if(route in listOf("library","statistics"))SeenBottomBar(route,!busy&&preview==null,{stack=listOf("library")},{stack=listOf("statistics")})
@@ -59,7 +60,7 @@ fun SeenApp(vm:SeenViewModel=viewModel())=SeenTheme {
                     if(loadFailed)PageMessage("无法读取影库","请重新打开应用，原有数据不会被清空。")
                     else LibraryScreen(all,draft,draftReady&&!busy&&preview==null,vm.app.posters::file,::add,{push("movie:$it")},
                         {if(recordDraft!=null)push("record:${recordDraft!!.key}") else draft?.let{push("editor:${it.key}")}},onSettings={push("settings")},initialQuery=vm.app.libraryPreferences.read(),
-                        onQueryChanged=vm::saveLibraryQuery,languageCode=snapshot?.metadata?.activeLanguage?:"zh-CN",hasPendingRecord=recordDraft!=null,canAdd=draftReady&&!busy&&!metadataPreparing&&preview==null,preparationMessage=if(metadataPreparing)"资料准备中，暂缓增删影片；可在设置中取消。" else null)
+                        onQueryChanged=vm::saveLibraryQuery,languageCode="zh-CN",hasPendingRecord=recordDraft!=null,canAdd=draftReady&&!busy&&!metadataPreparing&&preview==null,preparationMessage=if(metadataPreparing)"资料准备中，暂缓增删影片；可在设置中取消。" else null)
                 }
                 route=="statistics"->pageStates.SaveableStateProvider("statistics"){
                     StatisticsScreen(all,onSettings={push("settings")})
