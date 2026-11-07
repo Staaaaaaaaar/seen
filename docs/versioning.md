@@ -8,7 +8,7 @@
 
 ## 版本与身份
 
-- 版本号采用 SemVer，versionCode 单调递增；v1.0.0 为 7，v1.1.0 为 8，当前 v1.2.0 为 9。标签 `v版本号` 必须与 Gradle versionName 相同。
+- 版本号采用 SemVer，versionCode 单调递增；v1.0.0 为 7，v1.1.0 为 8，v1.2.0 为 9，当前 v1.2.1 为 10。标签 `v版本号` 必须与 Gradle versionName 相同。
 - 正式包 `com.seen.film` 使用仓库外长期密钥；调试包 `com.seen.film.debug` 不能直接覆盖迁移到正式包，使用 JSON 导出/恢复。
 - Room schema v3 通过显式 v1 → v2 → v3 迁移保留旧数据，备份协议保持向后兼容；升级时不得 destructive migration 或通过卸载清数据绕过签名问题。
 - 不提交本机路径、SDK、密码、凭据、密钥、数据库、真实记录和构建产物。签名、安装与升级操作见 [发布流程](release.md)。
@@ -38,3 +38,7 @@ git ls-remote origin refs/tags/v1.0.0 'refs/tags/v1.0.0^{}'
 ## 历史例外
 
 v0.2.1 曾由用户明确要求不等待 CI 即打标签，属于该补丁的单次例外，不适用于当前版本。历史版本实际执行与限制保留在各版本验证日志中，不改写为当前验收成功。
+
+## v1.2.1 本地交付与提交
+
+用户授权构建正式APK并在真机反馈通过后授权本地提交；本次不推送、不创建tag或Release。不重复运行构建、check或测试。实际执行与人工反馈见[v1.2.1日志](v1.2.1-validation.md)。
